@@ -37,11 +37,14 @@ int main(int argc, char** argv) {
     (void)input;
     (void)yyunput;
 
-#if !defined(SCALAR_INTEGER)
+#if defined(SCALAR_FLOAT)
 #   if defined(HAVE_MPFR)
         mpfr_set_default_prec(FLOAT_PRECISION);
+#   elif defined(HAVE_GMP)
+        mpf_set_default_prec(FLOAT_PRECISION);
 #   endif
 #endif
+
     if (argc > 1) {
         yy_scan_string(argv[1]);
     } else {
