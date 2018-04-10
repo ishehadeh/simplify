@@ -8,7 +8,6 @@ file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/src/*.c")
 
 find_package(GMP)
 find_package(MPFR)
-find_package(FLEX REQUIRED)
 
 option(INTEGERS_ONLY "Use integers instead of floating point values" FALSE)
 option(DISABLE_GMP   "Don't use GMP, even if it is found" FALSE)
@@ -25,8 +24,7 @@ endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
 
-flex_target(simplify ${CMAKE_SOURCE_DIR}/src/simplify.y  ${CMAKE_CURRENT_BINARY_DIR}/simplify.c)
-add_executable(simplify ${SOURCES} ${FLEX_simplify_OUTPUTS})
+add_executable(simplify ${SOURCES})
 
 if (GMP_FOUND AND NOT DISABLE_GMP)
     target_link_libraries(simplify ${GMP_LIBRARIES})

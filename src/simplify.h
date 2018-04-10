@@ -1,17 +1,17 @@
-#ifndef VALUE_OF_H_
-#define VALUE_OF_H_
+// Copyright Ian R. Shehadeh 2018
+
+#ifndef SIMPLIFY_H_
+#define SIMPLIFY_H_
 
 #include "scalar.h"
 #include "expression.h"
 #include "parser.h"
+#include "lexer.h"
 
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-int yywrap(void) {
-    return 1;
-}
 
 void expression_print(expression_t* expr) {
     if (!expr) {
@@ -49,4 +49,4 @@ void expression_print(expression_t* expr) {
 }
 
 
-#endif  // VALUE_OF_H_
+#endif  // SIMPLIFY_H_

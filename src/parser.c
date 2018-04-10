@@ -50,13 +50,12 @@ int token_stream_init(token_stream_t* stream) {
 token_t* token_stream_next(token_stream_t* stream) {
     assert(stream != NULL);
 
-    if (stream->position == stream->buffer_length) {
+    if (stream->position >= stream->buffer_length) {
         return NULL;
     }
 
     token_t* tok = stream->buffer + stream->position;
     ++stream->position;
-
     return tok;
 }
 
@@ -73,7 +72,7 @@ token_t* token_stream_peek(token_stream_t* stream) {
 int token_stream_push(token_stream_t* stream, token_type_t type, char* start, size_t length) {
     assert(stream != NULL);
 
-    if (stream->buffer_length == stream->buffer_capacity) {
+    if (stream->buffer_length >= stream->buffer_capacity) {
         stream->buffer_capacity *= 2;
         stream->buffer = (token_t*)realloc(stream->buffer, stream->buffer_capacity);
         if (!stream->buffer)
@@ -119,7 +118,7 @@ expression_t* parse_prefix(token_stream_t* stream, token_t* tok) {
 
 expression_t* parse_infix(token_stream_t* stream, expression_t* left, token_t* tok) {
     if (tok->type != TOKEN_TYPE_OPERATOR) {
-        printf("ERROR: expected operator, found %s\n", tok->start);
+        printf("ERROR: expected operator, found %.*s\n", tok->length, tok->start);
         return NULL;
     }
 
@@ -134,6 +133,7 @@ expression_t* parse_infix(token_stream_t* stream, expression_t* left, token_t* t
 expression_t* parse_expression_prec(token_stream_t* stream, int precedence) {
     token_t* tok = token_stream_next(stream);
     if (!tok) {
+        printf("EOF\n");
         return NULL;
     }
 
@@ -168,6 +168,7 @@ expression_t* parse_expression_prec(token_stream_t* stream, int precedence) {
     }
 
     for(tok = token_stream_peek(stream); tok && precedence < token_precedence(tok); tok = token_stream_peek(stream)) {
+
         token_stream_next(stream);
         left = parse_infix(stream, left, tok);
     }
