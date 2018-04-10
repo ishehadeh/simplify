@@ -4,7 +4,7 @@ project(simplify C)
 set(CMAKE_MODULE_PATH CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include_directories("${CMAKE_SOURCE_DIR}/src")
 
-file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/src/*.c")
+file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/src/simplify/*.c")
 
 find_package(GMP)
 find_package(MPFR)

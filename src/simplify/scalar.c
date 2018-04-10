@@ -1,46 +1,50 @@
-#include "scalar.h"
-#include "string.h"
-#include "stdio.h"
+// Copyright Ian R. Shehadeh 2018
+
+#include <string.h>
+#include <stdio.h>
+
+#include "simplify/scalar.h"
+
 
 #if !defined(HAVE_GMP)
-char* __ltoa(long x, char* buf) {
+char* __ltoa(long x, char* c) {
     int i = 0;
     if (x < 0) {
-        *buf = '-';
+        *c = '-';
         ++i;
         x = -x;
     }
 
-    while(x > 0) {
-        buf[i++] = (x % 10) + '0';
+    while (x > 0) {
+        c[i++] = (x % 10) + '0';
         x /= 10;
     }
 
     int ret = i;
 
-    char t = buf[i];
-    for(int j = 0; i > j; ++j, --i) {
-        buf[i] = buf[j];
-        buf[j] = t;
+    for (int j = 0, k = i; k > j; ++j, --k) {
+        c[k] ^= c[j];
+        c[j] ^= c[k];
+        c[k] ^= c[j];
     }
 
-    buf[ret] = 0;
-    return buf;
+    c[i] = 0;
+    return c;
 }
 
 char * __dtoa(double n, char *s) {
     if (isnan(n)) {
-        strcpy(s, "@NAN@");
+        strncpy(s, "@NAN@", 5);
     } else if (isinf(n)) {
-        strcpy(s, "@INF@");
+        strncpy(s, "@INF@", 5);
     } else if (n == 0.0) {
-        strcpy(s, "0");
+        strncpy(s, "0", 1);
     } else {
         int digit;
         char* c = s;
 
         int neg = n < 0;
-        if(neg) n = -n;
+        if (neg) n = -n;
 
         int magnitude = log10(n);
         int magnitude_exp;
@@ -73,7 +77,6 @@ char * __dtoa(double n, char *s) {
         }
 
         if (scientific) {
-
             *(c++) = 'e';
             if (magnitude_exp > 0) {
                 *(c++) = '+';
@@ -107,7 +110,7 @@ char* _approximate_number(char* str, int min_reps) {
     size_t len = strlen(str);
 
     int deci;
-    for(deci = 0; str[deci] && str[deci] != '.'; ++deci);
+    for (deci = 0; str[deci] && str[deci] != '.'; ++deci) {}
 
     if (!str[deci])
         return str;
@@ -117,8 +120,8 @@ char* _approximate_number(char* str, int min_reps) {
     int chain = 0;
     char* chain_start = str + deci;
 
-    int i = deci;
-    for(; str[i] >= '0' && str[i] <= '9'; ++i) {
+    int i;
+    for (i = deci; str[i] >= '0' && str[i] <= '9'; ++i) {
         if (str[i] == '0') {
             ++chain;
         } else {
@@ -137,8 +140,8 @@ char* _approximate_number(char* str, int min_reps) {
 
     chain = 0;
     char last = 0;
-    for(i = deci; (str[i] >= '0' && str[i] <= '9') || str[i] == 0; ++i) {
-        if ( str[i] == last) {
+    for (i = deci; (str[i] >= '0' && str[i] <= '9') || str[i] == 0; ++i) {
+        if (str[i] == last) {
             ++chain;
         } else {
             if (chain > min_reps && last == '0') {
@@ -147,10 +150,10 @@ char* _approximate_number(char* str, int min_reps) {
                 if (len == deci) {
                     str[i - chain - 1] = 0;
                 }
-            }else if( chain >= min_reps && last == '9') {
-                char* r = str + i - 1;
+            } else if (chain >= min_reps && last == '9') {
+                char* r;
                 char write_char = 0;
-                for(; r != str && (*r == '9' || *r == '.'); --r ) {
+                for (r = str + i - 1; r != str && (*r == '9' || *r == '.'); --r) {
                     if (!write_char) --len;
                     if (*r == '.') {
                         *r = write_char;
@@ -159,7 +162,7 @@ char* _approximate_number(char* str, int min_reps) {
                         *r = write_char;
                     }
                 }
-                
+
                 if (r == str) {
                     memmove(str + 1, str, len-1);
                     str[0] = '1';
@@ -172,7 +175,7 @@ char* _approximate_number(char* str, int min_reps) {
             last = str[i];
             chain_start = str + i;
         }
-        if(str[i] == 0) {
+        if (str[i] == 0) {
             break;
         }
     }

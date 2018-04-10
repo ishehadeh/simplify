@@ -1,6 +1,9 @@
 // Copyright Ian R. Shehadeh 2018
 
-#include "simplify.h"
+#include "simplify/scalar.h"
+#include "simplify/expression.h"
+#include "simplify/parser.h"
+#include "simplify/lexer.h"
 
 int main(int argc, char** argv) {
 #if defined(SCALAR_FLOAT)

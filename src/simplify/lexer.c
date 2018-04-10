@@ -1,3 +1,5 @@
+// Copyright Ian R. Shehadeh 2018
+
 #include "lexer.h"
 
 int lexer_try_extend(lexer_t* lexer) {
@@ -23,7 +25,9 @@ void lexer_get_ident(lexer_t* lexer) {
             case '_':
                 break;
             default:
-                token_stream_push(&lexer->tokens, TOKEN_TYPE_IDENTIFIER, start, (lexer->buffer + lexer->buffer_position) - start);
+                token_stream_push(&lexer->tokens,
+                                    TOKEN_TYPE_IDENTIFIER, start,
+                                    (lexer->buffer + lexer->buffer_position) - start);
                 return;
         }
         ++lexer->buffer_position;

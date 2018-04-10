@@ -1,9 +1,12 @@
-#ifndef LEXER_H_
-#define LEXER_H_
+// Copyright Ian R. Shehadeh 2018
 
-#include "parser.h"
+#ifndef SIMPLIFY_LEXER_H_
+#define SIMPLIFY_LEXER_H_
 
 #include <string.h>
+
+#include "simplify/parser.h"
+
 
 #ifndef LEXER_BUFFER_MAX_CAPACITY
 #   define LEXER_BUFFER_MAX_CAPACITY (1024 * 4)
@@ -52,7 +55,7 @@ static inline int lexer_init_from_file(lexer_t* lexer, FILE* file) {
 static inline void lexer_clean(lexer_t* lexer) {
     token_stream_clean(&lexer->tokens);
 
-    if(lexer->buffer)
+    if (lexer->buffer)
         free(lexer->buffer);
     lexer->buffer_capacity = 0;
     lexer->buffer_length = 0;
@@ -61,4 +64,4 @@ static inline void lexer_clean(lexer_t* lexer) {
 
 token_stream_t* lexer_tokenize(lexer_t* lexer);
 
-#endif  // LEXER_H_
+#endif  // SIMPLIFY_LEXER_H_

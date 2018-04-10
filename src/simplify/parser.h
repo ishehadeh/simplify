@@ -1,12 +1,14 @@
-#ifndef PARSER_H_
-#define PARSER_H_
+// Copyright Ian R. Shehadeh
 
-#include "expression.h"
+#ifndef SIMPLIFY_PARSER_H_
+#define SIMPLIFY_PARSER_H_
 
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+
+#include "simplify/expression.h"
 
 #ifndef TOKEN_STREAM_BUFFER_INITIAL_CAPACITY
 #   define TOKEN_STREAM_BUFFER_INITIAL_CAPACITY 50
@@ -27,7 +29,7 @@ enum token_type {
 
 struct token {
     token_type_t type;
-    
+
     size_t length;
     char*  start;
 };
@@ -49,4 +51,4 @@ token_t* token_stream_peek(token_stream_t* stream);
 
 extern expression_t* parse_expression(token_stream_t*);
 
-#endif
+#endif  // SIMPLIFY_PARSER_H_

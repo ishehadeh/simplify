@@ -1,9 +1,14 @@
-#ifndef EXPRESSION_H_
-#define EXPRESSION_H_
+// Copyright Ian R. Shehadeh 2018
 
-#include "scalar.h"
+#ifndef SIMPLIFY_EXPRESSION_H_
+#define SIMPLIFY_EXPRESSION_H_
 
 #include <stdlib.h>
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "simplify/scalar.h"
 
 typedef char                  operator_t;
 typedef char                  variable_t;
@@ -86,5 +91,6 @@ static inline expression_t* new_operator_expression(expression_t* left, operator
 void expression_free(expression_t* expr);
 int expression_simplify(expression_t* expr);
 int expression_isolate_variable(expression_t* expr, variable_t var);
+void expression_print(expression_t* expr);
 
-#endif  // EXPRESSION_H_
+#endif  // SIMPLIFY_EXPRESSION_H_

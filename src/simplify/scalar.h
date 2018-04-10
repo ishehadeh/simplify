@@ -1,5 +1,7 @@
-#ifndef SCALAR_H_
-#define SCALAR_H_
+// Copyright Ian R. Shehadeh 2018
+
+#ifndef SIMPLIFY_SCALAR_H_
+#define SIMPLIFY_SCALAR_H_
 
 // Input Macros:
 // - HAVE_GMP: if defined we attempt to import `gmp.h`
@@ -130,4 +132,4 @@ static inline int _scalar_from_str(char* str, scalar_t* out) {
 }
 #endif
 
-#endif  // SCALAR_H_
+#endif  // SIMPLIFY_SCALAR_H_

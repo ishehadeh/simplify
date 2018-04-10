@@ -1,6 +1,8 @@
+// Copyright Ian R. Shehadeh
+
 #include <string.h>
 
-#include "parser.h"
+#include "simplify/parser.h"
 
 expression_t* parse_expression_prec(token_stream_t* stream, int precedence);
 expression_t* parse_infix(token_stream_t* stream, expression_t* left, token_t* tok);
@@ -40,11 +42,9 @@ int token_stream_init(token_stream_t* stream) {
     stream->buffer_length = 0;
     stream->position = 0;
 
-    stream->buffer = (token_t*)malloc(stream->buffer_capacity * sizeof(token_t));
+    stream->buffer = malloc(stream->buffer_capacity * sizeof(token_t));
 
-    if(!stream->buffer)
-        return 1;
-    return 0;
+    return !stream->buffer;
 }
 
 token_t* token_stream_next(token_stream_t* stream) {
@@ -74,7 +74,7 @@ int token_stream_push(token_stream_t* stream, token_type_t type, char* start, si
 
     if (stream->buffer_length >= stream->buffer_capacity) {
         stream->buffer_capacity *= 2;
-        stream->buffer = (token_t*)realloc(stream->buffer, stream->buffer_capacity);
+        stream->buffer = realloc(stream->buffer, stream->buffer_capacity);
         if (!stream->buffer)
             return 1;
     }
@@ -90,9 +90,8 @@ int token_stream_push(token_stream_t* stream, token_type_t type, char* start, si
 int token_stream_clean(token_stream_t* stream) {
     assert(stream != NULL);
 
-    if(stream->buffer)
+    if (stream->buffer)
         free(stream->buffer);
-    
     stream->buffer = NULL;
 
     stream->buffer_length = 0;
@@ -139,7 +138,7 @@ expression_t* parse_expression_prec(token_stream_t* stream, int precedence) {
 
     expression_t* left;
 
-    switch(tok->type) {
+    switch (tok->type) {
         case TOKEN_TYPE_OPERATOR:
             left = parse_prefix(stream, tok);
             break;
@@ -167,11 +166,13 @@ expression_t* parse_expression_prec(token_stream_t* stream, int precedence) {
             return NULL;
     }
 
-    for(tok = token_stream_peek(stream); tok && precedence < token_precedence(tok); tok = token_stream_peek(stream)) {
-
+    for (tok = token_stream_peek(stream);
+            tok && precedence < token_precedence(tok);
+            tok = token_stream_peek(stream)) {
         token_stream_next(stream);
         left = parse_infix(stream, left, tok);
     }
+
     return left;
 }
 
