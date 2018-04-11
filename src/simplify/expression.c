@@ -40,10 +40,22 @@ void expression_print(expression_t* expr) {
     switch (expr->type) {
         case EXPRESSION_TYPE_NUMBER:
         {
-            char* buf = alloca(256);
-            buf[255] = 0;
+            int len = SCALAR_REQUIRED_CHARS(expr->number.value);
+            char* buf = NULL;
+
+            if (len < 256) {
+                buf = alloca(len + 1);
+            } else {
+                buf = malloc(len + 1);
+            }
+
+            buf[len] = 0;
+
             SCALAR_TO_STRING(expr->number.value, buf);
             printf("%s", buf);
+            if (len >= 256) {
+                free(buf);
+            }
             break;
         }
         case EXPRESSION_TYPE_VARIABLE:

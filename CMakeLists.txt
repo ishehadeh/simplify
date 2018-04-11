@@ -34,6 +34,6 @@ if (GMP_FOUND AND NOT DISABLE_GMP)
         target_link_libraries(simplify ${MPFR_LIBRARIES})
         add_definitions(-DHAVE_MPFR)
     endif()
-else()
-    target_link_libraries(simplify m)
 endif()
+
+target_link_libraries(simplify m)

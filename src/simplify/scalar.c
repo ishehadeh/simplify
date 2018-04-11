@@ -2,11 +2,13 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <float.h>
 
 #include "simplify/scalar.h"
 
 
 #if !defined(HAVE_GMP)
+
 char* __ltoa(long x, char* c) {
     int i = 0;
     if (x < 0) {
@@ -64,7 +66,7 @@ char * __dtoa(double n, char *s) {
             magnitude = 0;
 
 
-        while (n > 0.00000000001 || magnitude >= 0) {
+        while (n > _DOUBLE_PRECISION || magnitude >= 0) {
             double weight = pow(10.0, magnitude);
             if (weight > 0 && !isinf(weight)) {
                 digit = floor(n / weight);
