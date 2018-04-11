@@ -144,7 +144,7 @@ expression_t* parse_expression_prec(token_stream_t* stream, int precedence) {
             break;
         case TOKEN_TYPE_NUMBER:
         {
-            SCALAR_DEFINE(num);
+            scalar_t num;
 
             char* del = alloca(tok->length + 1);
             del[tok->length] = 0;
@@ -156,6 +156,7 @@ expression_t* parse_expression_prec(token_stream_t* stream, int precedence) {
             }
 
             left = new_number_expression(num);
+            SCALAR_CLEAN(num);
             break;
         }
         case TOKEN_TYPE_IDENTIFIER:
