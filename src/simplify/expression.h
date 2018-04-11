@@ -88,6 +88,7 @@ static inline expression_t* new_operator_expression(expression_t* left, operator
     return expr;
 }
 
+int expression_to_bool(expression_t*);
 void expression_free(expression_t* expr);
 int expression_simplify(expression_t* expr);
 int expression_isolate_variable(expression_t* expr, variable_t var);

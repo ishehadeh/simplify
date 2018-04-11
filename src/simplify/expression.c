@@ -142,6 +142,8 @@ int expression_simplify_vars(expression_t* expr, expression_t** variables) {
                         SCALAR_POW(expr->operator.left->number.value, expr->operator.right->number.value, result);
                         break;
                     case '=':
+                    case '>':
+                    case '<':
                         return 0;
                     default:
                         printf("ERROR: invalid operator '%c'", expr->operator.infix);
@@ -164,6 +166,64 @@ int expression_simplify(expression_t* expr) {
     memset(&variables[0], 0, 26 * 2 *sizeof(expression_t*));
 
     return expression_simplify_vars(expr, &variables[0]);
+}
+int expression_to_bool(expression_t* expr) {
+    switch (expr->type) {
+        case EXPRESSION_TYPE_NUMBER:
+            return 1;
+        case EXPRESSION_TYPE_PREFIX:
+            return 1;
+        case EXPRESSION_TYPE_VARIABLE:
+            return 1;
+        case EXPRESSION_TYPE_OPERATOR:
+        {
+            if (expr->operator.left->type != EXPRESSION_TYPE_NUMBER ||
+                expr->operator.right->type != EXPRESSION_TYPE_NUMBER) {
+                    return 1;
+            }
+            int len = SCALAR_REQUIRED_CHARS(expr->operator.left->number.value);
+            int len1 = SCALAR_REQUIRED_CHARS(expr->operator.right->number.value);
+
+            char* buf = malloc(len + 1);
+            char* buf1 = malloc(len1 + 1);
+
+            buf[len] = 0;
+
+            SCALAR_TO_STRING(expr->operator.left->number.value, buf);
+            SCALAR_TO_STRING(expr->operator.right->number.value, buf1);
+
+            scalar_t l;
+            scalar_t r;
+
+            SCALAR_FROM_STRING(buf, l);
+            SCALAR_FROM_STRING(buf1, r);
+
+            int x = SCALAR_COMPARE(l, r);
+
+            free(buf);
+            free(buf1);
+            SCALAR_CLEAN(r);
+            SCALAR_CLEAN(l);
+            expression_free(expr->operator.left);
+            expression_free(expr->operator.right);
+
+            switch (expr->operator.infix) {
+                case '<':
+                    SCALAR_SET_INT(x < 0, expr->number.value);
+                    break;
+                case '>':
+                    SCALAR_SET_INT(x > 0, expr->number.value);
+                    break;
+                case '=':
+                    SCALAR_SET_INT(x == 0, expr->number.value);
+                    break;
+                default:
+                    return 1;
+            }
+            expr->type = EXPRESSION_TYPE_NUMBER;
+            return 0;
+        }
+    }
 }
 
 int expression_isolate_variable(expression_t* expr, variable_t var) {

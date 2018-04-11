@@ -39,6 +39,10 @@ void lexer_get_ident(lexer_t* lexer) {
 void lexer_get_number(lexer_t* lexer) {
     char* start = lexer->buffer + lexer->buffer_position;
     size_t len = 0;
+    if (lexer->buffer[lexer->buffer_position] == '-') {
+        ++len;
+        ++lexer->buffer_position;
+    }
     while (1) {
         if (lexer->buffer_position >= lexer->buffer_length) {
             if (lexer_try_extend(lexer)) {
@@ -51,6 +55,7 @@ void lexer_get_number(lexer_t* lexer) {
                 break;
             case '.':
                 ++lexer->buffer_position, ++len;
+                +len;
                 goto lexer_get_number_after_decimal;
             case 'E':
             case 'e':
@@ -136,6 +141,8 @@ token_stream_t* lexer_tokenize(lexer_t* lexer) {
             case '*':
             case '^':
             case '=':
+            case '>':
+            case '<':
                 token_stream_push(&lexer->tokens, TOKEN_TYPE_OPERATOR, lexer->buffer + lexer->buffer_position, 1);
                 break;
             case '(':

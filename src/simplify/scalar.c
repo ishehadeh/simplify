@@ -147,7 +147,7 @@ char* _approximate_number(char* str, int min_reps) {
             ++chain;
         } else {
             if (chain > min_reps && last == '0') {
-                str[i - chain + 1] = 0;
+                str[i - chain + 4] = 0;
                 len -= chain + (len - i);
                 if (len == deci) {
                     str[i - chain - 1] = 0;
@@ -180,6 +180,7 @@ char* _approximate_number(char* str, int min_reps) {
         if (str[i] == 0) {
             break;
         }
+
     }
 
     return str;

@@ -14,6 +14,8 @@ inline static int token_precedence(token_t* tok) {
         {
             switch (*tok->start) {
                 case '=':
+                case '>':
+                case '<':
                     return 10;
                 case '+':
                 case '-':
@@ -132,7 +134,6 @@ expression_t* parse_infix(token_stream_t* stream, expression_t* left, token_t* t
 expression_t* parse_expression_prec(token_stream_t* stream, int precedence) {
     token_t* tok = token_stream_next(stream);
     if (!tok) {
-        printf("EOF\n");
         return NULL;
     }
 
@@ -149,7 +150,6 @@ expression_t* parse_expression_prec(token_stream_t* stream, int precedence) {
             char* del = alloca(tok->length + 1);
             del[tok->length] = 0;
             strncpy(del, tok->start, tok->length);
-
             if (SCALAR_FROM_STRING(del, num)) {
                 printf("ERROR: invalid number: %s\n", del);
                 return NULL;

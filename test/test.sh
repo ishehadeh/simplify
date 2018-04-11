@@ -37,10 +37,9 @@ test_from_file() {
             continue
         fi
         printf "TEST: checking %s = %s..." "$equation" "$answer"
-        result=`./build/simplify "$equation"`
-        result="($(sed 's/[eE]+\{0,1\}/*10^/g' <<<"$result"))"
-        if [[ `echo "$answer == $result" | bc -l` == "0" ]]; then
-            printf "FAILED\nTEST: expected %s got %s\n" $answer $result
+        status=`./build/simplify "$line"`
+        if [[ "$status" -ne "1" ]]; then
+            printf "FAILED\n"
             exit 1
         fi
         echo "SUCCESS"

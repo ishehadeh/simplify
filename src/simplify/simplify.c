@@ -33,9 +33,12 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    int retcode = expression_simplify(expr);
-    if (!retcode)
-        expression_print(expr);
+    if (expression_simplify(expr) > 0) {
+        return 1;
+    }
+
+    expression_to_bool(expr);
+    expression_print(expr);
 
     puts("");
 
@@ -46,5 +49,5 @@ int main(int argc, char** argv) {
     mpfr_free_cache();
 #endif
 
-    return retcode;
+    return 0;
 }
