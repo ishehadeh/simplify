@@ -144,7 +144,7 @@ int expression_simplify_vars(expression_t* expr, expression_t** variables) {
                     case '=':
                     case '>':
                     case '<':
-                        return 0;
+                        return expression_to_bool(expr);
                     default:
                         printf("ERROR: invalid operator '%c'", expr->operator.infix);
                         return 1;
@@ -167,6 +167,7 @@ int expression_simplify(expression_t* expr) {
 
     return expression_simplify_vars(expr, &variables[0]);
 }
+
 int expression_to_bool(expression_t* expr) {
     switch (expr->type) {
         case EXPRESSION_TYPE_NUMBER:

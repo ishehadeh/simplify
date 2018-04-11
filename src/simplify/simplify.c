@@ -37,7 +37,6 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    expression_to_bool(expr);
     expression_print(expr);
 
     puts("");
