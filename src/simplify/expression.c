@@ -62,11 +62,9 @@ void expression_print(expression_t* expr) {
             printf("%c", expr->variable.value);
             break;
         case EXPRESSION_TYPE_OPERATOR:
-            printf("( ");
             expression_print(expr->operator.left);
             printf(" %c ", expr->operator.infix);
             expression_print(expr->operator.right);
-            printf(" )");
             break;
         case EXPRESSION_TYPE_PREFIX:
             printf("%c", expr->prefix.prefix);
