@@ -16,11 +16,13 @@ typedef union expression      expression_t;
 typedef enum  expression_type expression_type_t;
 
 enum expression_type {
+    EXPRESSION_TYPE_NULL,
     EXPRESSION_TYPE_NUMBER,
     EXPRESSION_TYPE_PREFIX,
     EXPRESSION_TYPE_OPERATOR,
     EXPRESSION_TYPE_VARIABLE,
 };
+
 
 struct expression_number {
     expression_type_t type;

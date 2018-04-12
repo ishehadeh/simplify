@@ -2,6 +2,29 @@
 
 #include "lexer.h"
 
+
+#define __LEXER_LOOP_END() __lexer_loop_continue = 0
+
+#define __LEXER_LOOP(LEXER, BLOCK) {                                \
+    int __lexer_loop_continue = 1;                                  \
+    while (1) {                                                     \
+        if ((LEXER)->buffer_position >= (LEXER)->buffer_length      \
+                && lexer_try_extend(LEXER)) break;                  \
+        BLOCK;                                                      \
+        if(__lexer_loop_continue) lexer_advance(LEXER); else break; \
+    }                                                               \
+}
+
+#define __LEXER_SKIP_WHILE(LEXER, FUNC) __LEXER_LOOP(LEXER, if (!FUNC(lexer_current(LEXER))) __LEXER_LOOP_END())
+
+static inline char lexer_current(lexer_t* lexer) {
+    return lexer->buffer[lexer->buffer_position];
+}
+
+static inline void lexer_advance(lexer_t* lexer) {
+    ++lexer->buffer_position;
+}
+
 int lexer_try_extend(lexer_t* lexer) {
     if (lexer->source != NULL) {
         lexer->buffer_length = fread(lexer->buffer, lexer->buffer_capacity, 1, lexer->source);
@@ -15,157 +38,72 @@ int lexer_try_extend(lexer_t* lexer) {
     }
 }
 
-void lexer_get_ident(lexer_t* lexer) {
-    char* start = lexer->buffer + lexer->buffer_position;
-    while (lexer->buffer_position < lexer->buffer_length) {
-        switch (lexer->buffer[lexer->buffer_position]) {
-            case 'a' ... 'z':
-            case 'A' ... 'Z':
-            case '0' ... '9':
-            case '_':
-                break;
-            default:
-                token_stream_push(&lexer->tokens,
-                                    TOKEN_TYPE_IDENTIFIER, start,
-                                    (lexer->buffer + lexer->buffer_position) - start);
-                return;
-        }
-        ++lexer->buffer_position;
-    }
-    token_stream_push(&lexer->tokens, TOKEN_TYPE_IDENTIFIER, start, (lexer->buffer + lexer->buffer_position) - start);
-    return;
-}
-
 void lexer_get_number(lexer_t* lexer) {
-    char* start = lexer->buffer + lexer->buffer_position;
-    size_t len = 0;
-    if (lexer->buffer[lexer->buffer_position] == '-') {
-        ++len;
-        ++lexer->buffer_position;
-    }
-    while (1) {
-        if (lexer->buffer_position >= lexer->buffer_length) {
-            if (lexer_try_extend(lexer)) {
-                break;
-            }
-        }
-        switch (lexer->buffer[lexer->buffer_position]) {
-            case '0' ... '9':
-                ++len;
-                break;
-            case '.':
-                ++lexer->buffer_position, ++len;
-                +len;
-                goto lexer_get_number_after_decimal;
-            case 'E':
-            case 'e':
-                ++lexer->buffer_position, ++len;
-                goto lexer_get_number_after_exponent;
-            default:
-                goto lexer_get_number_exit;
-        }
-        ++lexer->buffer_position;
+    lexer->token.start = lexer->buffer + lexer->buffer_position;
+    if (lexer_current(lexer) == '-')
+        lexer_advance(lexer);
+
+    __LEXER_SKIP_WHILE(lexer, isdigit);
+
+#   if defined(SCALAR_INTEGER)
+        lexer->token.length = lexer->buffer + lexer->buffer_position - lexer->token.start;
+#   endif
+
+    if(lexer_current(lexer) == '.') {
+        lexer_advance(lexer);
+        __LEXER_SKIP_WHILE(lexer, isdigit);
     }
 
-lexer_get_number_after_decimal:
-    while (1) {
-        if (lexer->buffer_position >= lexer->buffer_length) {
-            if (lexer_try_extend(lexer)) {
-                break;
-            }
-        }
-        switch (lexer->buffer[lexer->buffer_position]) {
-            case '0' ... '9':
-#               if !defined(SCALAR_INTEGER)
-                    ++len;
-#               endif
-                break;
-            case 'E':
-            case 'e':
-                ++lexer->buffer_position, ++len;
-                goto lexer_get_number_after_exponent;
-            default:
-                goto lexer_get_number_exit;
-        }
-        ++lexer->buffer_position;
+    if(lexer_current(lexer) == 'e' || lexer_current(lexer) == 'E') {
+        if (lexer_current(lexer) == '-')
+            lexer_advance(lexer);
+        __LEXER_SKIP_WHILE(lexer, isdigit);
     }
 
-lexer_get_number_after_exponent:
-    while (1) {
-        if (lexer->buffer_position >= lexer->buffer_length) {
-            if (lexer_try_extend(lexer)) {
-                break;
-            }
-        }
-        if (lexer->buffer[lexer->buffer_position] == '-') {
-#               if !defined(SCALAR_INTEGER)
-                ++len;
-#               endif
-                ++lexer->buffer_position;
-        }
-        switch (lexer->buffer[lexer->buffer_position]) {
-            case '0' ... '9':
-#               if !defined(SCALAR_INTEGER)
-                ++len;
-#               endif
-                break;
-            default:
-                goto lexer_get_number_exit;
-        }
-        ++lexer->buffer_position;
-    }
+    lexer->token.type = TOKEN_TYPE_NUMBER;
 
+#   if !defined(SCALAR_INTEGER)
+        lexer->token.length = lexer->buffer + lexer->buffer_position - lexer->token.start;
+#   endif
 
-lexer_get_number_exit:
-    --lexer->buffer_position;
-    token_stream_push(&lexer->tokens, TOKEN_TYPE_NUMBER, start, len);
-    return;
 }
 
-token_stream_t* lexer_tokenize(lexer_t* lexer) {
-    while (1) {
-        if (lexer->buffer_position >= lexer->buffer_length) {
-            if (lexer_try_extend(lexer)) {
-                break;
-            }
-        }
-        switch (lexer->buffer[lexer->buffer_position]) {
-            case '\n':
-            case '\v':
-            case '\t':
-            case ' ' :
-                break;
-            case '+':
-            case '-':
-            case '/':
-            case '*':
-            case '^':
-            case '=':
-            case '>':
-            case '<':
-                token_stream_push(&lexer->tokens, TOKEN_TYPE_OPERATOR, lexer->buffer + lexer->buffer_position, 1);
-                break;
-            case '(':
-                token_stream_push(&lexer->tokens, TOKEN_TYPE_LEFT_PAREN, lexer->buffer + lexer->buffer_position, 1);
-                break;
-            case ')':
-                token_stream_push(&lexer->tokens, TOKEN_TYPE_RIGHT_PAREN, lexer->buffer + lexer->buffer_position, 1);
-                break;
-            case 'a' ... 'z':
-            case 'A' ... 'Z':
-            case '_':
-                lexer_get_ident(lexer);
-                break;
-            case '0' ... '9':
-            case '.':
-                lexer_get_number(lexer);
-                break;
-            default:
-                printf("ERROR: invalid character '%c'", lexer->buffer[lexer->buffer_position]);
-                return NULL;
-        }
-        ++lexer->buffer_position;
+token_t* lexer_next(lexer_t* lexer) {
+    __LEXER_SKIP_WHILE(lexer, isspace);
+
+    switch (lexer->buffer[lexer->buffer_position]) {
+        case '+':
+        case '-':
+        case '/':
+        case '*':
+        case '^':
+        case '=':
+        case '>':
+        case '<':
+            lexer->token.type = TOKEN_TYPE_OPERATOR;
+        case '(':
+            lexer->token.type = TOKEN_TYPE_OPERATOR;
+        case ')':
+            lexer->token.type = TOKEN_TYPE_OPERATOR;
+            lexer->token.start = lexer->buffer + lexer->buffer_position;
+            lexer->token.length = 1;
+            break;
+        case 'a' ... 'z':
+        case 'A' ... 'Z':
+        case '_':
+            lexer->token.type  = TOKEN_TYPE_IDENTIFIER;
+            lexer->token.start = lexer->buffer + lexer->buffer_position;
+            __LEXER_SKIP_WHILE(lexer, isident)
+            lexer->token.length = lexer->buffer + lexer->buffer_position - lexer->token.start;
+            break;
+        case '0' ... '9':
+        case '.':
+            lexer_get_number(lexer);
+            break;
+        default:
+            printf("ERROR: invalid character '%c'", lexer_current(lexer));
+            return NULL;
     }
 
-    return &lexer->tokens;
+    return &lexer->token;
 }
