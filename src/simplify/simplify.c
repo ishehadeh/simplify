@@ -25,8 +25,7 @@ int main(int argc, char** argv) {
         lexer_init_from_file(&lexer, stdin);
     }
 
-    token_stream_t* tokens = lexer_tokenize(&lexer);
-    expression_t* expr = parse_expression(tokens);
+    expression_t* expr = parse_expression(&lexer);
 
     if (!expr) {
         lexer_clean(&lexer);
@@ -41,8 +40,8 @@ int main(int argc, char** argv) {
 
     puts("");
 
-    lexer_clean(&lexer);
     expression_free(expr);
+    lexer_clean(&lexer);
 
 #if defined(HAVE_MPFR) && !defined(SCALAR_INTEGER)
     mpfr_free_cache();

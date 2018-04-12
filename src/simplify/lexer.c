@@ -5,14 +5,18 @@
 
 #define __LEXER_LOOP_END() __lexer_loop_continue = 0
 
-#define __LEXER_LOOP(LEXER, BLOCK) {                                \
-    int __lexer_loop_continue = 1;                                  \
-    while (1) {                                                     \
-        if ((LEXER)->buffer_position >= (LEXER)->buffer_length      \
-                && lexer_try_extend(LEXER)) break;                  \
-        BLOCK;                                                      \
-        if(__lexer_loop_continue) lexer_advance(LEXER); else break; \
-    }                                                               \
+#define __LEXER_LOOP(LEXER, BLOCK) {                           \
+    int __lexer_loop_continue = 1;                             \
+    while (1) {                                                \
+        if ((LEXER)->buffer_position >= (LEXER)->buffer_length \
+                && lexer_try_extend(LEXER)) break;             \
+        BLOCK;                                                 \
+        if (__lexer_loop_continue) {                           \
+            lexer_advance(LEXER);                              \
+        } else {                                               \
+            break;                                             \
+        }                                                      \
+    }                                                          \
 }
 
 #define __LEXER_SKIP_WHILE(LEXER, FUNC) __LEXER_LOOP(LEXER, if (!FUNC(lexer_current(LEXER))) __LEXER_LOOP_END())
@@ -23,6 +27,10 @@ static inline char lexer_current(lexer_t* lexer) {
 
 static inline void lexer_advance(lexer_t* lexer) {
     ++lexer->buffer_position;
+}
+
+static inline int lexer_eof(lexer_t* lexer) {
+    return lexer->buffer_position >= lexer->buffer_length && lexer->source == NULL;
 }
 
 int lexer_try_extend(lexer_t* lexer) {
@@ -49,12 +57,12 @@ void lexer_get_number(lexer_t* lexer) {
         lexer->token.length = lexer->buffer + lexer->buffer_position - lexer->token.start;
 #   endif
 
-    if(lexer_current(lexer) == '.') {
+    if (!lexer_eof(lexer) && lexer_current(lexer) == '.') {
         lexer_advance(lexer);
         __LEXER_SKIP_WHILE(lexer, isdigit);
     }
 
-    if(lexer_current(lexer) == 'e' || lexer_current(lexer) == 'E') {
+    if (!lexer_eof(lexer) && (lexer_current(lexer) == 'e' || lexer_current(lexer) == 'E')) {
         if (lexer_current(lexer) == '-')
             lexer_advance(lexer);
         __LEXER_SKIP_WHILE(lexer, isdigit);
@@ -65,13 +73,20 @@ void lexer_get_number(lexer_t* lexer) {
 #   if !defined(SCALAR_INTEGER)
         lexer->token.length = lexer->buffer + lexer->buffer_position - lexer->token.start;
 #   endif
-
+    --lexer->buffer_position;
 }
 
-token_t* lexer_next(lexer_t* lexer) {
+token_t lexer_next(lexer_t* lexer) {
     __LEXER_SKIP_WHILE(lexer, isspace);
 
-    switch (lexer->buffer[lexer->buffer_position]) {
+    if (lexer_eof(lexer)) {
+        lexer->token.type = TOKEN_TYPE_EOF;
+        lexer->token.length = 0;
+        lexer->token.start = lexer->buffer + lexer->buffer_position;
+        return lexer->token;
+    }
+
+    switch (lexer_current(lexer)) {
         case '+':
         case '-':
         case '/':
@@ -81,10 +96,16 @@ token_t* lexer_next(lexer_t* lexer) {
         case '>':
         case '<':
             lexer->token.type = TOKEN_TYPE_OPERATOR;
+            lexer->token.start = lexer->buffer + lexer->buffer_position;
+            lexer->token.length = 1;
+            break;
         case '(':
-            lexer->token.type = TOKEN_TYPE_OPERATOR;
+            lexer->token.type = TOKEN_TYPE_LEFT_PAREN;
+            lexer->token.start = lexer->buffer + lexer->buffer_position;
+            lexer->token.length = 1;
+            break;
         case ')':
-            lexer->token.type = TOKEN_TYPE_OPERATOR;
+            lexer->token.type = TOKEN_TYPE_RIGHT_PAREN;
             lexer->token.start = lexer->buffer + lexer->buffer_position;
             lexer->token.length = 1;
             break;
@@ -102,8 +123,12 @@ token_t* lexer_next(lexer_t* lexer) {
             break;
         default:
             printf("ERROR: invalid character '%c'", lexer_current(lexer));
-            return NULL;
-    }
+            lexer->token.type = TOKEN_TYPE_EOF;
+            lexer->token.length = 0;
+            lexer->token.start = lexer->buffer + lexer->buffer_position;
+            return lexer->token;
+        }
 
-    return &lexer->token;
+    ++lexer->buffer_position;
+    return lexer->token;
 }

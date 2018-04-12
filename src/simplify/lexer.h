@@ -5,14 +5,36 @@
 
 #include <string.h>
 #include <ctype.h>
-#include "simplify/parser.h"
-
+#include <stdio.h>
+#include <stdlib.h>
 
 #ifndef LEXER_BUFFER_MAX_CAPACITY
 #   define LEXER_BUFFER_MAX_CAPACITY (1024 * 4)
 #endif
 
 typedef struct lexer lexer_t;
+
+typedef struct token_stream token_stream_t;
+typedef struct token        token_t;
+typedef enum   token_type   token_type_t;
+
+enum token_type {
+    TOKEN_TYPE_NULL,
+    TOKEN_TYPE_OPERATOR,
+    TOKEN_TYPE_NUMBER,
+    TOKEN_TYPE_IDENTIFIER,
+    TOKEN_TYPE_LEFT_PAREN,
+    TOKEN_TYPE_RIGHT_PAREN,
+    TOKEN_TYPE_EOF,
+};
+
+struct token {
+    token_type_t type;
+
+    size_t length;
+    char*  start;
+};
+
 
 struct lexer {
     token_t token;
@@ -61,6 +83,6 @@ static inline int isident(char c) {
             || c == '_';
 }
 
-token_t* lexer_next(lexer_t* lexer);
+token_t lexer_next(lexer_t* lexer);
 
 #endif  // SIMPLIFY_LEXER_H_
