@@ -4,6 +4,7 @@
 #include "simplify/expression.h"
 #include "simplify/parser.h"
 #include "simplify/lexer.h"
+#include "simplify/errors.h"
 
 int main(int argc, char** argv) {
 #if defined(SCALAR_FLOAT)
@@ -15,6 +16,8 @@ int main(int argc, char** argv) {
 #endif
 
     lexer_t lexer;
+    expression_t expression;
+    expression_parser_t parser;
 
     if (argc > 1) {
         if (lexer_init_from_string(&lexer, argv[1])) {
@@ -25,27 +28,23 @@ int main(int argc, char** argv) {
         lexer_init_from_file(&lexer, stdin);
     }
 
-    expression_t* expr = parse_expression(&lexer);
+    expression_parser_init(&parser, &lexer);
+    error_t err = parse_expression(&parser, &expression);
 
-    if (!expr) {
-        lexer_clean(&lexer);
-        return 1;
+    if (err) {
+        printf("simplify [%d]: %s", lexer.buffer_position, error_string(err));
+    } else {
+        expression_simplify(&expression);
+        expression_print(&expression);
     }
 
-    if (expression_simplify(expr) > 0) {
-        return 1;
-    }
-
-    expression_print(expr);
-
-    puts("");
-
-    expression_free(expr);
+    expression_clean(&expression);
     lexer_clean(&lexer);
 
 #if defined(HAVE_MPFR) && !defined(SCALAR_INTEGER)
     mpfr_free_cache();
 #endif
+    puts("");
 
     return 0;
 }

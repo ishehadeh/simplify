@@ -1,38 +1,51 @@
 // Copyright Ian R. Shehadeh
 
-#include "simplify/parser.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 
-inline static int operator_precedence(operator_t op) {
+#include "simplify/parser.h"
+#include "simplify/errors.h"
+
+inline static operator_precedence_t operator_precedence(operator_t op) {
     switch (op) {
         case '=':
         case '>':
         case '<':
-            return 10;
+            return OPERATOR_PRECEDENCE_COMPARE;
         case '+':
         case '-':
-            return 20;
+            return OPERATOR_PRECEDENCE_SUM;
         case '*':
         case '/':
-            return 30;
+            return OPERATOR_PRECEDENCE_PRODUCT;
         case '^':
-            return 40;
+            return OPERATOR_PRECEDENCE_EXPONENT;
+        case '(':
+            return OPERATOR_PRECEDENCE_MINIMUM;
         default:
-            return -1;
+            // TODO(IanS5): Somehow throw an error here
+            return OPERATOR_PRECEDENCE_MINIMUM;
     }
 }
 
 
-expression_t* parse_expression_prec(lexer_t* stream, token_t* last, int precedence) {
-    token_t tok = lexer_next(stream);
+error_t parse_expression_prec(expression_parser_t* parser, expression_t* expression, operator_precedence_t precedence) {
+    token_t token;
+    error_t err = lexer_next(parser->lexer, &token);
+    if (err) return err;
 
     expression_t* left;
 
-    switch (tok.type) {
+    switch (token.type) {
         case TOKEN_TYPE_OPERATOR:
         {
-            operator_t operator = *tok.start;
-            expression_t* operand = parse_expression_prec(stream, &tok, 50);
-            if (!operand) return NULL;
+            operator_t operator = *token.start;
+            expression_t* operand = new_expression();
+
+            error_t err = parse_expression_prec(parser, operand, OPERATOR_PRECEDENCE_MAXIMUM);
+            if (err) return err;
+
             left = new_prefix_expression(operator, operand);
             break;
         }
@@ -40,44 +53,58 @@ expression_t* parse_expression_prec(lexer_t* stream, token_t* last, int preceden
         {
             scalar_t num;
 
-            char* del = alloca(tok.length + 1);
-            del[tok.length] = 0;
-            strncpy(del, tok.start, tok.length);
-            if (SCALAR_FROM_STRING(del, num)) {
-                printf("ERROR: invalid number: %s\n", del);
-                return NULL;
-            }
+            char* del = alloca(token.length + 1);
+            del[token.length] = 0;
+            strncpy(del, token.start, token.length);
+            if (SCALAR_FROM_STRING(del, num))
+                return ERROR_INVALID_NUMBER;
 
             left = new_number_expression(num);
+
             SCALAR_CLEAN(num);
-            tok = lexer_next(stream);
+            err = lexer_next(parser->lexer, &token);
+            if (err) {
+                expression_free(left);
+                return err;
+            }
             break;
         }
         case TOKEN_TYPE_IDENTIFIER:
-            left = new_variable_expression(*tok.start);
+            left = new_variable_expression(*token.start);
             break;
+        case TOKEN_TYPE_LEFT_PAREN:
+            ++parser->missing_right_parens;
+            return parse_expression_prec(parser, expression, OPERATOR_PRECEDENCE_MINIMUM);
         case TOKEN_TYPE_EOF:
-            return NULL;
+            return ERROR_UNEXPECTED_EOF;
         default:
-            printf("ERROR: invalid token '%s', expeected operator number or variable", tok.start);
-            return NULL;
+            return ERROR_INVALID_TOKEN;
+        }
+
+    operator_t infix = *token.start;
+    while (left && token.type != TOKEN_TYPE_EOF && precedence < operator_precedence(infix)) {
+        expression_t* right_operand = new_expression();
+        err = parse_expression_prec(parser, right_operand, operator_precedence(infix));
+        if (err) return err;
+
+        memmove(&token, &parser->previous, sizeof(token_t));
+
+        if (token.type == TOKEN_TYPE_RIGHT_PAREN) {
+            if (parser->missing_right_parens <= 0)
+                return ERROR_STRAY_RIGHT_PAREN;
+
+            err = lexer_next(parser->lexer, &token);
+            if (err) return err;
+            --parser->missing_right_parens;
+            precedence = 50;
+        }
+
+        left = new_operator_expression(left, infix, right_operand);
+        infix = *token.start;
     }
 
-    operator_t infix = *tok.start;
-    while (left && tok.type != TOKEN_TYPE_EOF && precedence < operator_precedence(infix)) {
-        expression_t* op = parse_expression_prec(stream, &tok, operator_precedence(infix));
-        if (!op) break;
+    memmove(&parser->previous, &token, sizeof(token_t));
+    *expression = *left;
 
-        left = new_operator_expression(left, infix, op);
-
-        infix = *tok.start;
-    }
-
-    if (last) *last = tok;
-
-    return left;
-}
-
-expression_t* parse_expression(lexer_t* stream) {
-    return parse_expression_prec(stream, NULL, 0);
+    return ERROR_NO_ERROR;
 }

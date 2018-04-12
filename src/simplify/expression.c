@@ -1,9 +1,14 @@
 // Copyright Ian R. Shehadeh 2018
 
-#include "expression.h"
-
+#include "simplify/expression.h"
+#include "simplify/errors.h"
 
 void expression_free(expression_t* expr) {
+    expression_clean(expr);
+    free(expr);
+}
+
+void expression_clean(expression_t* expr) {
     switch (expr->type) {
         case EXPRESSION_TYPE_PREFIX:
             expression_free(expr->prefix.right);
@@ -18,8 +23,6 @@ void expression_free(expression_t* expr) {
         default:
             break;
     }
-
-    free(expr);
 }
 
 int variable_id(variable_t var) {
@@ -31,11 +34,9 @@ int variable_id(variable_t var) {
     return -1;
 }
 
-void expression_print(expression_t* expr) {
-    if (!expr) {
-        printf("(NULL)");
-        return;
-    }
+error_t expression_print(expression_t* expr) {
+    if (!expr)
+        return ERROR_NULL_EXPRESSION;
 
     switch (expr->type) {
         case EXPRESSION_TYPE_NUMBER:
@@ -74,114 +75,26 @@ void expression_print(expression_t* expr) {
             printf("(UNDEFINED TYPE %d)", expr->type);
             break;
     }
+
+    return ERROR_NO_ERROR;
 }
 
 
-int expression_simplify_vars(expression_t* expr, expression_t** variables) {
-    switch (expr->type) {
-        case EXPRESSION_TYPE_VARIABLE:
-        {
-            if (variables[variable_id(expr->variable.value)] != NULL) {
-                *expr = *variables[variable_id(expr->variable.value)];
-            }
-        }
-        case EXPRESSION_TYPE_NUMBER:
-            break;
-        case EXPRESSION_TYPE_PREFIX:
-        {
-            if (expression_simplify_vars(expr->prefix.right, variables)) {
-                return 1;
-            }
-            if (expr->prefix.right->type == EXPRESSION_TYPE_NUMBER) {
-                SCALAR_DEFINE(result);
-
-                switch (expr->prefix.prefix) {
-                    case '+':
-                        SCALAR_SET(expr->prefix.right->number.value, result);
-                        break;
-                    case '-':
-                        SCALAR_NEGATE(expr->prefix.right->number.value, result);
-                        break;
-                    default:
-                        printf("ERROR: invalid prefix '%c'", expr->prefix.prefix);
-                        return 1;
-                }
-                expression_free(expr->prefix.right);
-
-                expr->type = EXPRESSION_TYPE_NUMBER;
-                SCALAR_SET(result, expr->number.value);
-            }
-            break;
-        }
-        case EXPRESSION_TYPE_OPERATOR:
-        {
-            if (expression_simplify_vars(expr->operator.right, variables)) {
-                return 1;
-            }
-            if (expression_simplify_vars(expr->operator.left, variables)) {
-                return 1;
-            }
-            if (expr->operator.right->type == EXPRESSION_TYPE_NUMBER
-                && expr->operator.left->type == EXPRESSION_TYPE_NUMBER) {
-                SCALAR_DEFINE(result);
-
-                switch (expr->operator.infix) {
-                    case '+':
-                        SCALAR_ADD(expr->operator.left->number.value, expr->operator.right->number.value, result);
-                        break;
-                    case '-':
-                        SCALAR_SUB(expr->operator.left->number.value, expr->operator.right->number.value, result);
-                        break;
-                    case '/':
-                        SCALAR_DIV(expr->operator.left->number.value, expr->operator.right->number.value, result);
-                        break;
-                    case '*':
-                        SCALAR_MUL(expr->operator.left->number.value, expr->operator.right->number.value, result);
-                        break;
-                    case '^':
-                        SCALAR_POW(expr->operator.left->number.value, expr->operator.right->number.value, result);
-                        break;
-                    case '=':
-                    case '>':
-                    case '<':
-                        return expression_to_bool(expr);
-                    default:
-                        printf("ERROR: invalid operator '%c'", expr->operator.infix);
-                        return 1;
-                }
-                expression_free(expr->operator.left);
-                expression_free(expr->operator.right);
-
-                expr->type = EXPRESSION_TYPE_NUMBER;
-                SCALAR_SET(result, expr->number.value);
-            }
-            break;
-        }
-    }
-    return 0;
-}
-
-int expression_simplify(expression_t* expr) {
-    expression_t* variables[26 * 2];
-    memset(&variables[0], 0, 26 * 2 *sizeof(expression_t*));
-
-    return expression_simplify_vars(expr, &variables[0]);
-}
-
-int expression_to_bool(expression_t* expr) {
+error_t expression_to_bool(expression_t* expr) {
     switch (expr->type) {
         case EXPRESSION_TYPE_NUMBER:
-            return 1;
+            return ERROR_CANNOT_COMPARE;
         case EXPRESSION_TYPE_PREFIX:
-            return 1;
+            return ERROR_CANNOT_COMPARE;
         case EXPRESSION_TYPE_VARIABLE:
-            return 1;
+            return ERROR_CANNOT_COMPARE;
         case EXPRESSION_TYPE_OPERATOR:
         {
             if (expr->operator.left->type != EXPRESSION_TYPE_NUMBER ||
                 expr->operator.right->type != EXPRESSION_TYPE_NUMBER) {
-                    return 1;
+                    return ERROR_CANNOT_COMPARE;
             }
+
             int len = SCALAR_REQUIRED_CHARS(expr->operator.left->number.value);
             int len1 = SCALAR_REQUIRED_CHARS(expr->operator.right->number.value);
 
@@ -219,15 +132,105 @@ int expression_to_bool(expression_t* expr) {
                     SCALAR_SET_INT(x == 0, expr->number.value);
                     break;
                 default:
-                    return 1;
+                    return ERROR_INVALID_OPERATOR;
             }
             expr->type = EXPRESSION_TYPE_NUMBER;
-            return 0;
         }
     }
+    return ERROR_NO_ERROR;
+}
+
+error_t expression_simplify_vars(expression_t* expr, expression_t** variables) {
+    switch (expr->type) {
+        case EXPRESSION_TYPE_VARIABLE:
+        {
+            if (variables[variable_id(expr->variable.value)] != NULL)
+                *expr = *variables[variable_id(expr->variable.value)];
+        }
+        case EXPRESSION_TYPE_NUMBER:
+            break;
+        case EXPRESSION_TYPE_PREFIX:
+        {
+            error_t err = expression_simplify_vars(expr->prefix.right, variables);
+            if (err) return err;
+
+            if (expr->prefix.right->type == EXPRESSION_TYPE_NUMBER) {
+                SCALAR_DEFINE(result);
+
+                switch (expr->prefix.prefix) {
+                    case '+':
+                        SCALAR_SET(expr->prefix.right->number.value, result);
+                        break;
+                    case '-':
+                        SCALAR_NEGATE(expr->prefix.right->number.value, result);
+                        break;
+                    default:
+                        return ERROR_INVALID_PREFIX;
+                }
+                expression_free(expr->prefix.right);
+
+                expr->type = EXPRESSION_TYPE_NUMBER;
+                SCALAR_SET(result, expr->number.value);
+            }
+            break;
+        }
+        case EXPRESSION_TYPE_OPERATOR:
+        {
+            error_t err = expression_simplify_vars(expr->operator.right, variables);
+            if (err) return err;
+
+            err = expression_simplify_vars(expr->operator.left, variables);
+            if (err) return err;
+
+
+            if (expr->operator.right->type == EXPRESSION_TYPE_NUMBER
+                && expr->operator.left->type == EXPRESSION_TYPE_NUMBER) {
+                SCALAR_DEFINE(result);
+
+                switch (expr->operator.infix) {
+                    case '+':
+                        SCALAR_ADD(expr->operator.left->number.value, expr->operator.right->number.value, result);
+                        break;
+                    case '-':
+                        SCALAR_SUB(expr->operator.left->number.value, expr->operator.right->number.value, result);
+                        break;
+                    case '/':
+                        SCALAR_DIV(expr->operator.left->number.value, expr->operator.right->number.value, result);
+                        break;
+                    case '*':
+                    case '(':
+                        SCALAR_MUL(expr->operator.left->number.value, expr->operator.right->number.value, result);
+                        break;
+                    case '^':
+                        SCALAR_POW(expr->operator.left->number.value, expr->operator.right->number.value, result);
+                        break;
+                    case '=':
+                    case '>':
+                    case '<':
+                        return expression_to_bool(expr);
+                    default:
+                        return ERROR_INVALID_OPERATOR;
+                }
+                expression_free(expr->operator.left);
+                expression_free(expr->operator.right);
+
+                expr->type = EXPRESSION_TYPE_NUMBER;
+                SCALAR_SET(result, expr->number.value);
+            }
+            break;
+        }
+    }
+    return ERROR_NO_ERROR;
 }
 
 int expression_isolate_variable(expression_t* expr, variable_t var) {
     // TODO(IanS5)
     return 1;
+}
+
+void expression_simplify(expression_t* expr) {
+    expression_t* variables[26 * 2];
+    memset(&variables[0], 0, 26 * 2 *sizeof(expression_t*));
+
+    expression_simplify_vars(expr, &variables[0]);
 }

@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "simplify/scalar.h"
+#include "simplify/errors.h"
 
 typedef char                  operator_t;
 typedef char                  variable_t;
@@ -21,6 +22,7 @@ enum expression_type {
     EXPRESSION_TYPE_PREFIX,
     EXPRESSION_TYPE_OPERATOR,
     EXPRESSION_TYPE_VARIABLE,
+    EXPRESSION_TYPE_PARENS,
 };
 
 
@@ -90,10 +92,9 @@ static inline expression_t* new_operator_expression(expression_t* left, operator
     return expr;
 }
 
-int expression_to_bool(expression_t*);
 void expression_free(expression_t* expr);
-int expression_simplify(expression_t* expr);
-int expression_isolate_variable(expression_t* expr, variable_t var);
-void expression_print(expression_t* expr);
+void expression_clean(expression_t* expr);
+void expression_simplify(expression_t* expr);
+error_t expression_print(expression_t* expr);
 
 #endif  // SIMPLIFY_EXPRESSION_H_

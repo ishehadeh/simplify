@@ -1,0 +1,38 @@
+// Copyright Ian R. Shehadeh 2018
+
+#ifndef SIMPLIFY_ERRORS_H_
+#define SIMPLIFY_ERRORS_H_
+
+#include <string.h>
+#include <inttypes.h>
+
+#define ERRORED (__g_simplify_error.err != ERROR_NO_ERROR)
+
+typedef enum error error_t;
+
+enum error {
+    ERROR_NO_ERROR,
+    ERROR_INVALID_TOKEN,
+    ERROR_INVALID_CHARACTER,
+    ERROR_INVALID_PREFIX,
+    ERROR_INVALID_OPERATOR,
+    ERROR_INVALID_NUMBER,
+    ERROR_INVALID_IDENTIFIER,
+
+    ERROR_FAILED_TO_ALLOCATE,
+    ERROR_FAILED_TO_REALLOCATE,
+    ERROR_UNABLE_TO_OPEN_FILE,
+    ERROR_FILE_CLOSED,
+    ERROR_NUMBER_IS_NAN,
+    ERROR_NUMBER_IS_INFINITY,
+
+    ERROR_NULL_EXPRESSION,
+    ERROR_CANNOT_COMPARE,
+    ERROR_UNEXPECTED_EOF,
+    ERROR_STRAY_RIGHT_PAREN,
+    ERROR_STRAY_LEFT_PAREN,
+};
+
+const char* error_string(error_t);
+
+#endif  // SIMPLIFY_ERRORS_H_

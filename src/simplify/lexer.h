@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "simplify/errors.h"
+
 #ifndef LEXER_BUFFER_MAX_CAPACITY
 #   define LEXER_BUFFER_MAX_CAPACITY (1024 * 4)
 #endif
@@ -83,6 +85,6 @@ static inline int isident(char c) {
             || c == '_';
 }
 
-token_t lexer_next(lexer_t* lexer);
+error_t lexer_next(lexer_t*, token_t*);
 
 #endif  // SIMPLIFY_LEXER_H_
