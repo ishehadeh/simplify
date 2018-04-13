@@ -239,7 +239,7 @@ error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
     return ERROR_NO_ERROR;
 }
 
-error_t expression_isolate_variable(expression_t* expr, expression_t** target, variable_t var) {
+error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t** target, variable_t var) {
     switch (expr->type) {
         case EXPRESSION_TYPE_NULL:
         case EXPRESSION_TYPE_NUMBER:
@@ -247,22 +247,22 @@ error_t expression_isolate_variable(expression_t* expr, expression_t** target, v
         case EXPRESSION_TYPE_OPERATOR:
         {
             if (expr->operator.infix == '=') {
-                error_t err = expression_isolate_variable(expr->operator.left, &expr->operator.right, var);
+                error_t err = _expression_isolate_variable_recursive(expr->operator.left, &expr->operator.right, var);
                 if (err && err != ERROR_VARIABLE_NOT_PRESENT)
                     return err;
 
                 if (err) {
-                    err = expression_isolate_variable(expr->operator.right, &expr->operator.left, var);
+                    err = _expression_isolate_variable_recursive(expr->operator.right, &expr->operator.left, var);
                 }
                 return err;
             }
 
-            error_t err = expression_isolate_variable(expr->operator.left, target, var);
+            error_t err = _expression_isolate_variable_recursive(expr->operator.left, target, var);
             if (err && err != ERROR_VARIABLE_NOT_PRESENT)
                 return err;
 
             if (err) {
-                err = expression_isolate_variable(expr->operator.right, target, var);
+                err = _expression_isolate_variable_recursive(expr->operator.right, target, var);
                 if (err) return err;
             }
 
@@ -321,10 +321,31 @@ error_t expression_isolate_variable(expression_t* expr, expression_t** target, v
 }
 
 error_t expression_simplify(expression_t* expr, scope_t* scope) {
-    error_t err = _expression_simplify_recursive(expr, scope);
-    if (err) return err;
+    return  _expression_simplify_recursive(expr, scope);
+}
 
-    err = expression_isolate_variable(expr, NULL, "x");
-    if (err) return err;
-    return _expression_simplify_recursive(expr, scope);
+error_t expression_isolate_variable(expression_t* expr, variable_t var) {
+    switch (expr->type) {
+        case EXPRESSION_TYPE_OPERATOR:
+        {
+            if (expr->operator.infix == '=')
+                break;
+        }
+        case EXPRESSION_TYPE_NULL:
+        case EXPRESSION_TYPE_NUMBER:
+        case EXPRESSION_TYPE_PREFIX:
+        case EXPRESSION_TYPE_VARIABLE:
+        {
+            expression_t* left = new_expression();
+            memmove(left, expr, sizeof(expression_t));
+            expr->type = EXPRESSION_TYPE_OPERATOR;
+            expr->operator.left = left;
+            scalar_t zero;
+            SCALAR_SET_INT(0, zero);
+            expr->operator.right = new_number_expression(zero);
+            break;
+        }
+    }
+
+    return _expression_isolate_variable_recursive(expr, NULL, var);
 }

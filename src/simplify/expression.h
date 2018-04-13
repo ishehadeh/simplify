@@ -105,7 +105,7 @@ void expression_free(expression_t* expr);
 void expression_clean(expression_t* expr);
 error_t expression_simplify(expression_t* expr, scope_t* scope);
 error_t expression_print(expression_t* expr);
-
+error_t expression_isolate_variable(expression_t* expr, variable_t var);
 
 static inline void scope_init(scope_t* scope) {
     rbtree_init(&scope->variables);

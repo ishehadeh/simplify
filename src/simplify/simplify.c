@@ -19,7 +19,9 @@ int main(int argc, char** argv) {
     lexer_t lexer;
     expression_t expression;
     expression_parser_t parser;
+    scope_t scope;
 
+    scope_init(&scope);
     if (argc > 1) {
         if (lexer_init_from_string(&lexer, argv[1])) {
             printf("failed to initialize parser\n");
@@ -32,25 +34,30 @@ int main(int argc, char** argv) {
     expression_parser_init(&parser, &lexer);
     error_t err = parse_expression(&parser, &expression);
 
-    if (err) {
-        printf("simplify [%d]: %s", lexer.buffer_position, error_string(err));
-    } else {
-        scope_t scope;
-        scope_init(&scope);
+    if (err) goto error;
+
+    err = expression_simplify(&expression, &scope);
+    if (err) goto error;
+
+    if (argc > 2) {
+        err = expression_isolate_variable(&expression, argv[2]);
+        if (err) goto error;
 
         err = expression_simplify(&expression, &scope);
-        if (err)
-            printf("simplify: %s", error_string(err));
-        else
-            expression_print(&expression);
-        puts("");
-
-        scope_clean(&scope);
+        if (err) goto error;
     }
+    expression_print(&expression);
+    puts("");
+    goto cleanup;
 
 
+error:
+    printf("simplify: %s\n", error_string(err));
+
+cleanup:
     expression_clean(&expression);
     lexer_clean(&lexer);
+    scope_clean(&scope);
 
 #if defined(HAVE_MPFR) && !defined(SCALAR_INTEGER)
     mpfr_free_cache();
