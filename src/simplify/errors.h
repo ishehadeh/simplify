@@ -66,9 +66,9 @@ static inline const char* error_string(error_t err) {
         case ERROR_UNEXPECTED_EOF:
             return "unexpected end of equation";
         case ERROR_STRAY_RIGHT_PAREN:
-            return "random right parenthese in expression";
+            return "random right parentheses in expression";
         case ERROR_STRAY_LEFT_PAREN:
-            return "random left parenthese in expression";
+            return "random left parentheses in expression";
     }
 }
 

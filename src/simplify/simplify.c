@@ -36,6 +36,7 @@ int main(int argc, char** argv) {
     } else {
         expression_simplify(&expression);
         expression_print(&expression);
+        puts("");
     }
 
     expression_clean(&expression);
@@ -44,7 +45,6 @@ int main(int argc, char** argv) {
 #if defined(HAVE_MPFR) && !defined(SCALAR_INTEGER)
     mpfr_free_cache();
 #endif
-    puts("");
 
     return 0;
 }

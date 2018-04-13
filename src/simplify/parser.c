@@ -22,7 +22,7 @@ inline static operator_precedence_t operator_precedence(operator_t op) {
         case '^':
             return OPERATOR_PRECEDENCE_EXPONENT;
         case '(':
-            return OPERATOR_PRECEDENCE_MINIMUM;
+            return OPERATOR_PRECEDENCE_MAXIMUM;
         default:
             // TODO(IanS5): Somehow throw an error here
             return OPERATOR_PRECEDENCE_MINIMUM;
@@ -84,12 +84,17 @@ error_t parse_expression_prec(expression_parser_t* parser, expression_t* express
 
     operator_t infix = *token.start;
     while (left && token.type != TOKEN_TYPE_EOF && precedence < operator_precedence(infix)) {
+
         expression_t* right_operand = new_expression();
-        err = parse_expression_prec(parser, right_operand, operator_precedence(infix));
+        if (token.type == TOKEN_TYPE_LEFT_PAREN) {
+            ++parser->missing_right_parens;
+            err = parse_expression_prec(parser, right_operand, OPERATOR_PRECEDENCE_MINIMUM);
+        } else {
+            err = parse_expression_prec(parser, right_operand, operator_precedence(infix));
+        }
         if (err) return err;
 
         memmove(&token, &parser->previous, sizeof(token_t));
-
         if (token.type == TOKEN_TYPE_RIGHT_PAREN) {
             if (parser->missing_right_parens <= 0)
                 return ERROR_STRAY_RIGHT_PAREN;
