@@ -327,10 +327,7 @@ error_t expression_simplify(expression_t* expr, scope_t* scope) {
 error_t expression_isolate_variable(expression_t* expr, variable_t var) {
     switch (expr->type) {
         case EXPRESSION_TYPE_OPERATOR:
-        {
-            if (expr->operator.infix == '=')
-                break;
-        }
+            if (expr->operator.infix == '=') break;
         case EXPRESSION_TYPE_NULL:
         case EXPRESSION_TYPE_NUMBER:
         case EXPRESSION_TYPE_PREFIX:
@@ -343,6 +340,7 @@ error_t expression_isolate_variable(expression_t* expr, variable_t var) {
             scalar_t zero;
             SCALAR_SET_INT(0, zero);
             expr->operator.right = new_number_expression(zero);
+            expr->operator.infix = '=';
             break;
         }
     }
