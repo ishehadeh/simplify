@@ -239,11 +239,92 @@ error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
     return ERROR_NO_ERROR;
 }
 
-int expression_isolate_variable(expression_t* expr, variable_t var) {
-    // TODO(IanS5)
-    return 1;
+error_t expression_isolate_variable(expression_t* expr, expression_t** target, variable_t var) {
+    switch (expr->type) {
+        case EXPRESSION_TYPE_NULL:
+        case EXPRESSION_TYPE_NUMBER:
+            return ERROR_VARIABLE_NOT_PRESENT;
+        case EXPRESSION_TYPE_OPERATOR:
+        {
+            if (expr->operator.infix == '=') {
+                error_t err = expression_isolate_variable(expr->operator.left, &expr->operator.right, var);
+                if (err && err != ERROR_VARIABLE_NOT_PRESENT)
+                    return err;
+
+                if (err) {
+                    err = expression_isolate_variable(expr->operator.right, &expr->operator.left, var);
+                }
+                return err;
+            }
+
+            error_t err = expression_isolate_variable(expr->operator.left, target, var);
+            if (err && err != ERROR_VARIABLE_NOT_PRESENT)
+                return err;
+
+            if (err) {
+                err = expression_isolate_variable(expr->operator.right, target, var);
+                if (err) return err;
+            }
+
+            variable_t _var;
+            expression_t* new_target = new_expression();
+            new_target->type = EXPRESSION_TYPE_OPERATOR;
+            if (expr->operator.left->type == EXPRESSION_TYPE_VARIABLE) {
+                new_target->operator.left = *target;
+                new_target->operator.right = expr->operator.right;
+                _var = expr->operator.left->variable.value;
+            } else {
+                new_target->operator.right = *target;
+                new_target->operator.left = expr->operator.left;
+                _var = expr->operator.right->variable.value;
+            }
+
+            switch (expr->operator.infix) {
+                case '+':
+                    new_target->operator.infix = '-';
+                    break;
+                case '-':
+                    new_target->operator.infix = '+';
+                    break;
+                case '/':
+                    new_target->operator.infix = '*';
+                    break;
+                case '*':
+                case '(':
+                    new_target->operator.infix = '/';
+                    break;
+                case '^':
+                    printf("TODO(IanS5): roots");
+                    exit(1);
+                    break;
+                default:
+                    return ERROR_INVALID_OPERATOR;
+            }
+            expr->type = EXPRESSION_TYPE_VARIABLE;
+            expr->variable.value = _var;
+            *target = new_target;
+            break;
+        }
+        case EXPRESSION_TYPE_PREFIX:
+        {
+            printf("TODO(IanS5): isolate with prefix");
+            exit(1);
+        }
+        case EXPRESSION_TYPE_VARIABLE:
+            if (strcmp(var, expr->variable.value) == 0) {
+                return ERROR_NO_ERROR;
+            } else {
+                return ERROR_VARIABLE_NOT_PRESENT;
+            }
+    }
+    return ERROR_NO_ERROR;
 }
 
 error_t expression_simplify(expression_t* expr, scope_t* scope) {
+    error_t err = _expression_simplify_recursive(expr, scope);
+    if (err) return err;
+
+    err = expression_isolate_variable(expr, NULL, "x");
+    if (err) return err;
     return _expression_simplify_recursive(expr, scope);
 }

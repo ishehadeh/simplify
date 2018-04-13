@@ -38,8 +38,11 @@ int main(int argc, char** argv) {
         scope_t scope;
         scope_init(&scope);
 
-        expression_simplify(&expression, &scope);
-        expression_print(&expression);
+        err = expression_simplify(&expression, &scope);
+        if (err)
+            printf("simplify: %s", error_string(err));
+        else
+            expression_print(&expression);
         puts("");
 
         scope_clean(&scope);
