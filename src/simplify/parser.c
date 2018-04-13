@@ -47,6 +47,7 @@ error_t parse_expression_prec(expression_parser_t* parser, expression_t* express
             if (err) return err;
 
             left = new_prefix_expression(operator, operand);
+            memmove(&token, &parser->previous, sizeof(token_t));
             break;
         }
         case TOKEN_TYPE_NUMBER:
@@ -76,10 +77,10 @@ error_t parse_expression_prec(expression_parser_t* parser, expression_t* express
             ++parser->missing_right_parens;
             return parse_expression_prec(parser, expression, OPERATOR_PRECEDENCE_MINIMUM);
         case TOKEN_TYPE_EOF:
-            return ERROR_UNEXPECTED_EOF;
+            return ERROR_NO_ERROR;
         default:
             return ERROR_INVALID_TOKEN;
-        }
+    }
 
     operator_t infix = *token.start;
     while (left && token.type != TOKEN_TYPE_EOF && precedence < operator_precedence(infix)) {
