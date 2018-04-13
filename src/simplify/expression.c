@@ -20,18 +20,28 @@ void expression_clean(expression_t* expr) {
         case EXPRESSION_TYPE_NUMBER:
             SCALAR_CLEAN(expr->number.value);
             break;
+        case EXPRESSION_TYPE_VARIABLE:
+            free(expr->variable.value);
+            break;
         default:
             break;
     }
 }
 
-int variable_id(variable_t var) {
-    if (var <= 'Z' && var >= 'A') {
-        return var - 'A' + 25;
-    } else if (var <= 'z' && var >= 'a') {
-        return var - 'a';
+expression_t* expression_copy(expression_t* expr) {
+    switch (expr->type) {
+        case EXPRESSION_TYPE_PREFIX:
+            return new_prefix_expression(expr->prefix.prefix, expression_copy(expr->prefix.right));
+        case EXPRESSION_TYPE_OPERATOR:
+            return new_operator_expression(expression_copy(expr->operator.left),
+                    expr->operator.infix, expression_copy(expr->operator.right));
+        case EXPRESSION_TYPE_NUMBER:
+            return new_number_expression(expr->number.value);
+        case EXPRESSION_TYPE_VARIABLE:
+            return new_variable_expression(expr->variable.value, strlen(expr->variable.value));
+        default:
+            return new_expression();
     }
-    return -1;
 }
 
 error_t expression_print(expression_t* expr) {
@@ -60,7 +70,7 @@ error_t expression_print(expression_t* expr) {
             break;
         }
         case EXPRESSION_TYPE_VARIABLE:
-            printf("%c", expr->variable.value);
+            printf("%s", expr->variable.value);
             break;
         case EXPRESSION_TYPE_OPERATOR:
             expression_print(expr->operator.left);
@@ -140,18 +150,25 @@ error_t expression_to_bool(expression_t* expr) {
     return ERROR_NO_ERROR;
 }
 
-error_t expression_simplify_vars(expression_t* expr, expression_t** variables) {
+error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
     switch (expr->type) {
         case EXPRESSION_TYPE_VARIABLE:
         {
-            if (variables[variable_id(expr->variable.value)] != NULL)
-                *expr = *variables[variable_id(expr->variable.value)];
+            expression_t* var_value;
+            error_t err = rbtree_search(&scope->variables, expr->variable.value, (void**)&var_value);
+            if (!err) {
+                var_value = expression_copy(var_value);
+                err = _expression_simplify_recursive(var_value, scope);
+                if (err) return err;
+                memmove(expr, var_value, sizeof(expression_t));
+            }
+            break;
         }
         case EXPRESSION_TYPE_NUMBER:
             break;
         case EXPRESSION_TYPE_PREFIX:
         {
-            error_t err = expression_simplify_vars(expr->prefix.right, variables);
+            error_t err = _expression_simplify_recursive(expr->prefix.right, scope);
             if (err) return err;
 
             if (expr->prefix.right->type == EXPRESSION_TYPE_NUMBER) {
@@ -176,12 +193,11 @@ error_t expression_simplify_vars(expression_t* expr, expression_t** variables) {
         }
         case EXPRESSION_TYPE_OPERATOR:
         {
-            error_t err = expression_simplify_vars(expr->operator.right, variables);
+            error_t err = _expression_simplify_recursive(expr->operator.left, scope);
             if (err) return err;
 
-            err = expression_simplify_vars(expr->operator.left, variables);
+            err = _expression_simplify_recursive(expr->operator.right, scope);
             if (err) return err;
-
 
             if (expr->operator.right->type == EXPRESSION_TYPE_NUMBER
                 && expr->operator.left->type == EXPRESSION_TYPE_NUMBER) {
@@ -228,9 +244,6 @@ int expression_isolate_variable(expression_t* expr, variable_t var) {
     return 1;
 }
 
-void expression_simplify(expression_t* expr) {
-    expression_t* variables[26 * 2];
-    memset(&variables[0], 0, 26 * 2 *sizeof(expression_t*));
-
-    expression_simplify_vars(expr, &variables[0]);
+error_t expression_simplify(expression_t* expr, scope_t* scope) {
+    return _expression_simplify_recursive(expr, scope);
 }

@@ -71,7 +71,12 @@ error_t parse_expression_prec(expression_parser_t* parser, expression_t* express
             break;
         }
         case TOKEN_TYPE_IDENTIFIER:
-            left = new_variable_expression(*token.start);
+            left = new_variable_expression(token.start, token.length);
+            err = lexer_next(parser->lexer, &token);
+            if (err) {
+                expression_free(left);
+                return err;
+            }
             break;
         case TOKEN_TYPE_LEFT_PAREN:
             ++parser->missing_right_parens;
@@ -82,9 +87,11 @@ error_t parse_expression_prec(expression_parser_t* parser, expression_t* express
             return ERROR_INVALID_TOKEN;
     }
 
+    if (token.type == TOKEN_TYPE_EOF)
+        goto cleanup;
+
     operator_t infix = *token.start;
     while (left && token.type != TOKEN_TYPE_EOF && precedence < operator_precedence(infix)) {
-
         expression_t* right_operand = new_expression();
         if (token.type == TOKEN_TYPE_LEFT_PAREN) {
             ++parser->missing_right_parens;
@@ -106,11 +113,17 @@ error_t parse_expression_prec(expression_parser_t* parser, expression_t* express
         }
 
         left = new_operator_expression(left, infix, right_operand);
+
+        if (token.type == TOKEN_TYPE_EOF) {
+            goto cleanup;
+        }
         infix = *token.start;
     }
 
+cleanup:
     memmove(&parser->previous, &token, sizeof(token_t));
     *expression = *left;
+    free(left);
 
     return ERROR_NO_ERROR;
 }

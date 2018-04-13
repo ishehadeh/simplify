@@ -81,7 +81,7 @@ static inline void lexer_clean(lexer_t* lexer) {
 static inline int isident(char c) {
     return (c <= 'Z' && c >= 'A')
             || (c <= 'z' && c >= 'a')
-            || (c <= '9' || c >= '0')
+            || (c <= '9' && c >= '0')
             || c == '_';
 }
 

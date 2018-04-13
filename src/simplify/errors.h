@@ -29,6 +29,7 @@ enum error {
     ERROR_UNEXPECTED_EOF,
     ERROR_STRAY_RIGHT_PAREN,
     ERROR_STRAY_LEFT_PAREN,
+    ERROR_NONEXISTANT_KEY,
 };
 
 static inline const char* error_string(error_t err) {
@@ -69,6 +70,8 @@ static inline const char* error_string(error_t err) {
             return "random right parentheses in expression";
         case ERROR_STRAY_LEFT_PAREN:
             return "random left parentheses in expression";
+        case ERROR_NONEXISTANT_KEY:
+            return "no value associated with key";
     }
 }
 

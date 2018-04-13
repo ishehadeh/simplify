@@ -10,11 +10,13 @@
 
 #include "simplify/scalar.h"
 #include "simplify/errors.h"
+#include "simplify/rbtree/rbtree.h"
 
 typedef char                  operator_t;
-typedef char                  variable_t;
+typedef char*                 variable_t;
 typedef union expression      expression_t;
 typedef enum  expression_type expression_type_t;
+typedef struct scope          scope_t;
 
 enum expression_type {
     EXPRESSION_TYPE_NULL,
@@ -22,9 +24,12 @@ enum expression_type {
     EXPRESSION_TYPE_PREFIX,
     EXPRESSION_TYPE_OPERATOR,
     EXPRESSION_TYPE_VARIABLE,
-    EXPRESSION_TYPE_PARENS,
 };
 
+struct scope {
+    rbtree_t variables;
+    rbtree_t functions;
+};
 
 struct expression_number {
     expression_type_t type;
@@ -61,6 +66,7 @@ union expression {
 static inline expression_t* new_expression() {
     return malloc(sizeof(expression_t));
 }
+
 static inline expression_t* new_number_expression(scalar_t value) {
     expression_t* expr = new_expression();
     expr->type = EXPRESSION_TYPE_NUMBER;
@@ -68,10 +74,13 @@ static inline expression_t* new_number_expression(scalar_t value) {
     return expr;
 }
 
-static inline expression_t* new_variable_expression(variable_t value) {
+static inline expression_t* new_variable_expression(char* value, size_t length) {
     expression_t* expr = new_expression();
     expr->type = EXPRESSION_TYPE_VARIABLE;
-    expr->variable.value = value;
+    expr->variable.value = malloc(length + 1);
+    expr->variable.value[length] = 0;
+    strncpy(expr->variable.value, value, length);
+
     return expr;
 }
 
@@ -94,7 +103,18 @@ static inline expression_t* new_operator_expression(expression_t* left, operator
 
 void expression_free(expression_t* expr);
 void expression_clean(expression_t* expr);
-void expression_simplify(expression_t* expr);
+error_t expression_simplify(expression_t* expr, scope_t* scope);
 error_t expression_print(expression_t* expr);
+
+
+static inline void scope_init(scope_t* scope) {
+    rbtree_init(&scope->variables);
+    rbtree_init(&scope->functions);
+}
+
+static inline void scope_clean(scope_t* scope) {
+    rbtree_clean(&scope->variables, (void(*)(void*))&expression_free);
+    rbtree_clean(&scope->functions, (void(*)(void*))&expression_free);
+}
 
 #endif  // SIMPLIFY_EXPRESSION_H_

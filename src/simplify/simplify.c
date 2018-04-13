@@ -6,6 +6,7 @@
 #include "simplify/lexer.h"
 #include "simplify/errors.h"
 
+
 int main(int argc, char** argv) {
 #if defined(SCALAR_FLOAT)
 #   if defined(HAVE_MPFR)
@@ -34,10 +35,16 @@ int main(int argc, char** argv) {
     if (err) {
         printf("simplify [%d]: %s", lexer.buffer_position, error_string(err));
     } else {
-        expression_simplify(&expression);
+        scope_t scope;
+        scope_init(&scope);
+
+        expression_simplify(&expression, &scope);
         expression_print(&expression);
         puts("");
+
+        scope_clean(&scope);
     }
+
 
     expression_clean(&expression);
     lexer_clean(&lexer);
