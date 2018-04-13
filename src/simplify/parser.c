@@ -91,7 +91,7 @@ error_t parse_expression_prec(expression_parser_t* parser, expression_t* express
         goto cleanup;
 
     operator_t infix = *token.start;
-    while (left && token.type != TOKEN_TYPE_EOF && precedence < operator_precedence(infix)) {
+    while (left && precedence < operator_precedence(infix)) {
         expression_t* right_operand = new_expression();
         if (token.type == TOKEN_TYPE_LEFT_PAREN) {
             ++parser->missing_right_parens;
@@ -109,7 +109,7 @@ error_t parse_expression_prec(expression_parser_t* parser, expression_t* express
             err = lexer_next(parser->lexer, &token);
             if (err) return err;
             --parser->missing_right_parens;
-            precedence = 50;
+            precedence = OPERATOR_PRECEDENCE_MAXIMUM;
         }
 
         left = new_operator_expression(left, infix, right_operand);

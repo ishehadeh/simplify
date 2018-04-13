@@ -98,16 +98,19 @@ error_t lexer_next(lexer_t* lexer, token_t* token) {
             token->type = TOKEN_TYPE_OPERATOR;
             token->start = lexer->buffer + lexer->buffer_position;
             token->length = 1;
+            ++lexer->buffer_position;
             break;
         case '(':
             token->type = TOKEN_TYPE_LEFT_PAREN;
             token->start = lexer->buffer + lexer->buffer_position;
             token->length = 1;
+            ++lexer->buffer_position;
             break;
         case ')':
             token->type = TOKEN_TYPE_RIGHT_PAREN;
             token->start = lexer->buffer + lexer->buffer_position;
             token->length = 1;
+            ++lexer->buffer_position;
             break;
         case 'a' ... 'z':
         case 'A' ... 'Z':
@@ -123,8 +126,6 @@ error_t lexer_next(lexer_t* lexer, token_t* token) {
         default:
             return ERROR_INVALID_CHARACTER;
         }
-
-    ++lexer->buffer_position;
 
     return ERROR_NO_ERROR;
 }
