@@ -81,7 +81,11 @@ error_t parse_expression_prec(expression_parser_t* parser, expression_t* express
             break;
         case TOKEN_TYPE_LEFT_PAREN:
             ++parser->missing_right_parens;
-            return parse_expression_prec(parser, expression, OPERATOR_PRECEDENCE_MINIMUM);
+            left = new_expression();
+            err = parse_expression_prec(parser, left, OPERATOR_PRECEDENCE_MINIMUM);
+            if (err) return err;
+            memmove(&token, &parser->previous, sizeof(token_t));
+            break;
         case TOKEN_TYPE_EOF:
             return ERROR_NO_ERROR;
         default:
