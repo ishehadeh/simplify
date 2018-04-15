@@ -1,4 +1,4 @@
-// Copyright Ian R. Shehadeh 2018
+/* Copyright Ian Shehadeh 2018 */
 
 #include "simplify/lexer.h"
 #include "simplify/errors.h"
@@ -30,7 +30,7 @@ static inline void lexer_advance(lexer_t* lexer) {
 }
 
 static inline int lexer_eof(lexer_t* lexer) {
-    return lexer->buffer_position >= lexer->buffer_length && lexer->source == NULL || lexer_current(lexer) == 0;
+    return lexer->buffer_position >= lexer->buffer_length && (lexer->source == NULL || lexer_current(lexer) == 0);
 }
 
 int lexer_try_extend(lexer_t* lexer) {

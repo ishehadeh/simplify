@@ -1,4 +1,4 @@
-// Copyright Ian R. Shehadeh
+/* Copyright Ian Shehadeh 2018 */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -56,11 +56,10 @@ error_t parse_expression_prec(expression_parser_t* parser, expression_t* express
             scalar_t num;
             SCALAR_INIT(num);
 
-            char* del = alloca(token.length + 1);
+            char del[token.length + 1];
             del[token.length] = 0;
             strncpy(del, token.start, token.length);
-            if (SCALAR_FROM_STRING(del, num))
-                return ERROR_INVALID_NUMBER;
+            SCALAR_FROM_STRING(del, num);
 
             left = new_number_expression(num);
 

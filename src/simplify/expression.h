@@ -1,4 +1,4 @@
-// Copyright Ian R. Shehadeh 2018
+/* Copyright Ian Shehadeh 2018 */
 
 #ifndef SIMPLIFY_EXPRESSION_H_
 #define SIMPLIFY_EXPRESSION_H_
@@ -113,6 +113,10 @@ error_t expression_isolate_variable(expression_t*, variable_t);
 static inline void scope_init(scope_t* scope) {
     rbtree_init(&scope->variables);
     rbtree_init(&scope->functions);
+}
+
+static inline error_t scope_define(scope_t* scope, char* variable, expression_t* value) {
+    return rbtree_insert(&scope->variables, variable, value);
 }
 
 static inline void scope_clean(scope_t* scope) {

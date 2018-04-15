@@ -1,4 +1,4 @@
-// Copyright Ian R.Shehadeh 2018
+/* Copyright Ian Shehadeh 2018 */
 
 #include <string.h>
 #include <stdlib.h>

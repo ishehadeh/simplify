@@ -1,4 +1,4 @@
-// Copyright Ian R. Shehadeh 2018
+/* Copyright Ian Shehadeh 2018 */
 
 #ifndef SIMPLIFY_LEXER_H_
 #define SIMPLIFY_LEXER_H_

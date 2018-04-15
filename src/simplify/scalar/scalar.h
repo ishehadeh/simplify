@@ -1,19 +1,19 @@
-// Copyright Ian R. Shehadeh 2018
+/* Copyright Ian Shehadeh 2018 */
 
 #ifndef SIMPLIFY_SCALAR_SCALAR_H_
 #define SIMPLIFY_SCALAR_SCALAR_H_
 
 
-static char* __g_nan_string = "NAN";
-static char* __g_inf_string = "INF";
+extern char* __g_nan_string;
+extern char* __g_inf_string;
 
 
-// Make the default float precision 32
+/* Make the default float precision 32 */
 #if !defined(FLOAT_PRECISION)
 #   define FLOAT_PRECISION 32
 #endif
 
-// Make the default scalar type a float
+/* Make the default scalar type a float */
 #if !defined(SCALAR_FLOAT) && !defined(SCALAR_INTEGER)
 #   define SCALAR_FLOAT 1
 #endif

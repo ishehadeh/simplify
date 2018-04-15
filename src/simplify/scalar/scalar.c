@@ -1,13 +1,16 @@
-// Copyright Ian R. Shehadeh 2018
+/* Copyright Ian Shehadeh 2018 */
 
 #include <string.h>
 #include <math.h>
 
 #include "simplify/scalar/scalar.h"
 
+char* __g_nan_string = "NAN";
+char* __g_inf_string = "INF";
+
 // TODO(IanS5): Cleanup this function
 char* _approximate_number(char* str, int min_reps) {
-    size_t len = strlen(str);
+    int len = strlen(str);
 
     int deci;
     for (deci = 0; str[deci] && str[deci] != '.'; ++deci) {}
@@ -18,8 +21,6 @@ char* _approximate_number(char* str, int min_reps) {
     ++deci;
 
     int chain = 0;
-    char* chain_start = str + deci;
-
     int i;
     for (i = deci; str[i] >= '0' && str[i] <= '9'; ++i) {
         if (str[i] == '0') {
@@ -73,7 +74,6 @@ char* _approximate_number(char* str, int min_reps) {
                 break;
             }
             last = str[i];
-            chain_start = str + i;
         }
         if (str[i] == 0) {
             break;
@@ -96,8 +96,6 @@ char* ltoa(long x, char* c) {
         c[i++] = (x % 10) + '0';
         x /= 10;
     }
-
-    int ret = i;
 
     for (int j = 0, k = i; k > j; ++j, --k) {
         c[k] ^= c[j];

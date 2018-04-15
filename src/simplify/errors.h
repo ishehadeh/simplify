@@ -1,4 +1,4 @@
-// Copyright Ian R. Shehadeh 2018
+/* Copyright Ian Shehadeh 2018 */
 
 #ifndef SIMPLIFY_ERRORS_H_
 #define SIMPLIFY_ERRORS_H_
@@ -32,6 +32,8 @@ enum error {
     ERROR_NONEXISTANT_KEY,
     ERROR_VARIABLE_NOT_PRESENT,
     ERROR_CANNOT_PERFORM_VARIABLE_ROOTS,
+    ERROR_INVALID_ASSIGNMENT_EXPRESSION,
+    ERROR_UNRECOGNIZED_ARGUMENT,
 };
 
 static inline const char* error_string(error_t err) {
@@ -78,7 +80,12 @@ static inline const char* error_string(error_t err) {
             return "that variable was not found in this expression";
         case ERROR_CANNOT_PERFORM_VARIABLE_ROOTS:
             return "simplify was not compiled with support for variable root operations";
+        case ERROR_INVALID_ASSIGNMENT_EXPRESSION:
+            return "expected an expression in the form of VARIABLE=EXPRESSION";
+        case ERROR_UNRECOGNIZED_ARGUMENT:
+            return "invalid command line argument";
     }
+    return "unkown error type";
 }
 
 

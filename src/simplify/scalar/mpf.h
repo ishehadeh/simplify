@@ -1,4 +1,4 @@
-// Copyright Ian R. Shehadeh 2018
+/* Copyright Ian Shehadeh 2018 */
 
 #ifndef SIMPLIFY_SCALAR_MPF_H_
 #define SIMPLIFY_SCALAR_MPF_H_
@@ -44,8 +44,8 @@ typedef mpf_t scalar_t;
 #define SCALAR_REQUIRED_CHARS(X) _scalar_get_size(X)
 #define SCALAR_TO_STRING(X, Z)   _scalar_to_string(X, Z)
 #define SCALAR_FROM_STRING(X, Z) mpf_set_str((Z), (X), 10)
-#define SCALAR_SET_INT(X, Z)     mpf_init_set_si(Z, X)
-#define SCALAR_SET_DOUBLE(X, Z)  mpf_init_set_d(Z, X)
+#define SCALAR_SET_INT(X, Z)     mpf_set_si(Z, X)
+#define SCALAR_SET_DOUBLE(X, Z)  mpf_set_d(Z, X)
 
 
 static inline void _scalar_pow(scalar_t x, scalar_t y, scalar_t z) {

@@ -1,4 +1,4 @@
-// Copyright Ian R. Shehadeh 2018
+/* Copyright Ian Shehadeh 2018 */
 
 #ifndef SIMPLIFY_RBTREE_RBTREE_H_
 #define SIMPLIFY_RBTREE_RBTREE_H_

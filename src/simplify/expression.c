@@ -1,4 +1,4 @@
-// Copyright Ian R. Shehadeh 2018
+/* Copyright Ian Shehadeh 2018 */
 
 #include "simplify/expression.h"
 #include "simplify/errors.h"
@@ -52,21 +52,12 @@ error_t expression_print(expression_t* expr) {
         case EXPRESSION_TYPE_NUMBER:
         {
             int len = SCALAR_REQUIRED_CHARS(expr->number.value);
-            char* buf = NULL;
-
-            if (len < 256) {
-                buf = alloca(len + 1);
-            } else {
-                buf = malloc(len + 1);
-            }
-
+            char* buf = malloc(len + 1);
             buf[len] = 0;
 
             SCALAR_TO_STRING(expr->number.value, buf);
             printf("%s", buf);
-            if (len >= 256) {
-                free(buf);
-            }
+            free(buf);
             break;
         }
         case EXPRESSION_TYPE_VARIABLE:
@@ -92,6 +83,7 @@ error_t expression_print(expression_t* expr) {
 
 error_t expression_to_bool(expression_t* expr) {
     switch (expr->type) {
+        case EXPRESSION_TYPE_NULL:
         case EXPRESSION_TYPE_NUMBER:
             return ERROR_CANNOT_COMPARE;
         case EXPRESSION_TYPE_PREFIX:
@@ -148,7 +140,6 @@ error_t expression_to_bool(expression_t* expr) {
                     SCALAR_SET_INT(x == 0, expr->number.value);
                     break;
                 default:
-                    SCALAR_CLEAN(expr->number.value);
                     return ERROR_INVALID_OPERATOR;
             }
         }
@@ -158,6 +149,8 @@ error_t expression_to_bool(expression_t* expr) {
 
 error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
     switch (expr->type) {
+        case EXPRESSION_TYPE_NULL:
+            return ERROR_NULL_EXPRESSION;
         case EXPRESSION_TYPE_VARIABLE:
         {
             expression_t* var_value;
@@ -288,9 +281,11 @@ int _expression_has_variable_recursive(expression_t* expr, variable_t var) {
         case EXPRESSION_TYPE_PREFIX:
             if (_expression_has_variable_recursive(expr->operator.right, var))
                 return 1;
+            return 0;
         case EXPRESSION_TYPE_VARIABLE:
             return strcmp(var, expr->variable.value) == 0;
     }
+    return 0;
 }
 
 error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t** target, variable_t var) {
@@ -315,7 +310,6 @@ error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t*
                 return ERROR_NO_ERROR;
             }
 
-            variable_t _var;
             expression_t* new_target = new_expression();
             new_target->type = EXPRESSION_TYPE_OPERATOR;
             if (_expression_has_variable_recursive(expr->operator.left, var)) {
@@ -389,14 +383,7 @@ error_t expression_simplify(expression_t* expr, scope_t* scope) {
 }
 
 error_t expression_isolate_variable(expression_t* expr, variable_t var) {
-    switch (expr->type) {
-        case EXPRESSION_TYPE_OPERATOR:
-            if (expr->operator.infix == '=') break;
-        case EXPRESSION_TYPE_NULL:
-        case EXPRESSION_TYPE_NUMBER:
-        case EXPRESSION_TYPE_PREFIX:
-        case EXPRESSION_TYPE_VARIABLE:
-        {
+    if ( !(expr->type == EXPRESSION_TYPE_OPERATOR && expr->operator.infix == '=') ) {
             expression_t* left = new_expression();
             memmove(left, expr, sizeof(expression_t));
             expr->type = EXPRESSION_TYPE_OPERATOR;
@@ -405,8 +392,6 @@ error_t expression_isolate_variable(expression_t* expr, variable_t var) {
             SCALAR_SET_INT(0, zero);
             expr->operator.right = new_number_expression(zero);
             expr->operator.infix = '=';
-            break;
-        }
     }
 
     return _expression_isolate_variable_recursive(expr, NULL, var);

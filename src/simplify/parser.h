@@ -1,4 +1,4 @@
-// Copyright Ian R. Shehadeh
+/* Copyright Ian Shehadeh 2018 */
 
 #ifndef SIMPLIFY_PARSER_H_
 #define SIMPLIFY_PARSER_H_

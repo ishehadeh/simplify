@@ -1,4 +1,4 @@
-// Copyright Ian R. Shehadeh 2018
+/* Copyright Ian Shehadeh 2018 */
 
 #ifndef SIMPLIFY_SCALAR_BUILTINS_H_
 #define SIMPLIFY_SCALAR_BUILTINS_H_
@@ -21,7 +21,7 @@
 #   define SCALAR_POW(X, Y, Z) ((Z) = powl(X, Y))
 #   define SCALAR_TO_STRING(X, Z)   ltoa(X, Z)
 #   define SCALAR_COMPARE(X, Y)     (X > Y ? 1 : X < Y ? -1 : 0)
-#   define SCALAR_FROM_STRING(X, Z) ((Z) = strtol(X, NULL, 10), 0)
+#   define SCALAR_FROM_STRING(X, Z) ((Z) = strtol(X, NULL, 10))
 
 #elif defined(SCALAR_FLOAT)
 #   define SCALAR_FEATURES                                                                                     \
@@ -35,7 +35,7 @@
 
     typedef double scalar_t;
 
-#   define SCALAR_FROM_STRING(X, Z) ((Z) = strtod(X, NULL), 0)
+#   define SCALAR_FROM_STRING(X, Z) ((Z) = strtod(X, NULL))
 #   define SCALAR_POW(X, Y, Z)      ((Z) = pow(X, Y))
 #   define SCALAR_TO_STRING(X, Z)   dtoa(X, Z)
 #   define SCALAR_REQUIRED_CHARS(X) ((X) == 0 ? 3 : 64 + FLOAT_PRECISION)

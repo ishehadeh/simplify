@@ -1,4 +1,4 @@
-// Copyright Ian R. Shehadeh 2018
+/* Copyright Ian Shehadeh 2018 */
 
 #ifndef SIMPLIFY_SCALAR_MPFR_H_
 #define SIMPLIFY_SCALAR_MPFR_H_
@@ -44,8 +44,8 @@ typedef mpfr_t scalar_t;
 #define SCALAR_REQUIRED_CHARS(X) _scalar_get_size(X)
 #define SCALAR_TO_STRING(X, Z)   _scalar_to_string(X, Z)
 #define SCALAR_FROM_STRING(X, Z) mpfr_set_str((Z), (X), 10, MPFR_RNDN)
-#define SCALAR_SET_INT(X, Z)     mpfr_init_set_si(Z, X, MPFR_RNDN)
-#define SCALAR_SET_DOUBLE(X, Z)  mpfr_init_set_d(Z, X, MPFR_RNDN)
+#define SCALAR_SET_INT(X, Z)     mpfr_set_si(Z, X, MPFR_RNDN)
+#define SCALAR_SET_DOUBLE(X, Z)  mpfr_set_d(Z, X, MPFR_RNDN)
 
 
 
