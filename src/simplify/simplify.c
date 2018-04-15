@@ -92,12 +92,7 @@ error_t parse_args(int argc, char** argv, struct args* args) {
                         return ERROR_NO_ERROR;
                     }
 
-                    expression_t result;
-                    err = parse(argv[i + 1], &result);
-                    if (result.type != EXPRESSION_TYPE_VARIABLE) {
-                        return ERROR_INVALID_ASSIGNMENT_EXPRESSION;
-                    }
-                    args->isolation_target = result.variable.value;
+                    args->isolation_target = argv[i + 1];
                     break;
                 }
                 case '0'...'9':
@@ -110,6 +105,7 @@ error_t parse_args(int argc, char** argv, struct args* args) {
             }
         }
     }
+    return ERROR_NO_ERROR;
 }
 
 int main(int argc, char** argv) {

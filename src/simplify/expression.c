@@ -352,8 +352,10 @@ error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t*
             variable_t nv;
             if (expr->operator.left->type == EXPRESSION_TYPE_VARIABLE) {
                 nv = expr->operator.left->variable.value;
+                free(expr->operator.left);
             } else {
                 nv = expr->operator.right->variable.value;
+                free(expr->operator.right);
             }
 
             expr->type = EXPRESSION_TYPE_VARIABLE;
