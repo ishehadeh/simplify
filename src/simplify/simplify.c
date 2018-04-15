@@ -31,7 +31,9 @@ error_t parse(char* source, expression_t* result) {
     lexer_init_from_string(&lexer, source);
     expression_parser_init(&parser, &lexer);
 
-    return parse_expression(&parser, result);
+    error_t err = parse_expression(&parser, result);
+    lexer_clean(&lexer);
+    return err;
 }
 
 int main(int argc, char** argv) {
