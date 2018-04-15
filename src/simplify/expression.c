@@ -295,7 +295,6 @@ error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t*
             return ERROR_VARIABLE_NOT_PRESENT;
         case EXPRESSION_TYPE_OPERATOR:
         {
-            operator_t my_op;
             if (expr->operator.infix == '=') {
                 target = &expr->operator.left;
                 error_t err = _expression_isolate_variable_recursive(expr->operator.left, &expr->operator.right, var);
@@ -322,29 +321,27 @@ error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t*
 
             switch (expr->operator.infix) {
                 case '+':
-                    my_op = '-';
+                    new_target->operator.infix = '-';
                     break;
                 case '-':
-                    my_op = '+';
+                    new_target->operator.infix = '+';
                     break;
                 case '/':
-                    my_op = '*';
+                    new_target->operator.infix = '*';
                     break;
                 case '*':
                 case '(':
-                    my_op = '/';
+                    new_target->operator.infix = '/';
                     break;
                 case '^':
-                    my_op = '\\';
+                    new_target->operator.infix = '\\';
                     break;
                 case '\\':
-                    my_op = '^';
+                    new_target->operator.infix = '^';
                     break;
                 default:
                     break;
             }
-
-            new_target->operator.infix = my_op;
 
             *target = new_target;
             error_t err = _expression_isolate_variable_recursive(expr->operator.right, target, var);
