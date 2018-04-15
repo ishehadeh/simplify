@@ -1,6 +1,6 @@
 // Copyright Ian R. Shehadeh 2018
 
-#include "simplify/scalar.h"
+#include "simplify/scalar/scalar.h"
 #include "simplify/expression.h"
 #include "simplify/parser.h"
 #include "simplify/lexer.h"

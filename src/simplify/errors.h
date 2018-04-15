@@ -31,6 +31,7 @@ enum error {
     ERROR_STRAY_LEFT_PAREN,
     ERROR_NONEXISTANT_KEY,
     ERROR_VARIABLE_NOT_PRESENT,
+    ERROR_CANNOT_PERFORM_VARIABLE_ROOTS,
 };
 
 static inline const char* error_string(error_t err) {
@@ -75,6 +76,8 @@ static inline const char* error_string(error_t err) {
             return "no value associated with key";
         case ERROR_VARIABLE_NOT_PRESENT:
             return "that variable was not found in this expression";
+        case ERROR_CANNOT_PERFORM_VARIABLE_ROOTS:
+            return "simplify was not compiled with support for variable root operations";
     }
 }
 

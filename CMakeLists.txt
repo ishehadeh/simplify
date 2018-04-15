@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.0.0)
 project(simplify C)
 
 set(CMAKE_MODULE_PATH CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+set(CMAKE_EXPORT_COMPILE_COMMAND ON)
+
 include_directories("${CMAKE_SOURCE_DIR}/src")
 
 file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/src/simplify/*.c" "${CMAKE_SOURCE_DIR}/src/simplify/*/*.c")
@@ -24,6 +26,11 @@ endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
 
+if (MSVC)
+    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} /W4 /WX")
+else()
+    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Werror -Wextra")
+endif()
 add_executable(simplify ${SOURCES})
 
 if (GMP_FOUND AND NOT DISABLE_GMP)

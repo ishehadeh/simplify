@@ -119,6 +119,8 @@ error_t expression_to_bool(expression_t* expr) {
             scalar_t l;
             scalar_t r;
 
+            SCALAR_INIT(l);
+            SCALAR_INIT(r);
             SCALAR_FROM_STRING(buf, l);
             SCALAR_FROM_STRING(buf1, r);
 
@@ -131,20 +133,24 @@ error_t expression_to_bool(expression_t* expr) {
             expression_free(expr->operator.left);
             expression_free(expr->operator.right);
 
+            expr->type = EXPRESSION_TYPE_NUMBER;
             switch (expr->operator.infix) {
                 case '<':
+                    SCALAR_INIT(expr->number.value);
                     SCALAR_SET_INT(x < 0, expr->number.value);
                     break;
                 case '>':
+                    SCALAR_INIT(expr->number.value);
                     SCALAR_SET_INT(x > 0, expr->number.value);
                     break;
                 case '=':
+                    SCALAR_INIT(expr->number.value);
                     SCALAR_SET_INT(x == 0, expr->number.value);
                     break;
                 default:
+                    SCALAR_CLEAN(expr->number.value);
                     return ERROR_INVALID_OPERATOR;
             }
-            expr->type = EXPRESSION_TYPE_NUMBER;
         }
     }
     return ERROR_NO_ERROR;
@@ -172,7 +178,8 @@ error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
             if (err) return err;
 
             if (expr->prefix.right->type == EXPRESSION_TYPE_NUMBER) {
-                SCALAR_DEFINE(result);
+                scalar_t result;
+                SCALAR_INIT(result);
 
                 switch (expr->prefix.prefix) {
                     case '+':
@@ -187,7 +194,9 @@ error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
                 expression_free(expr->prefix.right);
 
                 expr->type = EXPRESSION_TYPE_NUMBER;
-                SCALAR_SET(result, expr->number.value);
+                SCALAR_INIT(expr->number.value);
+                SCALAR_SWAP(result, expr->number.value);
+                SCALAR_CLEAN(result);
             }
             break;
         }
@@ -201,7 +210,8 @@ error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
 
             if (expr->operator.right->type == EXPRESSION_TYPE_NUMBER
                 && expr->operator.left->type == EXPRESSION_TYPE_NUMBER) {
-                SCALAR_DEFINE(result);
+                scalar_t result;
+                SCALAR_INIT(result);
 
                 switch (expr->operator.infix) {
                     case '+':
@@ -220,23 +230,67 @@ error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
                     case '^':
                         SCALAR_POW(expr->operator.left->number.value, expr->operator.right->number.value, result);
                         break;
+                    case '\\':
+#                       if (SCALAR_FEATURES & SCALAR_FEATURE_SQAURE_ROOT)
+                            if (SCALAR_COMPARE_INT(expr->operator.left->number.value, 2) == 0) {
+                                SCALAR_SQUARE_ROOT(expr->operator.left->number.value,
+                                    expr->operator.right->number.value, result);
+                                break;
+                            }
+#                       endif
+#                       if (SCALAR_FEATURES & SCALAR_FEATURE_CUBE_ROOT)
+                            if (SCALAR_COMPARE_INT(expr->operator.left->number.value, 3) == 0) {
+                                SCALAR_CUBE_ROOT(expr->operator.left->number.value,
+                                    expr->operator.right->number.value, result);
+                                break;
+                            }
+#                       endif
+#                       if (SCALAR_FEATURES & SCALAR_FEATURE_ROOT_N)
+                            SCALAR_ROOT(expr->operator.left->number.value, expr->operator.right->number.value, result);
+#                       else
+                            return ERROR_CANNOT_PERFORM_VARIABLE_ROOTS;
+#                       endif
+                        break;
                     case '=':
                     case '>':
                     case '<':
+                        SCALAR_CLEAN(result);
                         return expression_to_bool(expr);
                     default:
+                        SCALAR_CLEAN(result);
                         return ERROR_INVALID_OPERATOR;
                 }
                 expression_free(expr->operator.left);
                 expression_free(expr->operator.right);
 
                 expr->type = EXPRESSION_TYPE_NUMBER;
-                SCALAR_SET(result, expr->number.value);
+                SCALAR_SWAP(result, expr->number.value);
             }
             break;
         }
     }
     return ERROR_NO_ERROR;
+}
+
+int _expression_has_variable_recursive(expression_t* expr, variable_t var) {
+    switch (expr->type) {
+        case EXPRESSION_TYPE_NULL:
+        case EXPRESSION_TYPE_NUMBER:
+            return 0;
+        case EXPRESSION_TYPE_OPERATOR:
+        {
+            if (_expression_has_variable_recursive(expr->operator.left, var))
+                return 1;
+            if (_expression_has_variable_recursive(expr->operator.right, var))
+                return 1;
+            return 0;
+        }
+        case EXPRESSION_TYPE_PREFIX:
+            if (_expression_has_variable_recursive(expr->operator.right, var))
+                return 1;
+        case EXPRESSION_TYPE_VARIABLE:
+            return strcmp(var, expr->variable.value) == 0;
+    }
 }
 
 error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t** target, variable_t var) {
@@ -246,64 +300,74 @@ error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t*
             return ERROR_VARIABLE_NOT_PRESENT;
         case EXPRESSION_TYPE_OPERATOR:
         {
+            operator_t my_op;
             if (expr->operator.infix == '=') {
+                target = &expr->operator.left;
                 error_t err = _expression_isolate_variable_recursive(expr->operator.left, &expr->operator.right, var);
                 if (err && err != ERROR_VARIABLE_NOT_PRESENT)
                     return err;
 
+                target = &expr->operator.right;
                 if (err) {
                     err = _expression_isolate_variable_recursive(expr->operator.right, &expr->operator.left, var);
+                    if (err) return err;
                 }
-                return err;
-            }
-
-            error_t err = _expression_isolate_variable_recursive(expr->operator.left, target, var);
-            if (err && err != ERROR_VARIABLE_NOT_PRESENT)
-                return err;
-
-            if (err) {
-                err = _expression_isolate_variable_recursive(expr->operator.right, target, var);
-                if (err) return err;
+                return ERROR_NO_ERROR;
             }
 
             variable_t _var;
             expression_t* new_target = new_expression();
             new_target->type = EXPRESSION_TYPE_OPERATOR;
-            if (expr->operator.left->type == EXPRESSION_TYPE_VARIABLE) {
+            if (_expression_has_variable_recursive(expr->operator.left, var)) {
                 new_target->operator.left = *target;
                 new_target->operator.right = expr->operator.right;
-                _var = expr->operator.left->variable.value;
             } else {
-                new_target->operator.right = *target;
-                new_target->operator.left = expr->operator.left;
-                _var = expr->operator.right->variable.value;
+                new_target->operator.right = expr->operator.left;
+                new_target->operator.left  = *target;
             }
 
             switch (expr->operator.infix) {
                 case '+':
-                    new_target->operator.infix = '-';
+                    my_op = '-';
                     break;
                 case '-':
-                    new_target->operator.infix = '+';
+                    my_op = '+';
                     break;
                 case '/':
-                    new_target->operator.infix = '*';
+                    my_op = '*';
                     break;
                 case '*':
                 case '(':
-                    new_target->operator.infix = '/';
+                    my_op = '/';
                     break;
                 case '^':
-                    printf("TODO(IanS5): roots");
-                    exit(1);
+                    my_op = '\\';
+                    break;
+                case '\\':
+                    my_op = '^';
                     break;
                 default:
-                    return ERROR_INVALID_OPERATOR;
+                    break;
             }
-            expr->type = EXPRESSION_TYPE_VARIABLE;
-            expr->variable.value = _var;
+
+            new_target->operator.infix = my_op;
+
             *target = new_target;
-            break;
+            error_t err = _expression_isolate_variable_recursive(expr->operator.right, target, var);
+            if (err != ERROR_VARIABLE_NOT_PRESENT)
+                return err;
+
+            err =  _expression_isolate_variable_recursive(expr->operator.left, target, var);
+            variable_t nv;
+            if (expr->operator.left->type == EXPRESSION_TYPE_VARIABLE) {
+                nv = expr->operator.left->variable.value;
+            } else {
+                nv = expr->operator.right->variable.value;
+            }
+
+            expr->type = EXPRESSION_TYPE_VARIABLE;
+            expr->variable.value = nv;
+            return err;
         }
         case EXPRESSION_TYPE_PREFIX:
         {

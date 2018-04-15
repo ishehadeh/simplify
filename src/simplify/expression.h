@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "simplify/scalar.h"
+#include "simplify/scalar/scalar.h"
 #include "simplify/errors.h"
 #include "simplify/rbtree/rbtree.h"
 
@@ -70,7 +70,10 @@ static inline expression_t* new_expression() {
 static inline expression_t* new_number_expression(scalar_t value) {
     expression_t* expr = new_expression();
     expr->type = EXPRESSION_TYPE_NUMBER;
+
+    SCALAR_INIT(expr->number.value);
     SCALAR_SET(value, expr->number.value);
+
     return expr;
 }
 
@@ -105,7 +108,7 @@ void expression_free(expression_t* expr);
 void expression_clean(expression_t* expr);
 error_t expression_simplify(expression_t* expr, scope_t* scope);
 error_t expression_print(expression_t* expr);
-error_t expression_isolate_variable(expression_t* expr, variable_t var);
+error_t expression_isolate_variable(expression_t*, variable_t);
 
 static inline void scope_init(scope_t* scope) {
     rbtree_init(&scope->variables);

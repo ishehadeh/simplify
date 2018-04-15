@@ -20,6 +20,7 @@ inline static operator_precedence_t operator_precedence(operator_t op) {
         case '/':
             return OPERATOR_PRECEDENCE_PRODUCT;
         case '^':
+        case '\\':
             return OPERATOR_PRECEDENCE_EXPONENT;
         case '(':
             return OPERATOR_PRECEDENCE_MAXIMUM;
@@ -53,6 +54,7 @@ error_t parse_expression_prec(expression_parser_t* parser, expression_t* express
         case TOKEN_TYPE_NUMBER:
         {
             scalar_t num;
+            SCALAR_INIT(num);
 
             char* del = alloca(token.length + 1);
             del[token.length] = 0;
@@ -122,7 +124,7 @@ error_t parse_expression_prec(expression_parser_t* parser, expression_t* express
 
 cleanup:
     memmove(&parser->previous, &token, sizeof(token_t));
-    *expression = *left;
+    memmove(expression, left, sizeof(expression_t));
     free(left);
 
     return ERROR_NO_ERROR;
