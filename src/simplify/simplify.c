@@ -36,7 +36,86 @@ error_t parse(char* source, expression_t* result) {
     return err;
 }
 
+struct args {
+    int     verbosity;
+    int     help;
+    scope_t scope;
+    variable_t isolation_target;
+};
+
+error_t parse_args(int argc, char** argv, struct args* args) {
+    scope_init(&args->scope);
+    args->isolation_target = NULL;
+    args->help = 0;
+    args->verbosity = 0;
+    error_t err;
+    for (int i = 1; i < argc; ++i) {
+        if (argv[i][0] == '-') {
+            int x = 1;
+            if (argv[i][1] == '-')
+                ++x;
+            switch (argv[i][x]) {
+                case 'h':
+                    args->help = 1;
+                    break;
+                case 'v':
+                    args->verbosity = 1;
+                    break;
+                case 'q':
+                    args->verbosity = 1;
+                    break;
+                case 'd':
+                {
+                    if (i == argc - 2) {
+                        args->help = 1;
+                        return ERROR_NO_ERROR;
+                    }
+
+                    expression_t result;
+                    err = parse(argv[i + 1], &result);
+                    if (err) return err;
+
+                    if (result.type != EXPRESSION_TYPE_OPERATOR) {
+                        return ERROR_INVALID_ASSIGNMENT_EXPRESSION;
+                    } else if (result.operator.infix != '=' ||
+                        result.operator.left->type != EXPRESSION_TYPE_VARIABLE) {
+                        return ERROR_INVALID_ASSIGNMENT_EXPRESSION;
+                    }
+
+                    scope_define(&args->scope, result.operator.left->variable.value, result.operator.right);
+                    break;
+                }
+                case 'i':
+                {
+                    if (i == argc - 2) {
+                        args->help = 1;
+                        return ERROR_NO_ERROR;
+                    }
+
+                    expression_t result;
+                    err = parse(argv[i + 1], &result);
+                    if (result.type != EXPRESSION_TYPE_VARIABLE) {
+                        return ERROR_INVALID_ASSIGNMENT_EXPRESSION;
+                    }
+                    args->isolation_target = result.variable.value;
+                    break;
+                }
+                case '0'...'9':
+                    return ERROR_NO_ERROR;
+                default:
+                    return ERROR_UNRECOGNIZED_ARGUMENT;
+            }
+            if (i == argc - 1) {
+                return ERROR_NO_ERROR;
+            }
+        }
+    }
+}
+
 int main(int argc, char** argv) {
+    if (argc < 2)
+        return 0;
+
 #if defined(SCALAR_FLOAT)
 #   if defined(HAVE_MPFR)
         mpfr_set_default_prec(FLOAT_PRECISION);
@@ -45,74 +124,15 @@ int main(int argc, char** argv) {
 #   endif
 #endif
 
-    int verbose = 0;
-    variable_t isolation_target = NULL;
-    error_t err;
-    scope_t scope;
+    struct args args;
+    error_t err = parse_args(argc, argv, &args);
+    if (err) goto error;
 
-    scope_init(&scope);
-
-    for (int i = 1; i < argc - 1; ++i) {
-        if (argv[i][0] == '-') {
-            int x = 1;
-            if (argv[i][1] == '-')
-                ++x;
-            switch (argv[i][x]) {
-                case 'h':
-                    usage(argv[0]);
-                    goto cleanup;
-                case 'v':
-                    verbose = 1;
-                    break;
-                case 'q':
-                    verbose = -1;
-                    break;
-                case 'd':
-                {
-                    if (i == argc - 2) {
-                        usage(argv[0]);
-                        goto cleanup;
-                    }
-
-                    expression_t result;
-                    err = parse(argv[i + 1], &result);
-                    if (err) goto error;
-
-                    if (result.type != EXPRESSION_TYPE_OPERATOR) {
-                        err = ERROR_INVALID_ASSIGNMENT_EXPRESSION;
-                        goto error;
-                    } else if (result.operator.infix != '=' ||
-                        result.operator.left->type != EXPRESSION_TYPE_VARIABLE) {
-                        err = ERROR_INVALID_ASSIGNMENT_EXPRESSION;
-                        goto error;
-                    }
-
-                    scope_define(&scope, result.operator.left->variable.value, result.operator.right);
-                    break;
-                }
-                case 'i':
-                {
-                    if (i == argc - 2) {
-                        usage(argv[0]);
-                        goto cleanup;
-                    }
-
-                    expression_t result;
-                    err = parse(argv[i + 1], &result);
-                    if (result.type != EXPRESSION_TYPE_VARIABLE) {
-                        err = ERROR_INVALID_ASSIGNMENT_EXPRESSION;
-                        goto error;
-                    }
-                    isolation_target = result.variable.value;
-                    break;
-                }
-                default:
-                    err = ERROR_UNRECOGNIZED_ARGUMENT;
-                    usage(argv[0]);
-                    goto cleanup;
-            }
-        }
+    if (args.help) {
+        usage(argv[0]);
+        goto cleanup;
     }
+
 
     if (argc < 2) goto cleanup;
 
@@ -120,17 +140,17 @@ int main(int argc, char** argv) {
     err = parse(argv[argc - 1], &expr);
     if (err) goto error;
 
-    err = expression_simplify(&expr, &scope);
+    err = expression_simplify(&expr, &args.scope);
     if (err) goto error;
 
-    if (isolation_target) {
-        err = expression_isolate_variable(&expr, isolation_target);
+    if (args.isolation_target) {
+        err = expression_isolate_variable(&expr, args.isolation_target);
         if (err) goto error;
 
-        err = expression_simplify(&expr, &scope);
+        err = expression_simplify(&expr, &args.scope);
         if (err) goto error;
     }
-    if (verbose >= 0) {
+    if (args.verbosity >= 0) {
         expression_print(&expr);
         puts("");
     }
@@ -142,7 +162,7 @@ error:
     printf("simplify: %s\n", error_string(err));
 
 cleanup:
-    scope_clean(&scope);
+    scope_clean(&args.scope);
 
 #if defined(HAVE_MPFR) && !defined(SCALAR_INTEGER)
     mpfr_free_cache();
