@@ -14,14 +14,20 @@
 #   define LEXER_BUFFER_MAX_CAPACITY (1024 * 4)
 #endif
 
+/* lexical analyzer
+ * The lexer walks through a buffer or file, picking out tokens
+ */
 typedef struct lexer lexer_t;
 
-typedef struct token_stream token_stream_t;
+/* A token labels part of a buffer
+ */
 typedef struct token        token_t;
+
+/* Enumerates the different kinds of tokens
+ */
 typedef enum   token_type   token_type_t;
 
 enum token_type {
-    TOKEN_TYPE_NULL,
     TOKEN_TYPE_OPERATOR,
     TOKEN_TYPE_NUMBER,
     TOKEN_TYPE_IDENTIFIER,
@@ -33,8 +39,8 @@ enum token_type {
 struct token {
     token_type_t type;
 
-    size_t length;
     char*  start;
+    size_t length;
 };
 
 
@@ -48,7 +54,11 @@ struct lexer {
     size_t  buffer_position;
 };
 
-static inline int lexer_init_from_string(lexer_t* lexer, char* buffer) {
+/* initialize lexer from a null terminated string 
+ * @lexer the lexer to initialize
+ * @buffer the buffer to read, the buffer is copied
+ */
+static inline void lexer_init_from_string(lexer_t* lexer, char* buffer) {
     lexer->source = NULL;
     lexer->buffer_capacity = strlen(buffer);
     lexer->buffer_length = lexer->buffer_capacity;
@@ -56,20 +66,23 @@ static inline int lexer_init_from_string(lexer_t* lexer, char* buffer) {
     lexer->buffer_position = 0;
 
     strncpy(lexer->buffer, buffer, lexer->buffer_capacity);
-
-    return 0;
 }
 
-static inline int lexer_init_from_file(lexer_t* lexer, FILE* file) {
+/* initialize a lexer from a file
+ * @lexer the lexer to initialize
+ * @file the file read
+ */
+static inline void lexer_init_from_file(lexer_t* lexer, FILE* file) {
     lexer->source = file;
     lexer->buffer = malloc(LEXER_BUFFER_MAX_CAPACITY);
     lexer->buffer_capacity = LEXER_BUFFER_MAX_CAPACITY;
     lexer->buffer_length = 0;
     lexer->buffer_position = 0;
-
-    return 0;
 }
 
+/* free all the lexer's resources, except the file
+ * @lexer the lexer to clean
+ */
 static inline void lexer_clean(lexer_t* lexer) {
     if (lexer->buffer)
         free(lexer->buffer);
@@ -78,13 +91,22 @@ static inline void lexer_clean(lexer_t* lexer) {
     lexer->buffer_position = 0;
 }
 
+
+/* draw the next token from the lexer
+ * @lexer the lexer to draw from
+ * @token a location to store the token
+ * @return returns an error code
+ */
+error_t lexer_next(lexer_t* lexer, token_t* token);
+
+/* check if a character is a valid identifier
+ * @c the character to check
+ * @return a boolean integer, true if `c` is valid
+ */
 static inline int isident(char c) {
     return (c <= 'Z' && c >= 'A')
             || (c <= 'z' && c >= 'a')
-            || (c <= '9' && c >= '0')
             || c == '_';
 }
-
-error_t lexer_next(lexer_t*, token_t*);
 
 #endif  // SIMPLIFY_LEXER_H_

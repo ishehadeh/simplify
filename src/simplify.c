@@ -1,17 +1,20 @@
 /* Copyright Ian Shehadeh 2018 */
 
-#include "simplify/scalar/scalar.h"
-#include "simplify/expression.h"
+#include "simplify/expression/expression.h"
 #include "simplify/parser.h"
 #include "simplify/lexer.h"
 #include "simplify/errors.h"
 
-#define VERSION "0.0.1"
+#define VERSION "0.1.2"
 #define DATE __DATE__
 #define COPYRIGHT "Copyright Ian Shehadeh 2018, all rights reserved."
 
 #define INFO "simplify v" VERSION ". Compiled " DATE ".\n" COPYRIGHT \
 "\n  simplify is a simple utility to evaluate a mathmatical expression."
+
+#define TRUE_STRING  "true"
+#define FALSE_STRING "false"
+
 
 void usage(char* arg0) {
     puts(INFO);
@@ -22,18 +25,6 @@ void usage(char* arg0) {
     puts("\t-q,--quite .............. only print errors (this overides -v)");
     puts("\t-d,--define NAME=EXPR ... define a variable `NAME' as `EXPR'");
     puts("\t-i,--isolate NAME ....... if the variable `NAME' exists than attempt to isolate it");
-}
-
-error_t parse(char* source, expression_t* result) {
-    lexer_t lexer;
-    expression_parser_t parser;
-
-    lexer_init_from_string(&lexer, source);
-    expression_parser_init(&parser, &lexer);
-
-    error_t err = parse_expression(&parser, result);
-    lexer_clean(&lexer);
-    return err;
 }
 
 struct args {
@@ -72,7 +63,7 @@ error_t parse_args(int argc, char** argv, struct args* args) {
                     }
 
                     expression_t result;
-                    err = parse(argv[i + 1], &result);
+                    err = parse_string(argv[i + 1], &result);
                     if (err) return err;
 
                     if (result.type != EXPRESSION_TYPE_OPERATOR) {
@@ -109,31 +100,19 @@ error_t parse_args(int argc, char** argv, struct args* args) {
 }
 
 int main(int argc, char** argv) {
-    if (argc < 2)
-        return 0;
-
-#if defined(SCALAR_FLOAT)
-#   if defined(HAVE_MPFR)
-        mpfr_set_default_prec(FLOAT_PRECISION);
-#   elif defined(HAVE_GMP)
-        mpf_set_default_prec(FLOAT_PRECISION);
-#   endif
-#endif
+    mpfr_set_default_prec(64);
 
     struct args args;
     error_t err = parse_args(argc, argv, &args);
     if (err) goto error;
 
-    if (args.help) {
+    if (args.help || argc < 2) {
         usage(argv[0]);
         goto cleanup;
     }
 
-
-    if (argc < 2) goto cleanup;
-
     expression_t expr;
-    err = parse(argv[argc - 1], &expr);
+    err = parse_string(argv[argc - 1], &expr);
     if (err) goto error;
 
     err = expression_simplify(&expr, &args.scope);
@@ -141,14 +120,22 @@ int main(int argc, char** argv) {
 
     if (args.isolation_target) {
         err = expression_isolate_variable(&expr, args.isolation_target);
-        if (err) goto error;
-
-        err = expression_simplify(&expr, &args.scope);
-        if (err) goto error;
+        if (!err) {
+            err = expression_simplify(&expr, &args.scope);
+            if (err) goto error;
+        }
     }
     if (args.verbosity >= 0) {
-        expression_print(&expr);
-        puts("");
+        if (args.scope.boolean != -1) {
+            if (args.scope.boolean) {
+                puts(TRUE_STRING);
+            } else {
+                puts(FALSE_STRING);
+            }
+        } else {
+            expression_print(&expr);
+            puts("");
+        }
     }
     expression_clean(&expr);
     goto cleanup;
@@ -159,10 +146,7 @@ error:
 
 cleanup:
     scope_clean(&args.scope);
-
-#if defined(HAVE_MPFR) && !defined(SCALAR_INTEGER)
     mpfr_free_cache();
-#endif
 
     return 0;
 }

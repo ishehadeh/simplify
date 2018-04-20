@@ -7,63 +7,71 @@
 #include "simplify/parser.h"
 #include "simplify/errors.h"
 
-inline static operator_precedence_t operator_precedence(operator_t op) {
-    switch (op) {
-        case '=':
-        case '>':
-        case '<':
-            return OPERATOR_PRECEDENCE_COMPARE;
-        case '+':
-        case '-':
-            return OPERATOR_PRECEDENCE_SUM;
-        case '*':
-        case '/':
-            return OPERATOR_PRECEDENCE_PRODUCT;
-        case '^':
-        case '\\':
-            return OPERATOR_PRECEDENCE_EXPONENT;
-        case '(':
-            return OPERATOR_PRECEDENCE_MAXIMUM;
-        default:
-            // TODO(IanS5): Somehow throw an error here
-            return OPERATOR_PRECEDENCE_MINIMUM;
-    }
+error_t parse_string(char* source, expression_t* result) {
+    lexer_t lexer;
+    expression_parser_t parser;
+
+    lexer_init_from_string(&lexer, source);
+    expression_parser_init(&parser, &lexer);
+
+    error_t err = parser_parse_expression(&parser, result);
+    lexer_clean(&lexer);
+    expression_parser_clean(&parser);
+    return err;
+}
+
+error_t parse_file(FILE* source, expression_t* result) {
+    lexer_t lexer;
+    expression_parser_t parser;
+
+    lexer_init_from_file(&lexer, source);
+    expression_parser_init(&parser, &lexer);
+
+    error_t err = parser_parse_expression(&parser, result);
+    lexer_clean(&lexer);
+    expression_parser_clean(&parser);
+    return err;
 }
 
 
-error_t parse_expression_prec(expression_parser_t* parser, expression_t* expression, operator_precedence_t precedence) {
+/* _parse_expression_precedence_recursive parses an expression recursively.
+ * it expects a `precedence` parameter, which should only be used internally while recursing.
+ */
+error_t _parser_parse_expression_precedence_recursive(expression_parser_t* parser,
+                                                      expression_t* expression,
+                                                      operator_precedence_t precedence) {
     token_t token;
     error_t err = lexer_next(parser->lexer, &token);
     if (err) return err;
 
-    expression_t* left;
+    expression_t* left = malloc(sizeof(expression_t));
 
     switch (token.type) {
         case TOKEN_TYPE_OPERATOR:
         {
             operator_t operator = *token.start;
-            expression_t* operand = new_expression();
+            expression_t* operand = malloc(sizeof(expression_t));
 
-            error_t err = parse_expression_prec(parser, operand, OPERATOR_PRECEDENCE_MAXIMUM);
+            error_t err = _parser_parse_expression_precedence_recursive(parser, operand, OPERATOR_PRECEDENCE_MAXIMUM);
             if (err) return err;
 
-            left = new_prefix_expression(operator, operand);
+            expression_init_prefix(left, operator, operand);
             memmove(&token, &parser->previous, sizeof(token_t));
             break;
         }
         case TOKEN_TYPE_NUMBER:
         {
-            scalar_t num;
-            SCALAR_INIT(num);
+            mpfr_t num;
 
             char del[token.length + 1];
             del[token.length] = 0;
             strncpy(del, token.start, token.length);
-            SCALAR_FROM_STRING(del, num);
+            mpfr_init2(num, token.length + (1 << 6));
+            mpfr_set_str(num, del, 10, MPFR_RNDF);
 
-            left = new_number_expression(num);
+            expression_init_number(left, num);
 
-            SCALAR_CLEAN(num);
+            mpfr_clear(num);
             err = lexer_next(parser->lexer, &token);
             if (err) {
                 expression_free(left);
@@ -72,7 +80,7 @@ error_t parse_expression_prec(expression_parser_t* parser, expression_t* express
             break;
         }
         case TOKEN_TYPE_IDENTIFIER:
-            left = new_variable_expression(token.start, token.length);
+            expression_init_variable(left, token.start, token.length);
             err = lexer_next(parser->lexer, &token);
             if (err) {
                 expression_free(left);
@@ -81,8 +89,7 @@ error_t parse_expression_prec(expression_parser_t* parser, expression_t* express
             break;
         case TOKEN_TYPE_LEFT_PAREN:
             ++parser->missing_right_parens;
-            left = new_expression();
-            err = parse_expression_prec(parser, left, OPERATOR_PRECEDENCE_MINIMUM);
+            err = _parser_parse_expression_precedence_recursive(parser, left, OPERATOR_PRECEDENCE_MINIMUM);
             if (err) return err;
             memmove(&token, &parser->previous, sizeof(token_t));
             break;
@@ -97,12 +104,12 @@ error_t parse_expression_prec(expression_parser_t* parser, expression_t* express
 
     operator_t infix = *token.start;
     while (left && precedence < operator_precedence(infix)) {
-        expression_t* right_operand = new_expression();
+        expression_t* right_operand = malloc(sizeof(expression_t));
         if (token.type == TOKEN_TYPE_LEFT_PAREN) {
             ++parser->missing_right_parens;
-            err = parse_expression_prec(parser, right_operand, OPERATOR_PRECEDENCE_MINIMUM);
+            err = _parser_parse_expression_precedence_recursive(parser, right_operand, OPERATOR_PRECEDENCE_MINIMUM);
         } else {
-            err = parse_expression_prec(parser, right_operand, operator_precedence(infix));
+            err = _parser_parse_expression_precedence_recursive(parser, right_operand, operator_precedence(infix));
         }
         if (err) return err;
 
@@ -117,7 +124,9 @@ error_t parse_expression_prec(expression_parser_t* parser, expression_t* express
             precedence = OPERATOR_PRECEDENCE_MAXIMUM;
         }
 
-        left = new_operator_expression(left, infix, right_operand);
+        expression_t* new_left = malloc(sizeof(expression_t));
+        expression_init_operator(new_left, left, infix, right_operand);
+        left = new_left;
 
         if (token.type == TOKEN_TYPE_EOF) {
             goto cleanup;
@@ -130,5 +139,14 @@ cleanup:
     memmove(expression, left, sizeof(expression_t));
     free(left);
 
+    return ERROR_NO_ERROR;
+}
+
+error_t parser_parse_expression(expression_parser_t* parser, expression_t* result) {
+    error_t err = _parser_parse_expression_precedence_recursive(parser, result, OPERATOR_PRECEDENCE_MINIMUM);
+    if (err) return err;
+
+    if (parser->missing_right_parens > 0)
+        return ERROR_STRAY_LEFT_PAREN;
     return ERROR_NO_ERROR;
 }

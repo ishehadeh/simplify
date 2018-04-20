@@ -2,59 +2,76 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "simplify/rbtree/rbtree.h"
 
 
 static inline rbtree_node_t* rbtree_grandparent(rbtree_node_t* node) {
-    return node->parent->parent;
+    return node->parent != NULL ? node->parent->parent : NULL;
 }
 
 static inline rbtree_node_t* rbtree_uncle(rbtree_node_t* node) {
     rbtree_node_t* gp = rbtree_grandparent(node);
-    if (gp->left == node->parent) {
-        return gp->right;
-    }
-
-    return gp->left;
+    if (!gp) return NULL;
+    return gp->left == node->parent ? gp->right : gp->left;
 }
 
 static inline void rbtree_rotate_left(rbtree_t* tree, rbtree_node_t* node) {
     rbtree_node_t* right = node->right;
-    node->right = node->left;
-    if (node->right)
-        node->right->parent = node;
+
+    // Swap node's right subtree with it's child
+    node->right = node->right->left;
+
+    // if right's left child is not root, make it's parent node.
+    if (right->left)
+        right->left->parent = node;
+
     right->parent = node->parent;
 
     if (!node->parent)
+        // since root doesn't have an uncle there is a special case
         tree->root = right;
+
+    // otherwise swap the uncle with node's old left child
     else if (node == node->parent->left)
         node->parent->left = right;
     else
         node->parent->right = right;
+
     right->left = node;
     node->parent = right;
 }
 
 static inline void rbtree_rotate_right(rbtree_t* tree, rbtree_node_t* node) {
     rbtree_node_t* left = node->left;
-    node->left = node->right;
-    if (node->left)
-        node->left->parent = node;
+
+    // Swap node's left subtree with it's child
+    node->left = node->left->right;
+
+    // if right's right child is not root, make it's parent node.
+    if (left->right)
+        left->right->parent = node;
+
     left->parent = node->parent;
 
     if (!node->parent)
+        // since root doesn't have an uncle there is a special case
         tree->root = left;
+
+    // otherwise swap the uncle with node's old right child
     else if (node == node->parent->right)
         node->parent->right = left;
     else
-        node->parent->right = left;
+        node->parent->left = left;
+
     left->right = node;
     node->parent = left;
 }
 
 void rbtree_free_node_recursive(rbtree_node_t* node, void(*free_func)(void*)) {
     free(node->key);
-    free_func(node->data);
+    if (free_func)
+        free_func(node->data);
     if (node->left)
         rbtree_free_node_recursive(node->left, free_func);
 
@@ -102,30 +119,63 @@ error_t rbtree_search(rbtree_t* tree, char* key, void** dataout) {
         return ERROR_NONEXISTANT_KEY;
 
     rbtree_node_t* current = tree->root;
-    while (1) {
+    while (current) {
         int result = strcmp(key, current->key);
         if (result == 0) {
             *dataout = current->data;
             return ERROR_NO_ERROR;
         } else if (result > 0) {
-            if (current->left)
-                current = current->left;
-            else
-                return ERROR_NONEXISTANT_KEY;
+            current = current->left;
         } else {
-            if (current->right)
-                current = current->right;
-            else
-                return ERROR_NONEXISTANT_KEY;
+            current = current->right;
         }
     }
 
-    // UNREACHABLE!
+    return ERROR_NONEXISTANT_KEY;
 }
 
 void rbtree_clean(rbtree_t* tree, void(*free_func)(void*)) {
     if (tree->root)
         rbtree_free_node_recursive(tree->root, free_func);
+}
+
+error_t rbtree_balance(rbtree_t* tree, rbtree_node_t* node) {
+    rbtree_node_t* gp;
+    rbtree_node_t* uncle;
+    while (node != tree->root && node->parent->color == RBTREE_COLOR_RED) {
+        gp = rbtree_grandparent(node);
+        if (!gp)
+            break;
+        uncle = rbtree_uncle(node);
+
+        if (uncle && uncle->color == RBTREE_COLOR_RED) {
+            gp->color = RBTREE_COLOR_RED;
+            node->parent->color = RBTREE_COLOR_BLACK;
+            uncle->color = RBTREE_COLOR_BLACK;
+            node = gp;
+        } else {
+            if (gp->left == node->parent) {
+                if (node == node->parent->right) {
+                    rbtree_rotate_left(tree, node->parent);
+                }
+
+                rbtree_rotate_right(tree, gp);
+            } else if (gp->right == node->parent)  {
+                if (node == node->parent->left) {
+                    rbtree_rotate_right(tree, node->parent);
+                }
+
+                rbtree_rotate_left(tree, gp);
+            }
+            if (node->parent) {
+                rbtree_color_t t = node->parent->color;
+                node->parent->color = gp->color;
+                gp->color = t;
+            }
+        }
+    }
+    tree->root->color = RBTREE_COLOR_BLACK;
+    return ERROR_NO_ERROR;
 }
 
 error_t rbtree_insert(rbtree_t* tree, char* key, void* value) {
@@ -151,43 +201,5 @@ error_t rbtree_insert(rbtree_t* tree, char* key, void* value) {
         return ERROR_NO_ERROR;
     }
 
-    if (node->parent->color != RBTREE_COLOR_BLACK) {
-        switch (rbtree_uncle(node)->color) {
-            case RBTREE_COLOR_RED:
-            {
-                // if the uncle is red we recolor
-
-                rbtree_uncle(node)->color = RBTREE_COLOR_BLACK;
-                rbtree_grandparent(node)->color = RBTREE_COLOR_RED;
-                node->parent->color = RBTREE_COLOR_BLACK;
-
-                rbtree_node_t* gp = rbtree_grandparent(node);
-                rbtree_uncle(gp)->color = RBTREE_COLOR_BLACK;
-                rbtree_grandparent(gp)->color = RBTREE_COLOR_RED;
-                gp->parent->color = RBTREE_COLOR_BLACK;
-                break;
-            }
-            case RBTREE_COLOR_BLACK:
-            {
-                // if the uncle is black we rotate
-
-                if (node->parent->parent->left == node->parent) {
-                    if (node->parent->right == node)
-                        rbtree_rotate_left(tree, node->parent);
-                    rbtree_rotate_right(tree, node->parent->parent);
-                } else {
-                    if (node->parent->right == node)
-                        rbtree_rotate_right(tree, node->parent);
-                    rbtree_rotate_left(tree, node->parent->parent);
-                }
-                break;
-            }
-        }
-    }
-    if (node->parent->parent) {
-        rbtree_color_t pcolor = node->parent->color;
-        node->parent->color = node->parent->parent->color;
-        node->parent->parent->color = pcolor;
-    }
-    return ERROR_NO_ERROR;
+    return rbtree_balance(tree, node);
 }

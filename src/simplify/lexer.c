@@ -53,10 +53,7 @@ error_t lexer_get_number(lexer_t* lexer, token_t* token) {
 
     __LEXER_SKIP_WHILE(lexer, isdigit);
 
-#   if defined(SCALAR_INTEGER)
-        token->length = lexer->buffer + lexer->buffer_position - token->start;
-#   endif
-
+    token->length = lexer->buffer + lexer->buffer_position - token->start;
     if (!lexer_eof(lexer) && lexer_current(lexer) == '.') {
         lexer_advance(lexer);
         __LEXER_SKIP_WHILE(lexer, isdigit);
@@ -70,9 +67,7 @@ error_t lexer_get_number(lexer_t* lexer, token_t* token) {
 
     token->type = TOKEN_TYPE_NUMBER;
 
-#   if !defined(SCALAR_INTEGER)
-        token->length = lexer->buffer + lexer->buffer_position - token->start;
-#   endif
+    token->length = lexer->buffer + lexer->buffer_position - token->start;
     return ERROR_NO_ERROR;
 }
 
