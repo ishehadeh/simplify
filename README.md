@@ -4,11 +4,19 @@ Simplify evaluates a mathematician expression, putting it in it's simplest terms
 
 For example:
 
-`simplify --isolate x '2(x + 2) = 5'` results in `x = 0.5`
+`simplify --isolate x '2(x + 2) = 5'`\
+`x = 0.5`
 
-Simplify also works with multiple variables, for example:
+Simplify also works with multiple variables:
 
-`simplify --isolate y '2 + x * y^4 = 10` results in `y = 8 / x \ 4`.
+`simplify --isolate y '2 + x * y^4 = 10`\
+`y = 8 / x \ 4`.
+
+Variables can also be assigned to in an expression:
+
+`simplify 'x : 2' 'x - 5'`\
+`2`\
+`-3`
 
 ## Building
 

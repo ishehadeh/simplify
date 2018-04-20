@@ -91,6 +91,7 @@ error_t lexer_next(lexer_t* lexer, token_t* token) {
         case '=':
         case '>':
         case '<':
+        case ':':
             token->type = TOKEN_TYPE_OPERATOR;
             token->start = lexer->buffer + lexer->buffer_position;
             token->length = 1;

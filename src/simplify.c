@@ -19,7 +19,7 @@
 
 void usage(char* arg0) {
     puts(INFO);
-    printf("\nUSAGE: %s [OPTIONS] EXPRESSION\n", arg0);
+    printf("\nUSAGE: %s [OPTIONS] [...EXPRESSION]\n", arg0);
     puts("OPTIONS:");
     puts("\t-h,--help ..................... print this message");
     puts("\t-v,--verbose .................. print status updates while running, not just the expression's result");
@@ -92,6 +92,7 @@ int main(int argc, char** argv) {
             }
         }
         expression_clean(&expr);
+        scope.boolean = -1;
     }
 
     goto cleanup;
