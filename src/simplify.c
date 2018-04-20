@@ -21,11 +21,11 @@ void usage(char* arg0) {
     puts(INFO);
     printf("\nUSAGE: %s [OPTIONS] EXPRESSION\n", arg0);
     puts("OPTIONS:");
-    puts("\t-h,--help ............... print this message");
-    puts("\t-v,--verbose ............ print status updates while running, not just the expression's result");
-    puts("\t-q,--quite .............. only print errors (this overides -v)");
-    puts("\t-d,--define NAME=EXPR ... define a variable `NAME' as `EXPR'");
-    puts("\t-i,--isolate NAME ....... if the variable `NAME' exists than attempt to isolate it");
+    puts("\t-h,--help ..................... print this message");
+    puts("\t-v,--verbose .................. print status updates while running, not just the expression's result");
+    puts("\t-q,--quite .................... only print errors (this overides -v)");
+    puts("\t-d,--define NAME=EXPR ......... define a variable `NAME' as `EXPR'");
+    puts("\t-i,--isolate NAME ............. if the variable `NAME' exists than attempt to isolate it");
 }
 
 error_t do_assignment(char* assignment, scope_t* scope) {
@@ -60,7 +60,6 @@ int main(int argc, char** argv) {
         FLAG('q', "quite",   verbosity = -1)
         FLAG('d', "define",  err = do_assignment(flag_value, &scope); if (err) goto error)
         FLAG('i', "isolate", isolation_target = flag_value)
-        FLAG('p', "default-precision", mpfr_set_default_prec(atoi(flag_value)))
     )
     if (err) goto error;
     if (!flag_argc) goto cleanup;
