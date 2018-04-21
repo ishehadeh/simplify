@@ -6,7 +6,9 @@
 
 #include "simplify/parser.h"
 #include "simplify/errors.h"
-
+error_t _parser_parse_expression_precedence_recursive(expression_parser_t* parser,
+                                                      expression_t* expression,
+                                                      operator_precedence_t precedence);
 error_t parse_string(char* source, expression_t* result) {
     lexer_t lexer;
     expression_parser_t parser;
@@ -35,13 +37,14 @@ error_t parse_file(FILE* source, expression_t* result) {
 
 error_t _parser_parse_expression_list(expression_parser_t* parser, expression_list_t* list) {
     expression_t* next = malloc(sizeof(expression_t));
-    error_t err = parser_parse_expression(parser, next);
+    error_t err = _parser_parse_expression_precedence_recursive(parser, next, OPERATOR_PRECEDENCE_ASSIGN);
     if (err) return err;
     expression_list_append(list, next);
 
     while (parser->previous.type == TOKEN_TYPE_COMMA) {
+        lexer_next(parser->lexer, &parser->previous);
         expression_t* next = malloc(sizeof(expression_t));
-        error_t err = parser_parse_expression(parser, next);
+        error_t err = _parser_parse_expression_precedence_recursive(parser, next, OPERATOR_PRECEDENCE_ASSIGN);
         if (err) return err;
         expression_list_append(list, next);
     }
@@ -58,7 +61,6 @@ error_t _parser_parse_expression_precedence_recursive(expression_parser_t* parse
     token_t token;
     error_t err = lexer_next(parser->lexer, &token);
     if (err) return err;
-
     expression_t* left = malloc(sizeof(expression_t));
 
     switch (token.type) {
@@ -104,12 +106,13 @@ error_t _parser_parse_expression_precedence_recursive(expression_parser_t* parse
                 expression_list_t* args = malloc(sizeof(expression_list_t));
                 expression_list_init(args);
                 error_t err = _parser_parse_expression_list(parser, args);
+                ++parser->missing_right_parens;
                 if (err) {
                     expression_list_free(args);
                     return err;
                 }
                 expression_init_function(left, name, len, args);
-                err = lexer_next(parser->lexer, &token);
+                token = parser->previous;
             } else {
                 expression_init_variable(left, name, len);
             }
@@ -135,6 +138,14 @@ error_t _parser_parse_expression_precedence_recursive(expression_parser_t* parse
         goto cleanup;
 
     operator_t infix = *token.start;
+
+    if (token.type == TOKEN_TYPE_RIGHT_PAREN && precedence >= operator_precedence(infix)) {
+        --parser->missing_right_parens;
+        parser->previous = token;
+        lexer_next(parser->lexer, &token);
+        goto cleanup;
+    }
+
     while (left && precedence < operator_precedence(infix)) {
         expression_t* right_operand = malloc(sizeof(expression_t));
         if (token.type == TOKEN_TYPE_LEFT_PAREN) {
@@ -147,24 +158,21 @@ error_t _parser_parse_expression_precedence_recursive(expression_parser_t* parse
         }
         if (err) return err;
 
-        memmove(&token, &parser->previous, sizeof(token_t));
-        if (token.type == TOKEN_TYPE_RIGHT_PAREN) {
-            if (parser->missing_right_parens <= 0)
-                return ERROR_STRAY_RIGHT_PAREN;
-
-            err = lexer_next(parser->lexer, &token);
-            if (err) return err;
-            --parser->missing_right_parens;
-            precedence = OPERATOR_PRECEDENCE_MAXIMUM;
-        }
+        token = parser->previous;
 
         expression_t* new_left = malloc(sizeof(expression_t));
         expression_init_operator(new_left, left, infix, right_operand);
         left = new_left;
 
-        if (token.type == TOKEN_TYPE_EOF) {
+        if (token.type == TOKEN_TYPE_RIGHT_PAREN) {
+            --parser->missing_right_parens;
+            parser->previous = token;
+            lexer_next(parser->lexer, &token);
+            goto cleanup;
+        } else if (token.type == TOKEN_TYPE_EOF) {
             goto cleanup;
         }
+
         infix = *token.start;
     }
 
@@ -182,5 +190,7 @@ error_t parser_parse_expression(expression_parser_t* parser, expression_t* resul
 
     if (parser->missing_right_parens > 0)
         return ERROR_STRAY_LEFT_PAREN;
+    else if (parser->missing_right_parens < 0)
+        return ERROR_STRAY_RIGHT_PAREN;
     return ERROR_NO_ERROR;
 }

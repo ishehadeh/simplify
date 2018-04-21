@@ -124,6 +124,8 @@ inline operator_precedence_t operator_precedence(operator_t op) {
             return OPERATOR_PRECEDENCE_EXPONENT;
         case '(':
             return OPERATOR_PRECEDENCE_MAXIMUM;
+        case ')':
+            return OPERATOR_PRECEDENCE_MINIMUM;
         case ':':
             return OPERATOR_PRECEDENCE_ASSIGN;
         default:

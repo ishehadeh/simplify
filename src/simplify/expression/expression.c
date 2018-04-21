@@ -111,7 +111,6 @@ error_t _expression_run_function(expression_t* expr, scope_t* scope) {
         if (err) goto cleanup;
         args_top = args_top->next;
     }
-
     err = expression_simplify(&body, &fn_scope);
     if (err) return err;
 
