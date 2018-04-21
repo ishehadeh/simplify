@@ -109,6 +109,12 @@ error_t lexer_next(lexer_t* lexer, token_t* token) {
             token->length = 1;
             ++lexer->buffer_position;
             break;
+        case ',':
+            token->type = TOKEN_TYPE_COMMA;
+            token->start = lexer->buffer + lexer->buffer_position;
+            token->length = 1;
+            ++lexer->buffer_position;
+            break;
         case 'a' ... 'z':
         case 'A' ... 'Z':
         case '_':

@@ -34,6 +34,12 @@
     ((EXPR)->prefix.prefix) : (EXPRESSION_IS_PREFIX(EXPR)   ? \
     (EXPR->operator.infix)  : '\0'))
 
+#define EXPRESSION_LIST_FOREACH(I, EXPR_LIST)        \
+    (I) = (EXPR_LIST)->value;                        \
+    for (expression_list_t* __item = (EXPR_LIST);    \
+            __item;                                  \
+            I = __item->value, __item = __item->next)
+
 /* A parsed mathmatical expression.
  *
  * An expression is a union of four structures:
@@ -66,6 +72,9 @@ typedef char*                 variable_t;
  */
 typedef enum  expression_type expression_type_t;
 
+/* A singly linked list of expressions
+ */
+typedef struct expression_list expression_list_t;
 
 /* Operator precedence enumerates the different precedence levels for groups of operators.
  */
@@ -86,13 +95,26 @@ enum expression_type {
     EXPRESSION_TYPE_PREFIX,
     EXPRESSION_TYPE_OPERATOR,
     EXPRESSION_TYPE_VARIABLE,
+    EXPRESSION_TYPE_FUNCTION,
 };
+
+struct expression_list {
+    expression_t* value;
+    struct expression_list* next;
+};
+
 
 /* cldoc:begin-category(Expression Structures) */
 
 struct expression_number {
     expression_type_t type;
     mpfr_t value;
+};
+
+struct expression_function {
+    expression_type_t  type;
+    variable_t         name;
+    expression_list_t* parameters;
 };
 
 struct expression_prefix {
@@ -121,6 +143,7 @@ union expression {
     struct expression_variable variable;
     struct expression_prefix   prefix;
     struct expression_operator operator;
+    struct expression_function function;
 };
 
 /* cldoc:end-category() */
@@ -146,10 +169,20 @@ void expression_init_prefix(expression_t* expression, operator_t operator, expre
  * @name the variable's name
  * @length the length of the variable's name
  * 
- * It should be noted that this function copies the value `name` is pointing to up through `length`.
+ * NOTE: this function copies the value `name` is pointing to up through `length`.
  */
 void expression_init_variable(expression_t* expression, char* name, size_t length);
 
+
+/* initialize a function expression
+ * @expression the expression to initialize
+ * @name the function's name
+ * @length the length of the function's name
+ * @args the function's arguments
+ *
+ * NOTE: this function copies the value `name` is pointing to up through `length`.
+ */
+void expression_init_function(expression_t* expression, char* name, size_t length, expression_list_t* arguments);
 
 /* initialize a new number expression
  * @expression the expression to initialize
@@ -203,5 +236,71 @@ static inline int expression_is_comparison(expression_t* expr) {
         expr->operator.infix == '>' ||
         expr->operator.infix == '=');
 }
+
+/* append a new element to the end of `list`
+ * 
+ * @list the list to append to
+ * @expr the expression to append
+ */
+static inline void expression_list_append(expression_list_t* list, expression_t* expr) {
+    if (!list->value) {
+        list->value = expr;
+        return;
+    }
+
+    expression_list_t* next = malloc(sizeof(expression_list_t));
+    next->value = expr;
+    next->next  = NULL;
+    while (list->next) list = list->next;
+
+    list->next = next;
+}
+
+/* free the last element of the list (that may be `list` itself)
+ * 
+ * @list the list to pop
+ */
+static inline void expression_list_pop(expression_list_t* list) {
+    while (list->next) list = list->next;
+    if (list->value)
+        expression_free(list->value);
+    free(list);
+}
+
+/* initialize an expression list
+ * @list the list to initialize
+ */
+static inline void expression_list_init(expression_list_t* list) {
+    list->value = NULL;
+    list->next = NULL;
+}
+
+/* free all expressions and units in the list
+ * @list the list to clean
+ */
+static inline void expression_list_free(expression_list_t* list) {
+    expression_list_t* last    = NULL;
+    while (list) {
+        if (list->value) expression_free(list->value);
+        last = list;
+        list = list->next;
+        free(last);
+    }
+}
+
+/* copy all elements in one list to another
+ *
+ * @list1 the source list
+ * @list2 the destination list
+ */
+static inline void expression_list_copy(expression_list_t* list1, expression_list_t* list2) {
+    expression_t* expr;
+    EXPRESSION_LIST_FOREACH(expr, list1) {
+        expression_t* copy = malloc(sizeof(expression_t));
+        expression_copy(expr, copy);
+        expression_list_append(list2, copy);
+    }
+}
+
 
 #endif  // SIMPLIFY_EXPRESSION_EXPR_TYPES_H_

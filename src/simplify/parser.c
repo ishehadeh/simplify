@@ -33,6 +33,21 @@ error_t parse_file(FILE* source, expression_t* result) {
     return err;
 }
 
+error_t _parser_parse_expression_list(expression_parser_t* parser, expression_list_t* list) {
+    expression_t* next = malloc(sizeof(expression_t));
+    error_t err = parser_parse_expression(parser, next);
+    if (err) return err;
+    expression_list_append(list, next);
+
+    while (parser->previous.type == TOKEN_TYPE_COMMA) {
+        expression_t* next = malloc(sizeof(expression_t));
+        error_t err = parser_parse_expression(parser, next);
+        if (err) return err;
+        expression_list_append(list, next);
+    }
+    return ERROR_NO_ERROR;
+}
+
 
 /* _parse_expression_precedence_recursive parses an expression recursively.
  * it expects a `precedence` parameter, which should only be used internally while recursing.
@@ -80,13 +95,30 @@ error_t _parser_parse_expression_precedence_recursive(expression_parser_t* parse
             break;
         }
         case TOKEN_TYPE_IDENTIFIER:
-            expression_init_variable(left, token.start, token.length);
+        {
+            char* name = token.start;
+            size_t len = token.length;
+
             err = lexer_next(parser->lexer, &token);
+            if (token.type == TOKEN_TYPE_LEFT_PAREN) {
+                expression_list_t* args = malloc(sizeof(expression_list_t));
+                expression_list_init(args);
+                error_t err = _parser_parse_expression_list(parser, args);
+                if (err) {
+                    expression_list_free(args);
+                    return err;
+                }
+                expression_init_function(left, name, len, args);
+                err = lexer_next(parser->lexer, &token);
+            } else {
+                expression_init_variable(left, name, len);
+            }
             if (err) {
                 expression_free(left);
                 return err;
             }
             break;
+        }
         case TOKEN_TYPE_LEFT_PAREN:
             ++parser->missing_right_parens;
             err = _parser_parse_expression_precedence_recursive(parser, left, OPERATOR_PRECEDENCE_MINIMUM);
@@ -108,6 +140,8 @@ error_t _parser_parse_expression_precedence_recursive(expression_parser_t* parse
         if (token.type == TOKEN_TYPE_LEFT_PAREN) {
             ++parser->missing_right_parens;
             err = _parser_parse_expression_precedence_recursive(parser, right_operand, OPERATOR_PRECEDENCE_MINIMUM);
+        } else if (token.type == TOKEN_TYPE_COMMA) {
+            goto cleanup;
         } else {
             err = _parser_parse_expression_precedence_recursive(parser, right_operand, operator_precedence(infix));
         }

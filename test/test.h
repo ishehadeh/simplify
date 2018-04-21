@@ -58,9 +58,26 @@ void expression_assert_eq(expression_t* expr1, expression_t* expr2) {
         }
         case EXPRESSION_TYPE_VARIABLE:
             if (strcmp(expr1->variable.value, expr2->variable.value) != 0)
-                FATAL("ASSERT FAILED ('%s' != '%s'): numeric expressions don't match",
+                FATAL("ASSERT FAILED ('%s' != '%s'): variable names don't match",
                     expr1->variable.value, expr2->variable.value);
             break;
+        case EXPRESSION_TYPE_FUNCTION:
+        {
+            if (strcmp(expr1->function.name, expr2->function.name) != 0)
+                FATAL("ASSERT FAILED ('%s' != '%s'): function names don't match",
+                    expr1->function.name, expr2->function.name);
+
+            expression_t*      param1;
+            expression_list_t* other = expr1->function.parameters;
+            EXPRESSION_LIST_FOREACH(param1, expr1->function.parameters) {
+                if (!other)
+                    FATAL("ASSERT FAILED: argument count doesn't match");
+                expression_assert_eq(param1, other->value);
+                other = other->next;
+            }
+            if (other->next)
+                FATAL("ASSERT FAILED: argument count doesn't match");
+        }
     }
 }
 

@@ -148,10 +148,22 @@ error_t _expression_fprint_precedence_recursive(expression_t* expr, FILE* f, ope
         case EXPRESSION_TYPE_VARIABLE:
             fprintf(f, "%s", expr->variable.value);
             break;
-        case  EXPRESSION_TYPE_PREFIX:
+        case EXPRESSION_TYPE_PREFIX:
             fputc(expr->prefix.prefix, f);
             expression_fprint(expr->prefix.right, f);
             break;
+        case EXPRESSION_TYPE_FUNCTION:
+        {
+            fprintf(f, "%s(", expr->function.name);
+            expression_t* arg;
+            EXPRESSION_LIST_FOREACH(arg, expr->function.parameters) {
+                expression_fprint(arg, f);
+                if (__item->next)
+                    fprintf(f, ", ");
+            }
+            fputc(')', f);
+            break;
+        }
     }
     return ERROR_NO_ERROR;
 }

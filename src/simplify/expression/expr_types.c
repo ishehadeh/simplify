@@ -38,6 +38,14 @@ void expression_init_number_si(expression_t* expr, int value) {
     mpfr_init_set_si(expr->number.value, value, MPFR_RNDF);
 }
 
+void expression_init_function(expression_t* expr, char* name, size_t len, expression_list_t* params) {
+    expr->type = EXPRESSION_TYPE_FUNCTION;
+    expr->function.name = malloc(len + 1);
+    expr->function.name[len] = 0;
+    strncpy(expr->function.name, name, len);
+    expr->function.parameters = params;
+}
+
 void expression_clean(expression_t* expr) {
     switch (expr->type) {
         case EXPRESSION_TYPE_PREFIX:
@@ -56,6 +64,9 @@ void expression_clean(expression_t* expr) {
         case EXPRESSION_TYPE_VARIABLE:
             free(expr->variable.value);
             break;
+        case EXPRESSION_TYPE_FUNCTION:
+            free(expr->function.name);
+            expression_list_free(expr->function.parameters);
         default:
             break;
     }

@@ -59,7 +59,7 @@ error_t _expression_apply_operator(expression_t* expr, expression_t* out, scope_
 
 error_t _expression_substitute_variable(expression_t* expr, scope_t* scope) {
     expression_t temp_expr;
-    error_t err = scope_value_of(scope, expr->variable.value, &temp_expr);
+    error_t err = scope_get_value(scope, expr->variable.value, &temp_expr);
     if (!err) {
         expression_clean(expr);
         memmove(expr, &temp_expr, sizeof(expression_t));
@@ -71,6 +71,7 @@ error_t _expression_substitute_variable(expression_t* expr, scope_t* scope) {
 
 variable_t _expression_find_var_recursive(expression_t* expr) {
     switch (expr->type) {
+        case EXPRESSION_TYPE_FUNCTION:
         case EXPRESSION_TYPE_NUMBER:
             return NULL;
         case EXPRESSION_TYPE_OPERATOR:
@@ -88,11 +89,45 @@ variable_t _expression_find_var_recursive(expression_t* expr) {
     return NULL;
 }
 
+error_t _expression_run_function(expression_t* expr, scope_t* scope) {
+    scope_t fn_scope;
+    scope_init(&fn_scope);
+    fn_scope.parent = scope;
+
+    expression_t body;
+    expression_list_t args_def;
+    error_t err = scope_get_function(scope, expr->function.name, &body, &args_def);
+    if (err) return err;
+
+    expression_t* arg_def;
+    expression_list_t* args_top = expr->function.parameters;
+
+    EXPRESSION_LIST_FOREACH(arg_def, &args_def) {
+        if (!args_top)
+            return ERROR_MISSING_ARGUMENTS;
+        expression_t* op_expr = malloc(sizeof(expression_t));
+        expression_init_operator(op_expr, arg_def, ':', args_top->value);
+        error_t err = expression_simplify(op_expr, &fn_scope);
+        if (err) goto cleanup;
+        args_top = args_top->next;
+    }
+
+    err = expression_simplify(&body, &fn_scope);
+    if (err) return err;
+
+    memmove(expr, &body, sizeof(expression_t));
+
+cleanup:
+    scope_clean(&fn_scope);
+    return  ERROR_NO_ERROR;
+}
+
 error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
     switch (expr->type) {
         case EXPRESSION_TYPE_VARIABLE:
-            _expression_substitute_variable(expr, scope);
-            break;
+            return _expression_substitute_variable(expr, scope);
+        case EXPRESSION_TYPE_FUNCTION:
+            return _expression_run_function(expr, scope);
         case EXPRESSION_TYPE_NUMBER:
             break;
         case EXPRESSION_TYPE_PREFIX:
@@ -118,41 +153,55 @@ error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
         }
         case EXPRESSION_TYPE_OPERATOR:
         {
-            error_t err = _expression_simplify_recursive(expr->operator.right, scope);
-            if (err) return err;
-
             if (expr->operator.infix == ':') {
-                if (expr->operator.left->type != EXPRESSION_TYPE_VARIABLE) {
-                    variable_t varname = _expression_find_var_recursive(expr->operator.left);
-                    if (varname) {
-                        expression_isolate_variable(expr, varname);
-                        err = _expression_simplify_recursive(expr->operator.right, scope);
-                        if (err) return err;
+                if (expr->operator.left->type == EXPRESSION_TYPE_FUNCTION) {
+                    error_t err = scope_define_function(scope,
+                                            expr->operator.left->function.name,
+                                            expr->operator.right,
+                                            expr->operator.left->function.parameters);
+                    if (err) return err;
+
+                    // copy the body into the parent expression
+                    expression_copy(expr->operator.right, expr);
+                    return ERROR_NO_ERROR;
+                } else {
+                    error_t err = _expression_simplify_recursive(expr->operator.right, scope);
+                    if (err) return err;
+
+                    if (expr->operator.left->type != EXPRESSION_TYPE_VARIABLE) {
+                        variable_t varname = _expression_find_var_recursive(expr->operator.left);
+                        if (varname) {
+                            expression_isolate_variable(expr, varname);
+                            err = _expression_simplify_recursive(expr->operator.right, scope);
+                            if (err) return err;
+                        }
+                    }
+                    if (expr->operator.left->type == EXPRESSION_TYPE_VARIABLE
+                        && expr->operator.right->type == EXPRESSION_TYPE_NUMBER) {
+                        scope_define(scope, expr->operator.left->variable.value, expr->operator.right);
+                        mpfr_t result;
+                        mpfr_init(result);
+                        mpfr_set(result, expr->operator.right->number.value, MPFR_RNDF);
+                        expression_free(expr->operator.left);
+                        expression_init_number(expr, result);
+                        mpfr_clear(result);
                     }
                 }
-                if (expr->operator.left->type == EXPRESSION_TYPE_VARIABLE
-                    && expr->operator.right->type == EXPRESSION_TYPE_NUMBER) {
-                    scope_define(scope, expr->operator.left->variable.value, expr->operator.right);
-                    mpfr_t result;
-                    mpfr_init(result);
-                    mpfr_set(result, expr->operator.right->number.value, MPFR_RNDF);
-                    expression_free(expr->operator.left);
-                    expression_init_number(expr, result);
-                    mpfr_clear(result);
-                }
             } else {
+                error_t err = _expression_simplify_recursive(expr->operator.right, scope);
+                if (err) return err;
                 err = _expression_simplify_recursive(expr->operator.left, scope);
                 if (expr->operator.right->type == EXPRESSION_TYPE_NUMBER
                     && expr->operator.left->type == EXPRESSION_TYPE_NUMBER) {
-                if (err) return err;
+                    if (err) return err;
 
-                err = _expression_apply_operator(expr, expr, scope);
-            } else if (expression_is_comparison(expr)) {
-                // if we failed to evaluate a conditional we can't be sure about the expression's boolean result.
-                scope->boolean = -1;
+                    return _expression_apply_operator(expr, expr, scope);
+                } else if (expression_is_comparison(expr)) {
+                    // if we failed to evaluate a conditional we can't be sure about the expression's boolean result.
+                    scope->boolean = -1;
+                }
             }
-            }
-            return err;
+            return ERROR_NO_ERROR;
         }
     }
     return ERROR_NO_ERROR;
@@ -160,6 +209,7 @@ error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
 
 int _expression_has_variable_recursive(expression_t* expr, variable_t var) {
     switch (expr->type) {
+        case EXPRESSION_TYPE_FUNCTION:
         case EXPRESSION_TYPE_NUMBER:
             return 0;
         case EXPRESSION_TYPE_OPERATOR:
@@ -182,6 +232,7 @@ int _expression_has_variable_recursive(expression_t* expr, variable_t var) {
 
 error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t** target, variable_t var) {
     switch (expr->type) {
+        case EXPRESSION_TYPE_FUNCTION:
         case EXPRESSION_TYPE_NUMBER:
             return ERROR_VARIABLE_NOT_PRESENT;
         case EXPRESSION_TYPE_OPERATOR:

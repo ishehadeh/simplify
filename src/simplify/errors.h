@@ -42,6 +42,10 @@ enum error {
 
     ERROR_INVALID_ASSIGNMENT_EXPRESSION,
     ERROR_UNRECOGNIZED_ARGUMENT,
+
+    ERROR_IS_A_FUNCTION,
+    ERROR_IS_A_VARIABLE,
+    ERROR_MISSING_ARGUMENTS,
 };
 
 /* get a description of the error
@@ -95,6 +99,12 @@ static inline const char* error_string(error_t err) {
             return "invalid command line argument";
         case ERROR_UNEXPECTED_EOL:
             return "line ended prematurely";
+        case ERROR_IS_A_FUNCTION:
+            return "you're trying to get the value of a function, instead call it using parentheses.";
+        case ERROR_IS_A_VARIABLE:
+            return "you're trying to call a variable!";
+        case ERROR_MISSING_ARGUMENTS:
+            return "missing arguments to function call";
     }
     return "unkown error type";
 }
