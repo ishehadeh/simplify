@@ -9,6 +9,28 @@
 error_t _parser_parse_expression_precedence_recursive(expression_parser_t* parser,
                                                       expression_t* expression,
                                                       operator_precedence_t precedence);
+
+/* get the next token from the parser's internal lexer
+ *
+ * @parser
+ * @out token output, this may be null
+ * @return returns an error code
+ */
+inline error_t _parser_next_token(expression_parser_t* parser, token_t* out) {
+    if (out)
+        *out = parser->previous;
+    return lexer_next(parser->lexer, &parser->previous);
+}
+
+/* grab the parser's cached token
+ *
+ * @parser
+ * @out token output
+ */
+inline void _parser_peek_token(expression_parser_t* parser, token_t* out) {
+    *out = parser->previous;
+}
+
 error_t parse_string(char* source, expression_t* result) {
     lexer_t lexer;
     expression_parser_t parser;
@@ -35,12 +57,44 @@ error_t parse_file(FILE* source, expression_t* result) {
     return err;
 }
 
+error_t _parser_parse_number(expression_parser_t* parser, expression_t* expr) {
+    expr->type = EXPRESSION_TYPE_NUMBER;
+    token_t token;
+    error_t err;
+
+    err = _parser_next_token(parser, &token);
+    if (err) return err;
+
+    char number_buffer[token.length + 1];
+    number_buffer[token.length] = 0;
+
+    strncpy(&number_buffer[0], token.start, token.length);
+    mpfr_init2(expr->number.value, token.length + (1 << 6));
+    mpfr_set_str(expr->number.value, &number_buffer[0], 10, MPFR_RNDF);
+
+    return ERROR_NO_ERROR;
+}
+
+error_t _parser_parse_prefix_operator(expression_parser_t* parser, expression_t* expr) {
+    expr->type = EXPRESSION_TYPE_PREFIX;
+    token_t       token;
+    error_t       err;
+
+    err = _parser_next_token(parser, &token);
+    if (err) return err;
+
+    expr->prefix.prefix = *token.start;
+    expr->prefix.right = malloc(sizeof(expression_t));
+
+    return _parser_parse_expression_precedence_recursive(parser, expr->prefix.right, OPERATOR_PRECEDENCE_MAXIMUM);
+}
+
+
 error_t _parser_parse_expression_list(expression_parser_t* parser, expression_list_t* list) {
     expression_t* next = malloc(sizeof(expression_t));
     error_t err = _parser_parse_expression_precedence_recursive(parser, next, OPERATOR_PRECEDENCE_ASSIGN);
     if (err) return err;
     expression_list_append(list, next);
-
     while (parser->previous.type == TOKEN_TYPE_COMMA) {
         lexer_next(parser->lexer, &parser->previous);
         expression_t* next = malloc(sizeof(expression_t));
@@ -52,136 +106,136 @@ error_t _parser_parse_expression_list(expression_parser_t* parser, expression_li
 }
 
 
+error_t _parser_parse_identifier(expression_parser_t* parser, expression_t* expr) {
+    token_t identifier;
+    token_t maybe_left_paren;
+    error_t err;
+
+    err = _parser_next_token(parser, &identifier);
+    if (err) return err;
+
+    _parser_peek_token(parser, &maybe_left_paren);
+    // if the identifier is followed by a left-paren then assume it's a function
+    if (maybe_left_paren.type == TOKEN_TYPE_LEFT_PAREN) {
+        expr->type = EXPRESSION_TYPE_FUNCTION;
+        expr->function.parameters = malloc(sizeof(expression_list_t));
+
+        expression_list_init(expr->function.parameters);
+
+        // since a left paren was hit let the parser know there should be a right paren coming up
+        ++parser->missing_right_parens;
+        err = _parser_next_token(parser, NULL);
+        if (err) return err;
+
+        error_t err = _parser_parse_expression_list(parser, expr->function.parameters);
+        if (err) {
+            expression_list_free(expr->function.parameters);
+            return err;
+        }
+
+        // copy the function's name from the underlying buffer
+        expr->function.name = malloc(identifier.length + 1);
+        expr->function.name[identifier.length] = 0;
+        strncpy(expr->function.name, identifier.start, identifier.length);
+    } else {
+        expr->type = EXPRESSION_TYPE_VARIABLE;
+
+        // copy the variable's name from the underlying buffer
+        expr->variable.value = malloc(identifier.length + 1);
+        expr->variable.value[identifier.length] = 0;
+        strncpy(expr->variable.value, identifier.start, identifier.length);
+    }
+
+    return err;
+}
+
+
 /* _parse_expression_precedence_recursive parses an expression recursively.
- * it expects a `precedence` parameter, which should only be used internally while recursing.
+ * 
+ * @parser the parser to draw from
+ * @expression the parse result
+ * @precedence The minimum operator precedence where this function will recurse.
+ * @return returns an error code
  */
 error_t _parser_parse_expression_precedence_recursive(expression_parser_t* parser,
                                                       expression_t* expression,
                                                       operator_precedence_t precedence) {
     token_t token;
-    error_t err = lexer_next(parser->lexer, &token);
-    if (err) return err;
-    expression_t* left = malloc(sizeof(expression_t));
+    error_t err;
 
+    _parser_peek_token(parser, &token);
+    expression_t* left = malloc(sizeof(expression_t));
     switch (token.type) {
         case TOKEN_TYPE_OPERATOR:
-        {
-            operator_t operator = *token.start;
-            expression_t* operand = malloc(sizeof(expression_t));
-
-            error_t err = _parser_parse_expression_precedence_recursive(parser, operand, OPERATOR_PRECEDENCE_MAXIMUM);
-            if (err) return err;
-
-            expression_init_prefix(left, operator, operand);
-            memmove(&token, &parser->previous, sizeof(token_t));
+            err = _parser_parse_prefix_operator(parser, left);
             break;
-        }
         case TOKEN_TYPE_NUMBER:
-        {
-            mpfr_t num;
-
-            char del[token.length + 1];
-            del[token.length] = 0;
-            strncpy(del, token.start, token.length);
-            mpfr_init2(num, token.length + (1 << 6));
-            mpfr_set_str(num, del, 10, MPFR_RNDF);
-
-            expression_init_number(left, num);
-
-            mpfr_clear(num);
-            err = lexer_next(parser->lexer, &token);
-            if (err) {
-                expression_free(left);
-                return err;
-            }
+            err = _parser_parse_number(parser, left);
             break;
-        }
         case TOKEN_TYPE_IDENTIFIER:
+            err = _parser_parse_identifier(parser, left);
+            break;
+        case TOKEN_TYPE_LEFT_PAREN:
         {
-            char* name = token.start;
-            size_t len = token.length;
-
-            err = lexer_next(parser->lexer, &token);
-            if (token.type == TOKEN_TYPE_LEFT_PAREN) {
-                expression_list_t* args = malloc(sizeof(expression_list_t));
-                expression_list_init(args);
-                error_t err = _parser_parse_expression_list(parser, args);
-                ++parser->missing_right_parens;
-                if (err) {
-                    expression_list_free(args);
-                    return err;
-                }
-                expression_init_function(left, name, len, args);
-                token = parser->previous;
-            } else {
-                expression_init_variable(left, name, len);
-            }
-            if (err) {
-                expression_free(left);
-                return err;
-            }
+            // when a left paren is hit, try parse a sub-expression
+            ++parser->missing_right_parens;
+            err = _parser_next_token(parser, NULL);
+            if (err) goto cleanup;
+            err = parser_parse_expression(parser, left);
             break;
         }
-        case TOKEN_TYPE_LEFT_PAREN:
-            ++parser->missing_right_parens;
-            err = _parser_parse_expression_precedence_recursive(parser, left, OPERATOR_PRECEDENCE_MINIMUM);
-            if (err) return err;
-            memmove(&token, &parser->previous, sizeof(token_t));
-            break;
         case TOKEN_TYPE_EOF:
-            return ERROR_NO_ERROR;
+            return ERROR_UNEXPECTED_EOF;
+        case TOKEN_TYPE_COMMA:
+            return ERROR_UNEXPECTED_EOL;
         default:
             return ERROR_INVALID_TOKEN;
     }
+    if (err) goto cleanup;
 
-    if (token.type == TOKEN_TYPE_EOF)
-        goto cleanup;
-
-    operator_t infix = *token.start;
-
-    if (token.type == TOKEN_TYPE_RIGHT_PAREN && precedence >= operator_precedence(infix)) {
-        --parser->missing_right_parens;
-        parser->previous = token;
-        lexer_next(parser->lexer, &token);
+    _parser_peek_token(parser, &token);
+    if (token.type == TOKEN_TYPE_EOF) {
         goto cleanup;
     }
 
+    operator_t infix = *token.start;
     while (left && precedence < operator_precedence(infix)) {
-        expression_t* right_operand = malloc(sizeof(expression_t));
-        if (token.type == TOKEN_TYPE_LEFT_PAREN) {
-            ++parser->missing_right_parens;
-            err = _parser_parse_expression_precedence_recursive(parser, right_operand, OPERATOR_PRECEDENCE_MINIMUM);
-        } else if (token.type == TOKEN_TYPE_COMMA) {
-            goto cleanup;
-        } else {
-            err = _parser_parse_expression_precedence_recursive(parser, right_operand, operator_precedence(infix));
-        }
-        if (err) return err;
 
-        token = parser->previous;
+        // comma's are the end-of-expression delemiter, so if the parser hits one exit immediately
+        if (token.type == TOKEN_TYPE_COMMA) {
+            goto cleanup;
+        }
+
+        err = _parser_next_token(parser, &token);
+        if (err) goto cleanup;
+
+        expression_t* right_operand = malloc(sizeof(expression_t));
+        err = _parser_parse_expression_precedence_recursive(parser, right_operand, operator_precedence(infix));
+        if (err) {
+            free(right_operand);
+            goto cleanup;
+        }
+
+        _parser_peek_token(parser, &token);
 
         expression_t* new_left = malloc(sizeof(expression_t));
         expression_init_operator(new_left, left, infix, right_operand);
         left = new_left;
 
-        if (token.type == TOKEN_TYPE_RIGHT_PAREN) {
-            --parser->missing_right_parens;
-            parser->previous = token;
-            lexer_next(parser->lexer, &token);
-            goto cleanup;
-        } else if (token.type == TOKEN_TYPE_EOF) {
-            goto cleanup;
-        }
-
+        if (token.type == TOKEN_TYPE_EOF) goto cleanup;
         infix = *token.start;
     }
 
-cleanup:
-    memmove(&parser->previous, &token, sizeof(token_t));
-    memmove(expression, left, sizeof(expression_t));
-    free(left);
+    if (token.type == TOKEN_TYPE_RIGHT_PAREN) {
+        --parser->missing_right_parens;
+        _parser_next_token(parser, &token);
+        goto cleanup;
+    }
 
-    return ERROR_NO_ERROR;
+cleanup:
+    *expression = *left;
+    free(left);
+    return err;
 }
 
 error_t parser_parse_expression(expression_parser_t* parser, expression_t* result) {

@@ -19,6 +19,7 @@ struct expression_parser {
 static inline void expression_parser_init(expression_parser_t* parser, lexer_t* lexer) {
     parser->lexer = lexer,
     parser->missing_right_parens = 0;
+    lexer_next(lexer, &parser->previous);
 }
 
 /* clean all resources associated with a parser
