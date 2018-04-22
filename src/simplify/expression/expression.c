@@ -323,10 +323,13 @@ error_t expression_isolate_variable(expression_t* expr, variable_t var) {
     if (!expression_is_comparison(expr) && expr->operator.infix != ':') {
         if (!_expression_has_variable_recursive(expr, var))
             return ERROR_VARIABLE_NOT_PRESENT;
+        expression_t* new_left = malloc(sizeof(expression_t));
 
+        *new_left = *expr;
         expr->type = EXPRESSION_TYPE_OPERATOR;
         expr->operator.infix = '=';
-        expr->operator.left = expr;
+        expr->operator.left = new_left;
+        expr->operator.right = malloc(sizeof(expression_t));
         expression_init_number_si(expr->operator.right, 0);
     } else {
         if (!_expression_has_variable_recursive(expr->operator.right, var)
@@ -337,11 +340,13 @@ error_t expression_isolate_variable(expression_t* expr, variable_t var) {
     error_t err = _expression_isolate_variable_recursive(expr, NULL, var);
     if (err) return err;
 
+    // make sure the variable is always on the left
     if (expr->operator.right->type == EXPRESSION_TYPE_VARIABLE) {
         expression_t* right = expr->operator.right;
         expr->operator.right = expr->operator.left;
         expr->operator.left = right;
     } else {
+        // flip the sign if it was a < or >
         if (expr->operator.infix == '<') {
             expr->operator.infix = '>';
         } else if (expr->operator.infix == '>') {
