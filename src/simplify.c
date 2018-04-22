@@ -68,9 +68,9 @@ error_t execute_file(char* fname, scope_t* scope) {
             expression_list_free(exprs);
             return err;
         }
-
     }
 
+    expression_list_free(exprs);
     if (f != stdin)
         fclose(f);
     return ERROR_NO_ERROR;

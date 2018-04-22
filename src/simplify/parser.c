@@ -43,8 +43,8 @@ error_t parse_string(char* source, expression_t* result) {
     expression_parser_init(&parser, &lexer);
 
     error_t err = parser_parse_expression(&parser, result);
-    lexer_clean(&lexer);
     expression_parser_clean(&parser);
+    lexer_clean(&lexer);
     return err;
 }
 
@@ -56,8 +56,8 @@ error_t parse_file(FILE* source, expression_list_t* result) {
     expression_parser_init(&parser, &lexer);
 
     error_t err = _parser_parse_expression_list_precedence(&parser, result, OPERATOR_PRECEDENCE_MINIMUM);
-    lexer_clean(&lexer);
     expression_parser_clean(&parser);
+    lexer_clean(&lexer);
     return err;
 }
 
@@ -194,11 +194,14 @@ error_t _parser_parse_expression_precedence_recursive(expression_parser_t* parse
             break;
         }
         case TOKEN_TYPE_EOF:
-            return ERROR_UNEXPECTED_EOF;
+            err = ERROR_UNEXPECTED_EOF;
+            goto cleanup;
         case TOKEN_TYPE_COMMA:
-            return ERROR_UNEXPECTED_EOL;
+            err = ERROR_UNEXPECTED_EOL;
+            goto cleanup;
         default:
-            return ERROR_INVALID_TOKEN;
+            err = ERROR_INVALID_TOKEN;
+            goto cleanup;
     }
     if (err) goto cleanup;
 

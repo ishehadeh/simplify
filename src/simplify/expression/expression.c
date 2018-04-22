@@ -106,11 +106,11 @@ error_t _expression_run_function(expression_t* expr, scope_t* scope) {
     EXPRESSION_LIST_FOREACH(arg_def, &args_def) {
         if (!args_top)
             return ERROR_MISSING_ARGUMENTS;
-        expression_t* op_expr = malloc(sizeof(expression_t));
+        expression_t op_expr;
         expression_simplify(args_top->value, scope);
-        expression_init_operator(op_expr, arg_def, ':', args_top->value);
-        error_t err = expression_simplify(op_expr, &fn_scope);
-
+        expression_init_operator(&op_expr, arg_def, ':', args_top->value);
+        error_t err = expression_simplify(&op_expr, &fn_scope);
+        expression_clean(&op_expr);
 
         if (err) goto cleanup;
         args_top = args_top->next;
