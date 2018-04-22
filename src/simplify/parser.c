@@ -198,19 +198,28 @@ error_t _parser_parse_expression_precedence_recursive(expression_parser_t* parse
         goto cleanup;
     }
 
-    operator_t infix = *token.start;
-    while (left && precedence < operator_precedence(infix)) {
+    operator_precedence_t operator_prec = operator_precedence(*token.start);
+    while (left && precedence < operator_prec) {
+        operator_t infix;
 
         // comma's are the end-of-expression delemiter, so if the parser hits one exit immediately
         if (token.type == TOKEN_TYPE_COMMA) {
             goto cleanup;
         }
 
+        // left parens can be used as a multiplication operator
+        if (token.type == TOKEN_TYPE_LEFT_PAREN) {
+            ++parser->missing_right_parens;
+            infix = '*';
+        } else {
+            infix = *token.start;
+        }
+
         err = _parser_next_token(parser, &token);
         if (err) goto cleanup;
 
         expression_t* right_operand = malloc(sizeof(expression_t));
-        err = _parser_parse_expression_precedence_recursive(parser, right_operand, operator_precedence(infix));
+        err = _parser_parse_expression_precedence_recursive(parser, right_operand, operator_prec);
         if (err) {
             free(right_operand);
             goto cleanup;
@@ -223,7 +232,7 @@ error_t _parser_parse_expression_precedence_recursive(expression_parser_t* parse
         left = new_left;
 
         if (token.type == TOKEN_TYPE_EOF) goto cleanup;
-        infix = *token.start;
+        operator_prec = operator_precedence(*token.start);
     }
 
     if (token.type == TOKEN_TYPE_RIGHT_PAREN) {

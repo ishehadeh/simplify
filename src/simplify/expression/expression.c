@@ -66,7 +66,7 @@ error_t _expression_substitute_variable(expression_t* expr, scope_t* scope) {
         err = expression_simplify(expr, scope);
         if (err) return err;
     }
-    return err;
+    return ERROR_NO_ERROR;
 }
 
 variable_t _expression_find_var_recursive(expression_t* expr) {
