@@ -1,5 +1,7 @@
 /* Copyright Ian Shehadeh 2018 */
 
+#include <stdarg.h>
+
 #include "test/test.h"
 #include "simplify/parser.h"
 
@@ -27,11 +29,26 @@ static inline expression_t* expression_new_variable(variable_t var) {
     return x;
 }
 
+static inline expression_t* expression_new_function(variable_t name, int param_count, ...) {
+    expression_t* x = malloc(sizeof(expression_t));
+    va_list args;
+    va_start(args, param_count);
+    expression_list_t* params = malloc(sizeof(expression_list_t));
+    expression_list_init(params);
+
+    for (int i = 0; i < param_count; ++i) {
+        expression_list_append(params, va_arg(args, expression_t*));
+    }
+    va_end(args);
+    expression_init_function(x, name, strlen(name), params);
+    return x;
+}
+
 int main() {
     struct {
         char*        string;
         expression_t* expr;
-    } __string_expr_pairs[6] = {
+    } __string_expr_pairs[7] = {
         { "2 * 5.5",
             expression_new_operator(expression_new_number(2), '*', expression_new_number(5.5))
         },
@@ -77,11 +94,28 @@ int main() {
                 '*',
                 expression_new_prefix('-', expression_new_number(5.5)))
         },
+        { "f(x + 2) : 5 * x * 3",
+            expression_new_operator(
+                expression_new_function(
+                    "f", 1,
+                    expression_new_operator(
+                        expression_new_variable("x"),
+                        '+',
+                        expression_new_number(2))),
+                ':',
+                expression_new_operator(
+                    expression_new_operator(
+                        expression_new_number(5),
+                        '*',
+                        expression_new_variable("x")),
+                    '*',
+                    expression_new_number(3))),
+        },
     };
 
 
     error_t err;
-    for (int i = 0; i < 6; ++i) {
+    for (int i = 0; i < 7; ++i) {
         expression_t expr;
         err = parse_string(__string_expr_pairs[i].string, &expr);
         if (err)

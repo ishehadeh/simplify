@@ -68,14 +68,14 @@ void expression_assert_eq(expression_t* expr1, expression_t* expr2) {
                     expr1->function.name, expr2->function.name);
 
             expression_t*      param1;
-            expression_list_t* other = expr1->function.parameters;
+            expression_list_t* other = expr2->function.parameters;
             EXPRESSION_LIST_FOREACH(param1, expr1->function.parameters) {
                 if (!other)
                     FATAL("ASSERT FAILED: argument count doesn't match");
                 expression_assert_eq(param1, other->value);
                 other = other->next;
             }
-            if (other->next)
+            if (other)
                 FATAL("ASSERT FAILED: argument count doesn't match");
         }
     }
