@@ -104,7 +104,6 @@ static inline error_t scope_get_variable_info(scope_t* scope, char* variable, va
         err = rbtree_search(&parent->variables, variable, (void**)value);
         parent = parent->parent;
     }
-
     return err;
 }
 

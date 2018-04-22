@@ -101,6 +101,15 @@ void expression_copy(expression_t* expr, expression_t* out) {
         case EXPRESSION_TYPE_VARIABLE:
             expression_init_variable(out, expr->variable.value, strlen(expr->variable.value));
             break;
+        case EXPRESSION_TYPE_FUNCTION:
+        {
+            expression_list_t* params = malloc(sizeof(expression_list_t));
+            expression_list_init(params);
+            expression_list_copy(expr->function.parameters, params);
+            expression_init_function(out, expr->function.name, strlen(expr->function.name), params);
+            break;
+        }
+
         default:
             memcpy(expr, out, sizeof(expression_t));
             break;

@@ -37,8 +37,8 @@
 #define EXPRESSION_LIST_FOREACH(I, EXPR_LIST)        \
     (I) = (EXPR_LIST)->value;                        \
     for (expression_list_t* __item = (EXPR_LIST);    \
-            __item;                                  \
-            I = __item->value, __item = __item->next)
+            __item && (I = __item->value);           \
+            __item = __item->next)
 
 /* A parsed mathmatical expression.
  *

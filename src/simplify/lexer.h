@@ -10,10 +10,6 @@
 
 #include "simplify/errors.h"
 
-#ifndef LEXER_BUFFER_MAX_CAPACITY
-#   define LEXER_BUFFER_MAX_CAPACITY (1024 * 4)
-#endif
-
 /* lexical analyzer
  * The lexer walks through a buffer or file, picking out tokens
  */
@@ -51,7 +47,6 @@ struct lexer {
 
     char*   buffer;
     size_t  buffer_length;
-    size_t  buffer_capacity;
     size_t  buffer_position;
 };
 
@@ -61,12 +56,11 @@ struct lexer {
  */
 static inline void lexer_init_from_string(lexer_t* lexer, char* buffer) {
     lexer->source = NULL;
-    lexer->buffer_capacity = strlen(buffer);
-    lexer->buffer_length = lexer->buffer_capacity;
-    lexer->buffer = malloc(lexer->buffer_capacity);
+    lexer->buffer_length = strlen(buffer);
+    lexer->buffer = malloc(lexer->buffer_length);
     lexer->buffer_position = 0;
 
-    strncpy(lexer->buffer, buffer, lexer->buffer_capacity);
+    strncpy(lexer->buffer, buffer, lexer->buffer_length);
 }
 
 /* initialize a lexer from a file
@@ -74,11 +68,17 @@ static inline void lexer_init_from_string(lexer_t* lexer, char* buffer) {
  * @file the file read
  */
 static inline void lexer_init_from_file(lexer_t* lexer, FILE* file) {
+    fseek(file, 0, SEEK_END);
+    size_t len = (size_t)ftell(file);
+
     lexer->source = file;
-    lexer->buffer = malloc(LEXER_BUFFER_MAX_CAPACITY);
-    lexer->buffer_capacity = LEXER_BUFFER_MAX_CAPACITY;
-    lexer->buffer_length = 0;
+    lexer->buffer = malloc(len + 1);
+    lexer->buffer_length = len;
     lexer->buffer_position = 0;
+
+    lexer->buffer[len] = 0;
+    fseek(file, 0, SEEK_SET);
+    fread(lexer->buffer, len, 1, file);
 }
 
 /* free all the lexer's resources, except the file
@@ -87,7 +87,6 @@ static inline void lexer_init_from_file(lexer_t* lexer, FILE* file) {
 static inline void lexer_clean(lexer_t* lexer) {
     if (lexer->buffer)
         free(lexer->buffer);
-    lexer->buffer_capacity = 0;
     lexer->buffer_length = 0;
     lexer->buffer_position = 0;
 }

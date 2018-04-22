@@ -70,6 +70,7 @@ void expression_assert_eq(expression_t* expr1, expression_t* expr2) {
             expression_t*      param1;
             expression_list_t* other = expr2->function.parameters;
             EXPRESSION_LIST_FOREACH(param1, expr1->function.parameters) {
+                printf("%s\n", param1->variable.value);
                 if (!other)
                     FATAL("ASSERT FAILED: argument count doesn't match");
                 expression_assert_eq(param1, other->value);

@@ -46,6 +46,36 @@ error_t do_assignment(char* assignment, scope_t* scope) {
 }
 
 
+error_t execute_file(char* fname, scope_t* scope) {
+    FILE* f;
+    if (fname[0] == '-' && fname[1] == 0) {
+        f = stdin;
+    } else {
+        f = fopen(fname, "r");
+    }
+    if (!f)
+        return ERROR_UNABLE_TO_OPEN_FILE;
+
+    expression_list_t* exprs = malloc(sizeof(expression_list_t));
+    expression_list_init(exprs);
+    error_t err = parse_file(f, exprs);
+    if (err) return err;
+
+    expression_t* expr;
+    EXPRESSION_LIST_FOREACH(expr, exprs) {
+        err = expression_simplify(expr, scope);
+        if (err) {
+            expression_list_free(exprs);
+            return err;
+        }
+
+    }
+
+    if (f != stdin)
+        fclose(f);
+    return ERROR_NO_ERROR;
+}
+
 int main(int argc, char** argv) {
     int verbosity = 0;
     variable_t isolation_target = NULL;
@@ -60,7 +90,9 @@ int main(int argc, char** argv) {
         FLAG('q', "quite",   verbosity = -1)
         FLAG('d', "define",  err = do_assignment(flag_value, &scope); if (err) goto error)
         FLAG('i', "isolate", isolation_target = flag_value)
+        FLAG('f', "file",    err = execute_file(flag_value, &scope); if (err) goto error)
     )
+
     if (err) goto error;
     if (!flag_argc) goto cleanup;
 

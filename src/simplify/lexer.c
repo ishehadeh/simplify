@@ -8,8 +8,8 @@
 #define __LEXER_LOOP(LEXER, BLOCK) {                           \
     int __lexer_loop_continue = 1;                             \
     while (1) {                                                \
-        if ((LEXER)->buffer_position >= (LEXER)->buffer_length \
-                && lexer_try_extend(LEXER)) break;             \
+        if ((LEXER)->buffer_position >= (LEXER)->buffer_length)\
+            break;                                             \
         BLOCK;                                                 \
         if (__lexer_loop_continue) {                           \
             lexer_advance(LEXER);                              \
@@ -30,20 +30,7 @@ static inline void lexer_advance(lexer_t* lexer) {
 }
 
 static inline int lexer_eof(lexer_t* lexer) {
-    return lexer->buffer_position >= lexer->buffer_length && (lexer->source == NULL || lexer_current(lexer) == 0);
-}
-
-int lexer_try_extend(lexer_t* lexer) {
-    if (lexer->source != NULL) {
-        lexer->buffer_length = fread(lexer->buffer, lexer->buffer_capacity, 1, lexer->source);
-        lexer->buffer_position = 0;
-        if (lexer->buffer_length < lexer->buffer_capacity) {
-            lexer->source = NULL;
-        }
-        return lexer->buffer_length == 0;
-    } else {
-        return 1;
-    }
+    return lexer->buffer_position >= lexer->buffer_length;
 }
 
 error_t lexer_get_number(lexer_t* lexer, token_t* token) {

@@ -92,11 +92,12 @@ variable_t _expression_find_var_recursive(expression_t* expr) {
 error_t _expression_run_function(expression_t* expr, scope_t* scope) {
     scope_t fn_scope;
     scope_init(&fn_scope);
-    fn_scope.parent = scope;
 
     expression_t body;
     expression_list_t args_def;
+    expression_list_init(&args_def);
     error_t err = scope_get_function(scope, expr->function.name, &body, &args_def);
+    if (err == ERROR_NONEXISTANT_KEY) return ERROR_NO_ERROR;
     if (err) return err;
 
     expression_t* arg_def;
@@ -106,11 +107,16 @@ error_t _expression_run_function(expression_t* expr, scope_t* scope) {
         if (!args_top)
             return ERROR_MISSING_ARGUMENTS;
         expression_t* op_expr = malloc(sizeof(expression_t));
+        expression_simplify(args_top->value, scope);
         expression_init_operator(op_expr, arg_def, ':', args_top->value);
         error_t err = expression_simplify(op_expr, &fn_scope);
+
+
         if (err) goto cleanup;
         args_top = args_top->next;
     }
+
+    fn_scope.parent = scope;
     err = expression_simplify(&body, &fn_scope);
     if (err) return err;
 
@@ -154,17 +160,26 @@ error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
         {
             if (expr->operator.infix == ':') {
                 if (expr->operator.left->type == EXPRESSION_TYPE_FUNCTION) {
+                    expression_t* body = malloc(sizeof(expression_t));
+                    expression_list_t* params = malloc(sizeof(expression_list_t));
+                    body->type = 5;
+                    expression_list_init(params);
+                    expression_list_copy(expr->operator.left->function.parameters, params);
+                    expression_copy(expr->operator.right, body);
+
                     error_t err = scope_define_function(scope,
                                             expr->operator.left->function.name,
-                                            expr->operator.right,
-                                            expr->operator.left->function.parameters);
+                                            body,
+                                            params);
                     if (err) return err;
 
-                    // copy the body into the parent expression
-                    expression_copy(expr->operator.right, expr);
+                    *expr = *expr->operator.right;
                     return ERROR_NO_ERROR;
                 } else {
                     error_t err = _expression_simplify_recursive(expr->operator.right, scope);
+                    if (err) return err;
+
+                    err = _expression_simplify_recursive(expr->operator.left, scope);
                     if (err) return err;
 
                     if (expr->operator.left->type != EXPRESSION_TYPE_VARIABLE) {
@@ -175,15 +190,11 @@ error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
                             if (err) return err;
                         }
                     }
-                    if (expr->operator.left->type == EXPRESSION_TYPE_VARIABLE
-                        && expr->operator.right->type == EXPRESSION_TYPE_NUMBER) {
-                        scope_define(scope, expr->operator.left->variable.value, expr->operator.right);
-                        mpfr_t result;
-                        mpfr_init(result);
-                        mpfr_set(result, expr->operator.right->number.value, MPFR_RNDF);
-                        expression_free(expr->operator.left);
-                        expression_init_number(expr, result);
-                        mpfr_clear(result);
+                    if (expr->operator.left->type == EXPRESSION_TYPE_VARIABLE) {
+                        expression_t* value_copy = malloc(sizeof(expression_t));
+                        expression_copy(expr->operator.right, value_copy);
+                        scope_define(scope, expr->operator.left->variable.value, value_copy);
+                        *expr = *expr->operator.right;
                     }
                 }
             } else {

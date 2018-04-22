@@ -52,7 +52,7 @@ error_t parse_string(char* source, expression_t* result);
  * @result the expression to be filled
  * @return returns an error code
  */
-error_t parse_file(FILE* source, expression_t* result);
+error_t parse_file(FILE* source, expression_list_t* result);
 
 
 #endif  // SIMPLIFY_PARSER_H_

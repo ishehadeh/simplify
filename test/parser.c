@@ -48,7 +48,7 @@ int main() {
     struct {
         char*        string;
         expression_t* expr;
-    } __string_expr_pairs[7] = {
+    } __string_expr_pairs[8] = {
         { "2 * 5.5",
             expression_new_operator(expression_new_number(2), '*', expression_new_number(5.5))
         },
@@ -94,6 +94,12 @@ int main() {
                 '*',
                 expression_new_prefix('-', expression_new_number(5.5)))
         },
+        { "f(x, y)",
+            expression_new_function(
+                "f", 2,
+                expression_new_variable("x"),
+                expression_new_variable("y")),
+        },
         { "f(x + 2) : 5 * x * 3",
             expression_new_operator(
                 expression_new_function(
@@ -115,7 +121,7 @@ int main() {
 
 
     error_t err;
-    for (int i = 0; i < 7; ++i) {
+    for (int i = 0; i < 8; ++i) {
         expression_t expr;
         err = parse_string(__string_expr_pairs[i].string, &expr);
         if (err)
