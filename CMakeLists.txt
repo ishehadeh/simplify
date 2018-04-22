@@ -21,7 +21,7 @@ else()
     set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wall -Wextra -std=c99 -Werror -O3")
 endif()
 
-add_custom_target("doc" COMMAND cldoc generate --std=c99 -I${CMAKE_SOURCE_DIR}/src -- --language c --output ${CMAKE_SOURCE_DIR}/docs "${HEADERS_STR}")
+add_custom_target("doc" COMMAND cldoc generate --std=c99 -I${CMAKE_SOURCE_DIR}/src -- --language c --output ${CMAKE_SOURCE_DIR}/docs/lib "${HEADERS_STR}")
 add_library(simplify STATIC ${SOURCES})
 
 
