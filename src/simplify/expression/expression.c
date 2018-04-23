@@ -116,6 +116,7 @@ error_t _expression_run_function(expression_t* expr, scope_t* scope) {
         expression_simplify(args_top->value, scope);
         expression_init_operator(&op_expr, arg_def, ':', args_top->value);
         err = expression_simplify(&op_expr, &fn_scope);
+        expression_clean(&op_expr);
 
         if (err) goto cleanup;
         args_top = args_top->next;
@@ -123,6 +124,22 @@ error_t _expression_run_function(expression_t* expr, scope_t* scope) {
     fn_scope.parent = scope;
     err = expression_simplify(&body, &fn_scope);
     if (err) goto cleanup;
+
+    // cleanup the list, but not any expression in the list
+    expression_list_t* next_def = args_def.next;
+    expression_list_t* next_param = expr->function.parameters;
+    while (next_def && next_param) {
+        expression_list_t* curr = next_def;
+        next_def = next_def->next;
+        free(curr);
+
+        curr = next_param;
+        next_param = next_param->next;
+        free(curr);
+    }
+
+    // everything but the name has been cleaned or is in use
+    free(expr->function.name);
     memmove(expr, &body, sizeof(expression_t));
 
 cleanup:
@@ -164,18 +181,19 @@ error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
             if (expr->operator.infix == ':') {
                 if (expr->operator.left->type == EXPRESSION_TYPE_FUNCTION) {
                     expression_t*      body = malloc(sizeof(expression_t));
-                    expression_list_t* params = malloc(sizeof(expression_list_t));
-
-                    expression_list_init(params);
-                    expression_list_copy(expr->operator.left->function.parameters, params);
                     expression_copy(expr->operator.right, body);
+
                     error_t err = scope_define_function(scope,
                                             expr->operator.left->function.name,
                                             body,
-                                            params);
+                                            expr->operator.left->function.parameters);
                     if (err) return err;
 
-                    *expr = *expr->operator.right;
+                    expression_t right = *expr->operator.right;
+
+                    free(expr->operator.right);
+                    free(expr->operator.left->function.name);
+                    *expr = right;
                     return ERROR_NO_ERROR;
                 } else {
                     error_t err = _expression_simplify_recursive(expr->operator.right, scope);
@@ -196,7 +214,11 @@ error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
                         expression_t* value_copy = malloc(sizeof(expression_t));
                         expression_copy(expr->operator.right, value_copy);
                         scope_define(scope, expr->operator.left->variable.value, value_copy);
-                        *expr = *expr->operator.right;
+
+                        expression_free(expr->operator.left);
+                        expression_t right = *expr->operator.right;
+                        free(expr->operator.right);
+                        *expr = right;
                     }
                 }
             } else {

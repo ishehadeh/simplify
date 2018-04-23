@@ -306,7 +306,7 @@ static inline void expression_list_init(expression_list_t* list) {
  * @list the list to clean
  */
 static inline void expression_list_free(expression_list_t* list) {
-    expression_list_t* last    = NULL;
+    expression_list_t* last = NULL;
     while (list) {
         if (list->value) expression_free(list->value);
         last = list;
