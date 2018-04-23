@@ -33,5 +33,5 @@ Follow build steps `1` and `2`, then run `make test`
 
 ## Regenerate Documentation
 
-_To generate documentation cldoc must be in your PATH_\
-Similar to making the tests do build steps `1` and `2`, but run `make doc` instead of `make test`.
+_To generate documentation cldoc and ronn must be in your PATH_\
+Similar to making the tests do build steps `1` and `2`, but run `make docs` instead of `make test`.
