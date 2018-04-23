@@ -23,7 +23,7 @@ void usage(char* arg0) {
     puts("OPTIONS:");
     puts("\t-h,--help ..................... print this message");
     puts("\t-v,--verbose .................. print status updates while running, not just the expression's result");
-    puts("\t-q,--quite .................... only print errors (this overides -v)");
+    puts("\t-q,--quiet .................... only print errors (this overides -v)");
     puts("\t-d,--define NAME=EXPR ......... define a variable `NAME' as `EXPR'");
     puts("\t-i,--isolate NAME ............. if the variable `NAME' exists than attempt to isolate it");
 }
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
     PARSE_FLAGS(
         FLAG('h', "help",    usage(argv[0]); goto cleanup)
         FLAG('v', "verbose", verbosity = 1)
-        FLAG('q', "quite",   verbosity = -1)
+        FLAG('q', "quiet",   verbosity = -1)
         FLAG('d', "define",  err = do_assignment(flag_value, &scope); if (err) goto error)
         FLAG('i', "isolate", isolation_target = flag_value)
         FLAG('f', "file",    err = execute_file(flag_value, &scope); if (err) goto error)

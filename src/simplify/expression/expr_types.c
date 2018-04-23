@@ -20,6 +20,7 @@ void expression_init_variable(expression_t* expr, char* name, size_t len) {
     expr->type = EXPRESSION_TYPE_VARIABLE;
     expr->variable.value = malloc(len + 1);
     expr->variable.value[len] = 0;
+    expr->variable.binding = NULL;
     strncpy(expr->variable.value, name, len);
 }
 
@@ -100,6 +101,7 @@ void expression_copy(expression_t* expr, expression_t* out) {
             break;
         case EXPRESSION_TYPE_VARIABLE:
             expression_init_variable(out, expr->variable.value, strlen(expr->variable.value));
+            out->variable.binding = expr->variable.binding;
             break;
         case EXPRESSION_TYPE_FUNCTION:
         {

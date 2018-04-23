@@ -1,4 +1,7 @@
 .vscode
 build
 vgcore.*
-docs/lib/*
+docs/*.[0-9]
+docs/*.html
+docs/xml
+docs/*.markdown

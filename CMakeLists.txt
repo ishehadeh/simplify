@@ -9,19 +9,43 @@ include(CTest)
 include_directories("${CMAKE_SOURCE_DIR}/src" "${CMAKE_SOURCE_DIR}")
 file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/src/simplify/*.c" "${CMAKE_SOURCE_DIR}/src/simplify/*/*.c")
 file(GLOB HEADERS "${CMAKE_SOURCE_DIR}/src/simplify/*.h" "${CMAKE_SOURCE_DIR}/src/simplify/*/*.h")
+file(GLOB MANUALS "${CMAKE_SOURCE_DIR}/docs/simplify.*.md")
 string(REPLACE ";" "\t" HEADERS_STR "${HEADERS}")
-
+string(REPLACE ";" "\t" MANUALS_STR "${MANUALS}")
+set(CLDOC_FLAGS ${CLDOC_FLAGS} --language c --output ${CMAKE_SOURCE_DIR}/docs ${HEADERS_STR})
 
 find_package(GMP REQUIRED)
 find_package(MPFR REQUIRED)
+find_program(CLDOC cldoc cldoc.py DOC "c/c++/obj-c documentation generator")
+find_program(RONN  ronn  ronn.rb  DOC "markdown to man converter")
 
-if (MSVC)
-    set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} /W4 /WX /Za /std:c99")
+
+set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wall -Wextra -std=c99 -Werror -O3")
+
+add_custom_target("docs")
+
+if (CLDOC STREQUAL "CLDOC-NOTFOUND")
+    message(WARNING "cldoc was not found, the docs.lib.* targets will not be available")
 else()
-    set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wall -Wextra -std=c99 -Werror -O3")
+    add_custom_target("docs.lib.html" COMMAND ${CLDOC} generate -std=c99 -I${CMAKE_SOURCE_DIR}/src -- --type html ${CLDOC_FLAGS})
+    add_custom_target("docs.lib.xml"  COMMAND ${CLDOC} generate -std=c99 -I${CMAKE_SOURCE_DIR}/src -- --type xml  ${CLDOC_FLAGS})
+
+    add_custom_target("docs.lib" DEPENDS "docs.lib.html" "docs.lib.xml")
+
+    add_dependencies("docs" "docs.lib")
 endif()
 
-add_custom_target("doc" COMMAND cldoc generate --std=c99 -I${CMAKE_SOURCE_DIR}/src -- --language c --output ${CMAKE_SOURCE_DIR}/docs/lib "${HEADERS_STR}")
+if (RONN STREQUAL "RONN-NOTFOUND")
+    message(WARNING "ronn was not found, the docs.man.* targets will not be available")
+else()
+    add_custom_target("docs.man.html" COMMAND ${RONN}  -5 "${MANUALS_STR}" )
+    add_custom_target("docs.man.roff" COMMAND ${RONN}  -r "${MANUALS_STR}" )
+
+    add_custom_target("docs.man" DEPENDS "docs.man.html" "docs.man.roff")
+
+    add_dependencies("docs" "docs.man")
+endif()
+
 add_library(simplify STATIC ${SOURCES})
 
 
@@ -36,7 +60,7 @@ target_link_libraries(simplify-bin simplify)
 
 if(BUILD_TESTING)
     add_executable(test_rbtree ${CMAKE_SOURCE_DIR}/test/rbtree.c)
-    add_executable(test_lexer ${CMAKE_SOURCE_DIR}/test/lexer.c)
+    add_executable(test_lexer  ${CMAKE_SOURCE_DIR}/test/lexer.c)
     add_executable(test_parser ${CMAKE_SOURCE_DIR}/test/parser.c)
 
     target_link_libraries(test_rbtree  simplify)

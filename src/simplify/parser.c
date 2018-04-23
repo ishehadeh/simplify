@@ -152,6 +152,7 @@ error_t _parser_parse_identifier(expression_parser_t* parser, expression_t* expr
         // copy the variable's name from the underlying buffer
         expr->variable.value = malloc(identifier.length + 1);
         expr->variable.value[identifier.length] = 0;
+        expr->variable.binding = NULL;
         strncpy(expr->variable.value, identifier.start, identifier.length);
     }
 

@@ -59,12 +59,19 @@ error_t _expression_apply_operator(expression_t* expr, expression_t* out, scope_
 
 error_t _expression_substitute_variable(expression_t* expr, scope_t* scope) {
     expression_t temp_expr;
-    error_t err = scope_get_value(scope, expr->variable.value, &temp_expr);
+    error_t err = ERROR_NO_ERROR;
+
+    if (expr->variable.binding)
+        err = scope_get_value(expr->variable.binding, expr->variable.value, &temp_expr);
+    else
+        err = scope_get_value(scope, expr->variable.value, &temp_expr);
+
     if (!err) {
         expression_clean(expr);
         memmove(expr, &temp_expr, sizeof(expression_t));
-        err = expression_simplify(expr, scope);
-        if (err) return err;
+        return err;
+    } else if (!expr->variable.binding) {
+        expr->variable.binding = scope;
     }
     return ERROR_NO_ERROR;
 }
@@ -95,7 +102,6 @@ error_t _expression_run_function(expression_t* expr, scope_t* scope) {
 
     expression_t body;
     expression_list_t args_def;
-    expression_list_init(&args_def);
     error_t err = scope_get_function(scope, expr->function.name, &body, &args_def);
     if (err == ERROR_NONEXISTANT_KEY) return ERROR_NO_ERROR;
     if (err) return err;
@@ -109,22 +115,19 @@ error_t _expression_run_function(expression_t* expr, scope_t* scope) {
         expression_t op_expr;
         expression_simplify(args_top->value, scope);
         expression_init_operator(&op_expr, arg_def, ':', args_top->value);
-        error_t err = expression_simplify(&op_expr, &fn_scope);
-        expression_clean(&op_expr);
+        err = expression_simplify(&op_expr, &fn_scope);
 
         if (err) goto cleanup;
         args_top = args_top->next;
     }
-
     fn_scope.parent = scope;
     err = expression_simplify(&body, &fn_scope);
-    if (err) return err;
-
+    if (err) goto cleanup;
     memmove(expr, &body, sizeof(expression_t));
 
 cleanup:
     scope_clean(&fn_scope);
-    return  ERROR_NO_ERROR;
+    return err;
 }
 
 error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
@@ -160,13 +163,12 @@ error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
         {
             if (expr->operator.infix == ':') {
                 if (expr->operator.left->type == EXPRESSION_TYPE_FUNCTION) {
-                    expression_t* body = malloc(sizeof(expression_t));
+                    expression_t*      body = malloc(sizeof(expression_t));
                     expression_list_t* params = malloc(sizeof(expression_list_t));
-                    body->type = 5;
+
                     expression_list_init(params);
                     expression_list_copy(expr->operator.left->function.parameters, params);
                     expression_copy(expr->operator.right, body);
-
                     error_t err = scope_define_function(scope,
                                             expr->operator.left->function.name,
                                             body,
@@ -179,10 +181,10 @@ error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
                     error_t err = _expression_simplify_recursive(expr->operator.right, scope);
                     if (err) return err;
 
-                    err = _expression_simplify_recursive(expr->operator.left, scope);
-                    if (err) return err;
-
                     if (expr->operator.left->type != EXPRESSION_TYPE_VARIABLE) {
+                        err = _expression_simplify_recursive(expr->operator.left, scope);
+                        if (err) return err;
+
                         variable_t varname = _expression_find_var_recursive(expr->operator.left);
                         if (varname) {
                             expression_isolate_variable(expr, varname);
@@ -309,6 +311,7 @@ error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t*
 
             expr->type = EXPRESSION_TYPE_VARIABLE;
             expr->variable.value = nv;
+            expr->variable.binding = NULL;
             return ERROR_NO_ERROR;
         }
         case EXPRESSION_TYPE_PREFIX:
