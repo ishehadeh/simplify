@@ -222,6 +222,11 @@ error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
 int _expression_has_variable_recursive(expression_t* expr, variable_t var) {
     switch (expr->type) {
         case EXPRESSION_TYPE_FUNCTION:
+            if (strcmp(var, expr->function.name) == 0) {
+                return ERROR_NO_ERROR;
+            } else {
+                return ERROR_VARIABLE_NOT_PRESENT;
+            }
         case EXPRESSION_TYPE_NUMBER:
             return 0;
         case EXPRESSION_TYPE_OPERATOR:
@@ -244,7 +249,6 @@ int _expression_has_variable_recursive(expression_t* expr, variable_t var) {
 
 error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t** target, variable_t var) {
     switch (expr->type) {
-        case EXPRESSION_TYPE_FUNCTION:
         case EXPRESSION_TYPE_NUMBER:
             return ERROR_VARIABLE_NOT_PRESENT;
         case EXPRESSION_TYPE_OPERATOR:
@@ -319,6 +323,12 @@ error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t*
             printf("TODO(IanS5): isolate with prefix");
             exit(1);
         }
+        case EXPRESSION_TYPE_FUNCTION:
+            if (strcmp(var, expr->function.name) == 0) {
+                return ERROR_NO_ERROR;
+            } else {
+                return ERROR_VARIABLE_NOT_PRESENT;
+            }
         case EXPRESSION_TYPE_VARIABLE:
             if (strcmp(var, expr->variable.value) == 0) {
                 return ERROR_NO_ERROR;
