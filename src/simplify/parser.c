@@ -112,6 +112,22 @@ error_t _parser_parse_expression_list_precedence(expression_parser_t* parser,
     return ERROR_NO_ERROR;
 }
 
+error_t _parser_parse_parentheses(expression_parser_t* parser, expression_t* expr) {
+    token_t token;
+    error_t err;
+
+    err = parser_parse_expression(parser, expr);
+    if (err) return err;
+
+    err = _parser_next_token(parser, &token);
+    if (err) return err;
+
+    if (token.type != TOKEN_TYPE_RIGHT_PAREN)
+        err = ERROR_STRAY_LEFT_PAREN;
+
+    return err;
+}
+
 
 error_t _parser_parse_identifier(expression_parser_t* parser, expression_t* expr) {
     token_t identifier;
@@ -129,14 +145,13 @@ error_t _parser_parse_identifier(expression_parser_t* parser, expression_t* expr
 
         expression_list_init(expr->function.parameters);
 
-        // since a left paren was hit let the parser know there should be a right paren coming up
-        ++parser->missing_right_parens;
         err = _parser_next_token(parser, NULL);
         if (err) return err;
 
         error_t err = _parser_parse_expression_list_precedence(parser,
                                                                expr->function.parameters,
                                                                OPERATOR_PRECEDENCE_ASSIGN);
+        _parser_next_token(parser, NULL);
         if (err) {
             expression_list_free(expr->function.parameters);
             return err;
@@ -187,11 +202,11 @@ error_t _parser_parse_expression_precedence_recursive(expression_parser_t* parse
             break;
         case TOKEN_TYPE_LEFT_PAREN:
         {
-            // when a left paren is hit, try parse a sub-expression
-            ++parser->missing_right_parens;
+            // when a left paren is hit, try to parse a sub-expression
             err = _parser_next_token(parser, NULL);
             if (err) goto cleanup;
-            err = parser_parse_expression(parser, left);
+
+            err = _parser_parse_parentheses(parser, left);
             break;
         }
         case TOKEN_TYPE_EOF:
@@ -222,14 +237,26 @@ error_t _parser_parse_expression_precedence_recursive(expression_parser_t* parse
 
         // left parens can be used as a multiplication operator
         if (token.type == TOKEN_TYPE_LEFT_PAREN) {
-            ++parser->missing_right_parens;
-            infix = '*';
+            expression_t* new_left = malloc(sizeof(expression_t));
+            expression_t* subexpr = malloc(sizeof(expression_t));
+
+            err = _parser_next_token(parser, NULL);
+            if (err) goto cleanup;
+
+            err = _parser_parse_parentheses(parser, subexpr);
+            expression_init_operator(new_left, left, '*', subexpr);
+            left = new_left;
             err = _parser_next_token(parser, &token);
+            if (err) goto cleanup;
+
+            infix = *token.start;
         } else if (token.type == TOKEN_TYPE_NUMBER || token.type == TOKEN_TYPE_IDENTIFIER) {
             infix = '*';
-        } else {
+        } else if (token.type == TOKEN_TYPE_OPERATOR) {
             infix = *token.start;
             err = _parser_next_token(parser, &token);
+        } else {
+            return ERROR_INVALID_TOKEN;
         }
         if (err) goto cleanup;
 
@@ -241,19 +268,12 @@ error_t _parser_parse_expression_precedence_recursive(expression_parser_t* parse
         }
 
         _parser_peek_token(parser, &token);
-
         expression_t* new_left = malloc(sizeof(expression_t));
         expression_init_operator(new_left, left, infix, right_operand);
         left = new_left;
 
         if (token.type == TOKEN_TYPE_EOF) goto cleanup;
         operator_prec = operator_precedence(*token.start);
-    }
-
-    if (token.type == TOKEN_TYPE_RIGHT_PAREN) {
-        --parser->missing_right_parens;
-        _parser_next_token(parser, &token);
-        goto cleanup;
     }
 
 cleanup:
@@ -263,12 +283,5 @@ cleanup:
 }
 
 error_t parser_parse_expression(expression_parser_t* parser, expression_t* result) {
-    error_t err = _parser_parse_expression_precedence_recursive(parser, result, OPERATOR_PRECEDENCE_MINIMUM);
-    if (err) return err;
-
-    if (parser->missing_right_parens > 0)
-        return ERROR_STRAY_LEFT_PAREN;
-    else if (parser->missing_right_parens < 0)
-        return ERROR_STRAY_RIGHT_PAREN;
-    return ERROR_NO_ERROR;
+    return _parser_parse_expression_precedence_recursive(parser, result, OPERATOR_PRECEDENCE_MINIMUM);
 }

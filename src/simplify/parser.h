@@ -13,12 +13,10 @@ typedef struct expression_parser   expression_parser_t;
 struct expression_parser {
     lexer_t* lexer;
     token_t  previous;
-    int      missing_right_parens;
 };
 
 static inline void expression_parser_init(expression_parser_t* parser, lexer_t* lexer) {
     parser->lexer = lexer,
-    parser->missing_right_parens = 0;
     lexer_next(lexer, &parser->previous);
 }
 

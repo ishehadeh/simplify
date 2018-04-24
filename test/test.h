@@ -19,18 +19,38 @@
 #include "simplify/expression/expression.h"
 
 #define FATAL(MSG, ...) { \
-    fprintf(stderr, __FILE__ ":%d FATAL: " MSG "\n", __LINE__, ##__VA_ARGS__); \
+    fprintf(stdout, __FILE__ ":%d FATAL: " MSG "\n", __LINE__, ##__VA_ARGS__); \
     exit(1); \
 }
-#define ERROR(MSG, ...) fprintf(stderr, __FILE__ ":%d ERROR: " MSG "\n", __LINE__, ##__VA_ARGS__);
+#define ERROR(MSG, ...) fprintf(stdout, __FILE__ ":%d ERROR: " MSG "\n", __LINE__, ##__VA_ARGS__);
 #define INFO(MSG, ...) fprintf(stdout, __FILE__ ":%d INFO: " MSG "\n", __LINE__, ##__VA_ARGS__);
-#define WARN(MSG, ...) fprintf(stderr, __FILE__ ":%d WARN: " MSG "\n", __LINE__, ##__VA_ARGS__);
+#define WARN(MSG, ...) fprintf(stdout, __FILE__ ":%d WARN: " MSG "\n", __LINE__, ##__VA_ARGS__);
 
+static inline const char* print_type(expression_type_t t) {
+    switch (t) {
+        case EXPRESSION_TYPE_FUNCTION:
+            return "EXPRESSION_TYPE_FUNCTION";
+        case EXPRESSION_TYPE_NUMBER:
+            return "EXPRESSION_TYPE_NUMBER";
+        case EXPRESSION_TYPE_OPERATOR:
+            return "EXPRESSION_TYPE_OPERATOR";
+        case EXPRESSION_TYPE_PREFIX:
+            return "EXPRESSION_TYPE_PREFIX";
+        case EXPRESSION_TYPE_VARIABLE:
+            return "EXPRESSION_TYPE_VARIABLE";
+    }
+    return "UNKOWN";
+}
 
 void expression_assert_eq(expression_t* expr1, expression_t* expr2) {
     if (expr1->type != expr2->type) {
+        printf("EXPECTED:\n");
         expression_print(expr2);
-        FATAL("ASSERT FAILED (%d != %d): expression types don't match", expr1->type, expr2->type);
+        printf("\n\nGOT:\n");
+        expression_print(expr1);
+        puts("");
+        FATAL("ASSERT FAILED (%s != %s): expression types don't match",
+            print_type(expr1->type), print_type(expr2->type));
     }
 
     switch (expr1->type) {
@@ -70,7 +90,6 @@ void expression_assert_eq(expression_t* expr1, expression_t* expr2) {
             expression_t*      param1;
             expression_list_t* other = expr2->function.parameters;
             EXPRESSION_LIST_FOREACH(param1, expr1->function.parameters) {
-                printf("%s\n", param1->variable.value);
                 if (!other)
                     FATAL("ASSERT FAILED: argument count doesn't match");
                 expression_assert_eq(param1, other->value);

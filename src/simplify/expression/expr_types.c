@@ -139,6 +139,7 @@ inline operator_precedence_t operator_precedence(operator_t op) {
             return OPERATOR_PRECEDENCE_MINIMUM;
         case ':':
             return OPERATOR_PRECEDENCE_ASSIGN;
+        // numbers and identifiers aren't operators, but it's legal to omit the '*' operator, so we pretend they are.
         case '0'...'9':
         case 'a'...'z':
         case 'A'...'Z':
