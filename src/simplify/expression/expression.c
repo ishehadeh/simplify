@@ -339,8 +339,19 @@ error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t*
         }
         case EXPRESSION_TYPE_PREFIX:
         {
-            printf("TODO(IanS5): isolate with prefix");
-            exit(1);
+            switch (EXPRESSION_OPERATOR(expr)) {
+                case '+':
+                    break;
+                case '-':
+                    mpfr_neg(expr->prefix.right->number.value, expr->prefix.right->number.value, MPFR_RNDF);
+                    break;
+                default:
+                    return ERROR_INVALID_PREFIX;
+            }
+            expression_t num = *expr->prefix.right;
+            free(expr->prefix.right);
+            *expr = num;
+            return ERROR_VARIABLE_NOT_PRESENT;
         }
         case EXPRESSION_TYPE_FUNCTION:
             if (strcmp(var, expr->function.name) == 0) {
