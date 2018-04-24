@@ -4,8 +4,19 @@
 #define FLAGS_H_
 
 
+#define __GET_FLAG_VALUE() \
+    if ((*flag_argv)[1] != '-' && (*flag_argv)[2] != 0) {                       \
+        flag_value = (*flag_argv) + 2;                                          \
+    } else {                                                                    \
+        flag_value = *(++flag_argv);                                            \
+        --flag_argc;                                                            \
+    }                                                                           \
+
 #define FLAG(SHORT, LONG, RESULT) \
-if ((*flag_argv)[1] == (SHORT) || strcmp(LONG, (*flag_argv) + 2) == 0 ) {RESULT;} else
+    if ((*flag_argv)[1] == (SHORT) || strcmp(LONG, (*flag_argv) + 2) == 0 ) { \
+        __GET_FLAG_VALUE() \
+        RESULT;            \
+    } else
 
 
 #define PARSE_FLAGS(FLAGS) __PARSE_FLAGS(argv, argc, FLAGS)
@@ -17,10 +28,6 @@ if ((*flag_argv)[1] == (SHORT) || strcmp(LONG, (*flag_argv) + 2) == 0 ) {RESULT;
     for (; flag_argc != 0;  ++flag_argv, --flag_argc) {                                 \
         if ((*flag_argv)[0] == '-') {                                                   \
             char* flag_value = NULL;                                                    \
-            if ((*flag_argv)[1] != '-' && (*flag_argv)[2] != 0)                         \
-                flag_value = (*flag_argv) + 2;                                          \
-            else                                                                        \
-                flag_value = *(flag_argv + 1);                                          \
             BLOCK                                                                       \
             {                                                                           \
                 printf("unkown argument '%s'\n", (*flag_argv));                         \
