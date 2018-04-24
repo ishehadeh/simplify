@@ -48,9 +48,13 @@ int main() {
     struct {
         char*        string;
         expression_t* expr;
-    } __string_expr_pairs[9] = {
+    } __string_expr_pairs[10] = {
         { "2 * 5.5",
             expression_new_operator(expression_new_number(2), '*', expression_new_number(5.5))
+        },
+        {
+            "2.5x",
+            expression_new_operator(expression_new_number(2.5), '*', expression_new_variable("x"))
         },
         { "2 * ( 5 + 9 )",
             expression_new_operator(
@@ -133,7 +137,7 @@ int main() {
 
 
     error_t err;
-    for (int i = 0; i < 9; ++i) {
+    for (int i = 0; i < 10; ++i) {
         expression_t expr;
         err = parse_string(__string_expr_pairs[i].string, &expr);
         if (err)

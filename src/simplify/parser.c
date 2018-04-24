@@ -224,11 +224,13 @@ error_t _parser_parse_expression_precedence_recursive(expression_parser_t* parse
         if (token.type == TOKEN_TYPE_LEFT_PAREN) {
             ++parser->missing_right_parens;
             infix = '*';
+            err = _parser_next_token(parser, &token);
+        } else if (token.type == TOKEN_TYPE_NUMBER || token.type == TOKEN_TYPE_IDENTIFIER) {
+            infix = '*';
         } else {
             infix = *token.start;
+            err = _parser_next_token(parser, &token);
         }
-
-        err = _parser_next_token(parser, &token);
         if (err) goto cleanup;
 
         expression_t* right_operand = malloc(sizeof(expression_t));
