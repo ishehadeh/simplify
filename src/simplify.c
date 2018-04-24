@@ -26,6 +26,7 @@ void usage(char* arg0) {
     puts("\t-q,--quiet .................... only print errors (this overides -v)");
     puts("\t-d,--define NAME=EXPR ......... define a variable `NAME' as `EXPR'");
     puts("\t-i,--isolate NAME ............. if the variable `NAME' exists than attempt to isolate it");
+    puts("\t-f,--file FILE ................ execute the file `FILE' before any expression(s)");
 }
 
 error_t do_assignment(char* assignment, scope_t* scope) {
