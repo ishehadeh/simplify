@@ -48,7 +48,7 @@ int main() {
     struct {
         char*        string;
         expression_t* expr;
-    } __string_expr_pairs[8] = {
+    } __string_expr_pairs[9] = {
         { "2 * 5.5",
             expression_new_operator(expression_new_number(2), '*', expression_new_number(5.5))
         },
@@ -72,6 +72,18 @@ int main() {
                 expression_new_operator(expression_new_number(1), '\\', expression_new_number(2)),
                 '=',
                 expression_new_number(73))
+        },
+        { "p = n * 8 - t",
+            expression_new_operator(
+                expression_new_variable("p"),
+                '=',
+                expression_new_operator(
+                    expression_new_operator(
+                        expression_new_variable("n"),
+                        '*',
+                        expression_new_number(8)),
+                    '-',
+                    expression_new_variable("t")))
         },
         { "10 * 20 * 30^1 * 40",
             expression_new_operator(
@@ -121,7 +133,7 @@ int main() {
 
 
     error_t err;
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < 9; ++i) {
         expression_t expr;
         err = parse_string(__string_expr_pairs[i].string, &expr);
         if (err)

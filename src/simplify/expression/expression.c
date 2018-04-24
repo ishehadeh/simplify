@@ -140,8 +140,8 @@ error_t _expression_run_function(expression_t* expr, scope_t* scope) {
 
     // everything but the name has been cleaned or is in use
     free(expr->function.name);
-    memmove(expr, &body, sizeof(expression_t));
 
+    memmove(expr, &body, sizeof(expression_t));
 cleanup:
     scope_clean(&fn_scope);
     return err;
@@ -276,12 +276,10 @@ error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t*
         case EXPRESSION_TYPE_OPERATOR:
         {
             if (expression_is_comparison(expr) || expr->operator.infix == ':') {
-                target = &expr->operator.left;
                 error_t err = _expression_isolate_variable_recursive(expr->operator.left, &expr->operator.right, var);
                 if (err && err != ERROR_VARIABLE_NOT_PRESENT)
                     return err;
 
-                target = &expr->operator.right;
                 if (err) {
                     err = _expression_isolate_variable_recursive(expr->operator.right, &expr->operator.left, var);
                     if (err) return err;
@@ -295,8 +293,11 @@ error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t*
             new_target->operator.left  = *target;
             if (_expression_has_variable_recursive(expr->operator.left, var)) {
                 new_target->operator.right = expr->operator.right;
-            } else {
+            } else if (_expression_has_variable_recursive(expr->operator.right, var)) {
                 new_target->operator.right = expr->operator.left;
+            } else {
+                free(new_target);
+                return ERROR_VARIABLE_NOT_PRESENT;
             }
 
             switch (expr->operator.infix) {
@@ -324,20 +325,16 @@ error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t*
             }
 
             *target = new_target;
-            variable_t nv;
+            expression_t new_expr;
             if (!_expression_isolate_variable_recursive(expr->operator.left, target, var)) {
-                nv = expr->operator.left->variable.value;
-                free(expr->operator.left);
+                new_expr = *expr->operator.left;
             } else if (!_expression_isolate_variable_recursive(expr->operator.right, target, var)) {
-                nv = expr->operator.right->variable.value;
-                free(expr->operator.right);
+                new_expr = *expr->operator.right;
             } else {
                 return ERROR_VARIABLE_NOT_PRESENT;
             }
 
-            expr->type = EXPRESSION_TYPE_VARIABLE;
-            expr->variable.value = nv;
-            expr->variable.binding = NULL;
+            *expr = new_expr;
             return ERROR_NO_ERROR;
         }
         case EXPRESSION_TYPE_PREFIX:
