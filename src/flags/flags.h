@@ -1,27 +1,17 @@
 /* Copyright Ian Shehadeh 2018 */
 
-#ifndef FLAGS_H_
-#define FLAGS_H_
+#ifndef FLAGS_FLAGS_H_
+#define FLAGS_FLAGS_H_
 
-
-#define __GET_FLAG_VALUE() \
-    if ((*flag_argv)[1] != '-' && (*flag_argv)[2] != 0) {                       \
-        flag_value = (*flag_argv) + 2;                                          \
-    } else {                                                                    \
-        flag_value = *(++flag_argv);                                            \
-        --flag_argc;                                                            \
-    }                                                                           \
-
-#define FLAG(SHORT, LONG, RESULT) \
+#define FLAG(SHORT, LONG, RESULT)                                             \
     if ((*flag_argv)[1] == (SHORT) || strcmp(LONG, (*flag_argv) + 2) == 0 ) { \
-        __GET_FLAG_VALUE() \
-        RESULT;            \
+        _GET_FLAG_VALUE()                                                     \
+        RESULT;                                                               \
     } else
 
+#define PARSE_FLAGS(FLAGS) _PARSE_FLAGS(argv, argc, FLAGS)
 
-#define PARSE_FLAGS(FLAGS) __PARSE_FLAGS(argv, argc, FLAGS)
-
-#define __PARSE_FLAGS(ARGV, ARGC, BLOCK)                                                \
+#define _PARSE_FLAGS(ARGV, ARGC, BLOCK)                                                 \
     char** flag_argv = (ARGV) + 1;                                                      \
     int    flag_argc = (ARGC) - 1;                                                      \
 {                                                                                       \
@@ -39,6 +29,14 @@
     }                                                                                   \
 }                                                                                       \
 
+#define _GET_FLAG_VALUE()                                                       \
+    if ((*flag_argv)[1] != '-' && (*flag_argv)[2] != 0) {                       \
+        flag_value = (*flag_argv) + 2;                                          \
+    } else {                                                                    \
+        flag_value = *(++flag_argv);                                            \
+        --flag_argc;                                                            \
+    }                                                                           \
 
 
-#endif  // FLAGS_H_
+
+#endif  // FLAGS_FLAGS_H_

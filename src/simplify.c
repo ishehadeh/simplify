@@ -4,7 +4,7 @@
 #include "simplify/parser.h"
 #include "simplify/lexer.h"
 #include "simplify/errors.h"
-#include "flags.h"
+#include "flags/flags.h"
 
 #define VERSION "0.1.2"
 #define DATE __DATE__
