@@ -48,6 +48,18 @@ error_t do_assignment(char* assignment, scope_t* scope) {
 
 
 error_t execute_file(char* fname, scope_t* scope) {
+    if (fname[0] == '~') {
+        char* bad_fname = fname;
+        char* home = getenv("HOME");
+        int len = strlen(fname) - 1;
+        int home_len = strlen(home);
+        fname = malloc(len + home_len + 1);
+        fname[len + home_len] = 0;
+
+        memmove(fname, home, home_len);
+        memmove(fname + home_len, bad_fname + 1, len);
+    }
+
     FILE* f;
     if (fname[0] == '-' && fname[1] == 0) {
         f = stdin;
