@@ -89,9 +89,9 @@ int main(int argc, char** argv) {
         FLAG('h', "help",    usage(argv[0]); goto cleanup)
         FLAG('v', "verbose", verbosity = 1)
         FLAG('q', "quiet",   verbosity = -1)
-        FLAG('d', "define",  err = do_assignment(flag_value, &scope); if (err) goto error)
-        FLAG('i', "isolate", isolation_target = flag_value)
-        FLAG('f', "file",    err = execute_file(flag_value, &scope); if (err) goto error)
+        FLAG('d', "define",  err = do_assignment(FLAG_VALUE, &scope); if (err) goto error)
+        FLAG('i', "isolate", isolation_target = FLAG_VALUE)
+        FLAG('f', "file",    err = execute_file(FLAG_VALUE, &scope); if (err) goto error)
     )
 
     if (err) goto error;
