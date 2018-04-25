@@ -20,7 +20,7 @@ error_t _parser_parse_expression_list_precedence(expression_parser_t* parser,
  * @out token output, this may be null
  * @return returns an error code
  */
-inline error_t _parser_next_token(expression_parser_t* parser, token_t* out) {
+static inline error_t _parser_next_token(expression_parser_t* parser, token_t* out) {
     if (out)
         *out = parser->previous;
     return lexer_next(parser->lexer, &parser->previous);
@@ -31,7 +31,7 @@ inline error_t _parser_next_token(expression_parser_t* parser, token_t* out) {
  * @parser
  * @out token output
  */
-inline void _parser_peek_token(expression_parser_t* parser, token_t* out) {
+static inline void _parser_peek_token(expression_parser_t* parser, token_t* out) {
     *out = parser->previous;
 }
 

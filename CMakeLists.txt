@@ -11,16 +11,19 @@ file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/src/simplify/*.c" "${CMAKE_SOURCE_DIR}/sr
 file(GLOB HEADERS "${CMAKE_SOURCE_DIR}/src/simplify/*.h" "${CMAKE_SOURCE_DIR}/src/simplify/*/*.h")
 file(GLOB MANUALS "${CMAKE_SOURCE_DIR}/docs/simplify.*.md")
 string(REPLACE ";" "\t" HEADERS_STR "${HEADERS}")
+string(REPLACE ";" "\t" SOURCES_STR "${SOURCES}")
 string(REPLACE ";" "\t" MANUALS_STR "${MANUALS}")
 set(CLDOC_FLAGS ${CLDOC_FLAGS} --language c --output ${CMAKE_SOURCE_DIR}/docs ${HEADERS_STR})
 
 find_package(GMP REQUIRED)
 find_package(MPFR REQUIRED)
+
 find_program(CLDOC cldoc cldoc.py DOC "c/c++/obj-c documentation generator")
 find_program(RONN  ronn  ronn.rb  DOC "markdown to man converter")
+find_program(GCOV  gcov  DOC "GNU test coverage tool")
 
 
-set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wall -Wextra -std=c99 -Werror -O3")
+set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wall -Wextra -std=c99 -Werror")
 
 add_custom_target("docs")
 
@@ -46,6 +49,15 @@ else()
     add_dependencies("docs" "docs.man")
 endif()
 
+if (GCOV STREQUAL "GCOV-NOTFOUND")
+    message(WARNING "gcov was not found, the coverage target will not be available")
+    set(GCOV "")
+    set(HAVE_GCOV FALSE)
+else()
+    add_custom_target("coverage" COMMAND ${GCOV} ${SOURCES_STR} ${CMAKE_BINARY_DIR}/CMakeFiles/simplify.dir/src/simplify/**/*.gcno)
+    set(HAVE_GCOV TRUE)
+endif()
+
 add_library(simplify STATIC ${SOURCES})
 
 
@@ -59,6 +71,11 @@ target_link_libraries(simplify m)
 target_link_libraries(simplify-bin simplify)
 
 if(BUILD_TESTING)
+    if (HAVE_GCOV)
+        set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -O0 -g -fprofile-arcs -ftest-coverage")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fprofile-arcs -ftest-coverage")
+    endif()
+
     add_executable(test_rbtree ${CMAKE_SOURCE_DIR}/test/rbtree.c)
     add_executable(test_lexer  ${CMAKE_SOURCE_DIR}/test/lexer.c)
     add_executable(test_parser ${CMAKE_SOURCE_DIR}/test/parser.c)

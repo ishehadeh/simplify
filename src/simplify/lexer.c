@@ -35,8 +35,6 @@ static inline int lexer_eof(lexer_t* lexer) {
 
 error_t lexer_get_number(lexer_t* lexer, token_t* token) {
     token->start = lexer->buffer + lexer->buffer_position;
-    if (lexer_current(lexer) == '-')
-        lexer_advance(lexer);
 
     __LEXER_SKIP_WHILE(lexer, isdigit);
 
@@ -47,6 +45,7 @@ error_t lexer_get_number(lexer_t* lexer, token_t* token) {
     }
 
     if (!lexer_eof(lexer) && (lexer_current(lexer) == 'e' || lexer_current(lexer) == 'E')) {
+        lexer_advance(lexer);
         if (lexer_current(lexer) == '-')
             lexer_advance(lexer);
         __LEXER_SKIP_WHILE(lexer, isdigit);
