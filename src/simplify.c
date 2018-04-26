@@ -79,7 +79,7 @@ error_t execute_file(char* fname, scope_t* scope) {
 
     expression_t* expr;
     EXPRESSION_LIST_FOREACH(expr, exprs) {
-        err = expression_simplify(expr, scope);
+        err = expression_evaluate(expr, scope);
         if (err) {
             expression_list_free(exprs);
             return err;
@@ -119,13 +119,13 @@ int main(int argc, char** argv) {
         err = parse_string(flag_argv[i], &expr);
         if (err) goto error;
 
-        err = expression_simplify(&expr, &scope);
+        err = expression_evaluate(&expr, &scope);
         if (err) goto error;
 
         if (isolation_target) {
             err = expression_isolate_variable(&expr, isolation_target);
             if (!err) {
-                err = expression_simplify(&expr, &scope);
+                err = expression_evaluate(&expr, &scope);
                 if (err) goto error;
             }
         }

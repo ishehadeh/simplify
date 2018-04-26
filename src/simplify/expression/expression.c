@@ -113,16 +113,16 @@ error_t _expression_run_function(expression_t* expr, scope_t* scope) {
         if (!args_top)
             return ERROR_MISSING_ARGUMENTS;
         expression_t op_expr;
-        expression_simplify(args_top->value, scope);
+        expression_evaluate(args_top->value, scope);
         expression_init_operator(&op_expr, arg_def, ':', args_top->value);
-        err = expression_simplify(&op_expr, &fn_scope);
+        err = expression_evaluate(&op_expr, &fn_scope);
         expression_clean(&op_expr);
 
         if (err) goto cleanup;
         args_top = args_top->next;
     }
     fn_scope.parent = scope;
-    err = expression_simplify(&body, &fn_scope);
+    err = expression_evaluate(&body, &fn_scope);
     if (err) goto cleanup;
 
     // cleanup the list, but not any expression in the list
@@ -147,7 +147,7 @@ cleanup:
     return err;
 }
 
-error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
+error_t _expression_evaluate_recursive(expression_t* expr, scope_t* scope) {
     switch (expr->type) {
         case EXPRESSION_TYPE_VARIABLE:
             return _expression_substitute_variable(expr, scope);
@@ -157,7 +157,7 @@ error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
             break;
         case EXPRESSION_TYPE_PREFIX:
         {
-            error_t err = _expression_simplify_recursive(expr->prefix.right, scope);
+            error_t err = _expression_evaluate_recursive(expr->prefix.right, scope);
             if (err) return err;
 
             if (EXPRESSION_IS_NUMBER(EXPRESSION_RIGHT(expr))) {
@@ -196,17 +196,17 @@ error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
                     *expr = right;
                     return ERROR_NO_ERROR;
                 } else {
-                    error_t err = _expression_simplify_recursive(expr->operator.right, scope);
+                    error_t err = _expression_evaluate_recursive(expr->operator.right, scope);
                     if (err) return err;
 
                     if (expr->operator.left->type != EXPRESSION_TYPE_VARIABLE) {
-                        err = _expression_simplify_recursive(expr->operator.left, scope);
+                        err = _expression_evaluate_recursive(expr->operator.left, scope);
                         if (err) return err;
 
                         variable_t varname = _expression_find_var_recursive(expr->operator.left);
                         if (varname) {
                             expression_isolate_variable(expr, varname);
-                            err = _expression_simplify_recursive(expr->operator.right, scope);
+                            err = _expression_evaluate_recursive(expr->operator.right, scope);
                             if (err) return err;
                         }
                     }
@@ -222,9 +222,9 @@ error_t _expression_simplify_recursive(expression_t* expr, scope_t* scope) {
                     }
                 }
             } else {
-                error_t err = _expression_simplify_recursive(expr->operator.right, scope);
+                error_t err = _expression_evaluate_recursive(expr->operator.right, scope);
                 if (err) return err;
-                err = _expression_simplify_recursive(expr->operator.left, scope);
+                err = _expression_evaluate_recursive(expr->operator.left, scope);
                 if (expr->operator.right->type == EXPRESSION_TYPE_NUMBER
                     && expr->operator.left->type == EXPRESSION_TYPE_NUMBER) {
                     if (err) return err;
@@ -369,8 +369,8 @@ error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t*
     return ERROR_NO_ERROR;
 }
 
-error_t expression_simplify(expression_t* expr, scope_t* scope) {
-    return  _expression_simplify_recursive(expr, scope);
+error_t expression_evaluate(expression_t* expr, scope_t* scope) {
+    return  _expression_evaluate_recursive(expr, scope);
 }
 
 error_t expression_isolate_variable(expression_t* expr, variable_t var) {

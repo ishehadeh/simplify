@@ -13,7 +13,7 @@
  * @scope the where variables should be assigned and looked up.
  * @return returns an error
  */
-error_t expression_simplify(expression_t* expr, scope_t* scope);
+error_t expression_evaluate(expression_t* expr, scope_t* scope);
 
 /* isolate a variable on one side of an comparison operator.
  * If no comparison operator is present, append `= 0`
