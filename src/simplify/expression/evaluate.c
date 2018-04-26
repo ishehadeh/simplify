@@ -273,17 +273,9 @@ error_t _expression_evaluate_recursive(expression_t* expr, scope_t* scope) {
             /* numbers can't be evaluated */
             break;
         case EXPRESSION_TYPE_VARIABLE:
-        {
-            error_t err = _expression_substitute_variable(expr, scope);
-            if (err) return err;
-            return _expression_evaluate_recursive(expr, scope);
-        }
+            return _expression_substitute_variable(expr, scope);
         case EXPRESSION_TYPE_FUNCTION:
-        {
-            error_t err = _expression_run_function(expr, scope);
-            if (err) return err;
-            return _expression_evaluate_recursive(expr, scope);
-        }
+            return _expression_run_function(expr, scope);
         case EXPRESSION_TYPE_PREFIX:
             return _expression_apply_prefix(expr, scope);
         case EXPRESSION_TYPE_OPERATOR:

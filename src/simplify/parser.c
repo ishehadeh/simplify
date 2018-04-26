@@ -250,6 +250,7 @@ error_t _parser_parse_expression_precedence_recursive(expression_parser_t* parse
             left = new_left;
             err = _parser_next_token(parser, &token);
             if (err) goto cleanup;
+            if (token.type == TOKEN_TYPE_EOF) goto cleanup;
 
             infix = *token.start;
         } else if (token.type == TOKEN_TYPE_NUMBER || token.type == TOKEN_TYPE_IDENTIFIER) {

@@ -40,7 +40,7 @@ struct {
     },
     {"ALL CAPS",
         {{TOKEN_TYPE_IDENTIFIER, "ALL",  3},
-        {TOKEN_TYPE_IDENTIFIER, "CAPS", 4},
+        {TOKEN_TYPE_IDENTIFIER, "CAPS",  4},
         {TOKEN_TYPE_EOF,        "",     0}},
     },
     {"12345 + 32134 ) \\",
@@ -71,17 +71,6 @@ struct {
     {"123e&",   ERROR_INVALID_CHARACTER},
 };
 
-
-void assert_token_eq(token_t* tok1, token_t* tok2) {
-    if (tok1->length != tok2->length || strncmp(tok1->start, tok2->start, tok1->length) != 0) {
-        FATAL("token strings don't match! ('%.*s' != '%.*s')",
-            (int)tok1->length, tok1->start, (int)tok2->length, tok2->start);
-    }
-
-    if (tok1->type != tok2->type) {
-        FATAL("tokens are not of the same type! (%d != %d)", tok1->type, tok2->type);
-    }
-}
 
 int main() {
     token_t tok;

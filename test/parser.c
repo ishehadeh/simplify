@@ -1,48 +1,8 @@
 /* Copyright Ian Shehadeh 2018 */
 
-#include <stdarg.h>
-
 #include "test/test.h"
 #include "simplify/parser.h"
 
-static inline expression_t* expression_new_operator(expression_t* left, operator_t op, expression_t* right) {
-    expression_t* x = malloc(sizeof(expression_t));
-    expression_init_operator(x, left, op, right);
-    return x;
-}
-
-static inline expression_t* expression_new_prefix(operator_t op, expression_t* right) {
-    expression_t* x = malloc(sizeof(expression_t));
-    expression_init_prefix(x, op, right);
-    return x;
-}
-
-static inline expression_t* expression_new_number(double num) {
-    expression_t* x = malloc(sizeof(expression_t));
-    expression_init_number_d(x, num);
-    return x;
-}
-
-static inline expression_t* expression_new_variable(variable_t var) {
-    expression_t* x = malloc(sizeof(expression_t));
-    expression_init_variable(x, var, strlen(var));
-    return x;
-}
-
-static inline expression_t* expression_new_function(variable_t name, int param_count, ...) {
-    expression_t* x = malloc(sizeof(expression_t));
-    va_list args;
-    va_start(args, param_count);
-    expression_list_t* params = malloc(sizeof(expression_list_t));
-    expression_list_init(params);
-
-    for (int i = 0; i < param_count; ++i) {
-        expression_list_append(params, va_arg(args, expression_t*));
-    }
-    va_end(args);
-    expression_init_function(x, name, strlen(name), params);
-    return x;
-}
 
 int main() {
     struct {
@@ -148,6 +108,24 @@ int main() {
                     '*',
                     expression_new_number(3))),
         },
+        { "x^ 3 * 5(6 + 0 \\ 1)",
+            expression_new_operator(
+                expression_new_operator(
+                    expression_new_variable("x"),
+                    '^',
+                    expression_new_number(3)),
+                '*',
+                expression_new_operator(
+                    expression_new_number(5),
+                    '*',
+                    expression_new_operator(
+                        expression_new_number(6),
+                        '+',
+                        expression_new_operator(
+                            expression_new_number(0),
+                            '\\',
+                            expression_new_number(1)))))
+        }
     };
 
 
@@ -159,6 +137,5 @@ int main() {
         if (err)
             FATAL("failed to parse string: %s", error_string(err));
         expression_assert_eq(&expr, __string_expr_pairs[i].expr);
-
     }
 }

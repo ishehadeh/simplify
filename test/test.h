@@ -15,9 +15,11 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #include "simplify/expression/expression.h"
 #include "simplify/expression/stringify.h"
+#include "simplify/parser.h"
 
 #define FATAL(MSG, ...) { \
     fprintf(stdout, __FILE__ ":%d FATAL: " MSG "\n", __LINE__, ##__VA_ARGS__); \
@@ -41,6 +43,45 @@ static inline const char* print_type(expression_type_t t) {
             return "EXPRESSION_TYPE_VARIABLE";
     }
     return "UNKOWN";
+}
+
+static inline expression_t* expression_new_operator(expression_t* left, operator_t op, expression_t* right) {
+    expression_t* x = malloc(sizeof(expression_t));
+    expression_init_operator(x, left, op, right);
+    return x;
+}
+
+static inline expression_t* expression_new_prefix(operator_t op, expression_t* right) {
+    expression_t* x = malloc(sizeof(expression_t));
+    expression_init_prefix(x, op, right);
+    return x;
+}
+
+static inline expression_t* expression_new_number(double num) {
+    expression_t* x = malloc(sizeof(expression_t));
+    expression_init_number_d(x, num);
+    return x;
+}
+
+static inline expression_t* expression_new_variable(variable_t var) {
+    expression_t* x = malloc(sizeof(expression_t));
+    expression_init_variable(x, var, strlen(var));
+    return x;
+}
+
+static inline expression_t* expression_new_function(variable_t name, int param_count, ...) {
+    expression_t* x = malloc(sizeof(expression_t));
+    va_list args;
+    va_start(args, param_count);
+    expression_list_t* params = malloc(sizeof(expression_list_t));
+    expression_list_init(params);
+
+    for (int i = 0; i < param_count; ++i) {
+        expression_list_append(params, va_arg(args, expression_t*));
+    }
+    va_end(args);
+    expression_init_function(x, name, strlen(name), params);
+    return x;
 }
 
 void expression_assert_eq(expression_t* expr1, expression_t* expr2) {
@@ -99,6 +140,17 @@ void expression_assert_eq(expression_t* expr1, expression_t* expr2) {
             if (other)
                 FATAL("ASSERT FAILED: argument count doesn't match");
         }
+    }
+}
+
+void assert_token_eq(token_t* tok1, token_t* tok2) {
+    if (tok1->length != tok2->length || strncmp(tok1->start, tok2->start, tok1->length) != 0) {
+        FATAL("token strings don't match! ('%.*s' != '%.*s')",
+            (int)tok1->length, tok1->start, (int)tok2->length, tok2->start);
+    }
+
+    if (tok1->type != tok2->type) {
+        FATAL("tokens are not of the same type! (%d != %d)", tok1->type, tok2->type);
     }
 }
 
