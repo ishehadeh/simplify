@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "simplify/expression/expr_types.h"
+#include "simplify/expression/expression.h"
 
 /* convert a number to a string
  * @number the number to convert

@@ -17,6 +17,7 @@
 #include <stdio.h>
 
 #include "simplify/expression/expression.h"
+#include "simplify/expression/stringify.h"
 
 #define FATAL(MSG, ...) { \
     fprintf(stdout, __FILE__ ":%d FATAL: " MSG "\n", __LINE__, ##__VA_ARGS__); \

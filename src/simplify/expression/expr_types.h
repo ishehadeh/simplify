@@ -1,8 +1,4 @@
-/* Copyright Ian Shehadeh 2018 
-
-* @file expr_types.h
-* expression type definitions and utilities.
-*/
+/* Copyright Ian Shehadeh 2018 */
 
 #ifndef SIMPLIFY_EXPRESSION_EXPR_TYPES_H_
 #define SIMPLIFY_EXPRESSION_EXPR_TYPES_H_
@@ -11,6 +7,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 #include <gmp.h>
 #include <mpfr.h>
@@ -22,6 +19,7 @@
 #define EXPRESSION_IS_VARIABLE(EXPR) ((EXPR)->type == (EXPRESSION_TYPE_VARIABLE))
 #define EXPRESSION_IS_NUMBER(EXPR)   ((EXPR)->type == (EXPRESSION_TYPE_NUMBER))
 #define EXPRESSION_IS_PREFIX(EXPR)   ((EXPR)->type == (EXPRESSION_TYPE_PREFIX))
+#define EXPRESSION_IS_FUNCTION(EXPR) ((EXPR)->type == (EXPRESSION_TYPE_FUNCTION))
 
 #define EXPRESSION_RIGHT(EXPR) \
     (EXPRESSION_IS_PREFIX(EXPR) ? \
@@ -41,6 +39,15 @@
     for (expression_list_t* __item = (EXPR_LIST);    \
             __item && (I = __item->value);           \
             __item = __item->next)
+
+#define EXPRESSION_LIST_FOREACH2(I, I2, EXPR_LIST, EXPR_LIST2)                     \
+    (I)  = (EXPR_LIST)->value;                                                     \
+    (I2) = (EXPR_LIST2)->value;                                                    \
+    expression_list_t* __item2 = (EXPR_LIST2);                                     \
+    for (expression_list_t* __item = (EXPR_LIST);                                  \
+            __item && __item2 && ((I) = __item->value) && ((I2) = __item2->value); \
+            __item = __item->next, __item2 = __item2->next)
+
 
 /* A parsed mathmatical expression.
  *
@@ -246,6 +253,18 @@ void expression_free(expression_t* expression);
  */
 void expression_copy(expression_t* expression, expression_t* expression2);
 
+/* free the right branch of an expression, make the expressions equal to it's left branch
+ *
+ * @expr the expression to collapse
+ */
+void expression_collapse_right(expression_t* expr);
+
+/* free the left branch of an expression, make the expressions equal to it's right branch
+ *
+ * @expr the expression to collapse
+ */
+void expression_collapse_left(expression_t* expr);
+
 /* get the precedence of a given operator (higher = should be executed first)
  * @op the operator to check
  * 
@@ -269,19 +288,7 @@ static inline int expression_is_comparison(expression_t* expr) {
  * @list the list to append to
  * @expr the expression to append
  */
-static inline void expression_list_append(expression_list_t* list, expression_t* expr) {
-    if (!list->value) {
-        list->value = expr;
-        return;
-    }
-
-    expression_list_t* next = malloc(sizeof(expression_list_t));
-    next->value = expr;
-    next->next  = NULL;
-    while (list->next) list = list->next;
-
-    list->next = next;
-}
+void expression_list_append(expression_list_t* list, expression_t* expr);
 
 /* free the last element of the list (that may be `list` itself)
  * 
@@ -320,15 +327,7 @@ static inline void expression_list_free(expression_list_t* list) {
  * @list1 the source list
  * @list2 the destination list
  */
-static inline void expression_list_copy(expression_list_t* list1, expression_list_t* list2) {
-    expression_t* expr;
-    EXPRESSION_LIST_FOREACH(expr, list1) {
-        expression_t* copy = malloc(sizeof(expression_t));
-        expression_copy(expr, copy);
-        expression_list_append(list2, copy);
-    }
-}
-
+void expression_list_copy(expression_list_t* list1, expression_list_t* list2);
 
 /* Initialize a scope
  *
@@ -415,16 +414,7 @@ static inline error_t scope_get_variable_info(scope_t* scope, char* variable, va
  * @expr location for result
  * @return returns an error code
  */
-static inline error_t scope_get_value(scope_t* scope, char* name, expression_t* expr) {
-    variable_info_t* info;
-    error_t err = scope_get_variable_info(scope, name, &info);
-    if (err) return err;
-    if (info->named_inputs)
-        return ERROR_IS_A_FUNCTION;
-
-    expression_copy(info->value, expr);
-    return ERROR_NO_ERROR;
-}
+error_t scope_get_value(scope_t* scope, char* name, expression_t* expr);
 
 /* search a scope for a function
  * @scope the scope to search
@@ -433,26 +423,13 @@ static inline error_t scope_get_value(scope_t* scope, char* name, expression_t* 
  * @args location for argument list
  * @return returns an error code
  */
-static inline error_t scope_get_function(scope_t* scope, char* name, expression_t* body, expression_list_t* args) {
-    variable_info_t* info;
-    error_t err = scope_get_variable_info(scope, name, &info);
-    if (err) return err;
-    if (!info->named_inputs)
-        return ERROR_IS_A_VARIABLE;
+error_t scope_get_function(scope_t* scope, char* name, expression_t* body, expression_list_t* args);
 
-    expression_list_init(args);
-    expression_list_copy(info->named_inputs, args);
-
-    expression_copy(info->value, body);
-    return ERROR_NO_ERROR;
-}
-
-static void variable_info_free(variable_info_t* info) {
-    if (info->named_inputs)
-        expression_list_free(info->named_inputs);
-    expression_free(info->value);
-    free(info);
-}
+/* free variable's information
+ *
+ * @info variable info to free
+ */
+void variable_info_free(variable_info_t* info);
 
 /* clean all resources associated with a scope
  *

@@ -24,7 +24,7 @@ void expression_init_variable(expression_t* expr, char* name, size_t len) {
     strncpy(expr->variable.value, name, len);
 }
 
-void expression_init_number(expression_t* expr, mpfr_t value) {
+void expression_init_number(expression_t* expr, mpfr_ptr value) {
     expr->type = EXPRESSION_TYPE_NUMBER;
     mpfr_init_set(expr->number.value, value, MPFR_RNDF);
 }
@@ -149,4 +149,79 @@ inline operator_precedence_t operator_precedence(operator_t op) {
         default:
             return OPERATOR_PRECEDENCE_MINIMUM;
     }
+}
+
+void expression_list_append(expression_list_t* list, expression_t* expr) {
+    if (!list->value) {
+        list->value = expr;
+        return;
+    }
+
+    expression_list_t* next = malloc(sizeof(expression_list_t));
+    next->value = expr;
+    next->next  = NULL;
+    while (list->next) list = list->next;
+
+    list->next = next;
+}
+
+void expression_list_copy(expression_list_t* list1, expression_list_t* list2) {
+    expression_t* expr;
+    EXPRESSION_LIST_FOREACH(expr, list1) {
+        expression_t* copy = malloc(sizeof(expression_t));
+        expression_copy(expr, copy);
+        expression_list_append(list2, copy);
+    }
+}
+
+void variable_info_free(variable_info_t* info) {
+    if (info->named_inputs)
+        expression_list_free(info->named_inputs);
+    expression_free(info->value);
+    free(info);
+}
+
+error_t scope_get_function(scope_t* scope, char* name, expression_t* body, expression_list_t* args) {
+    variable_info_t* info;
+    error_t err = scope_get_variable_info(scope, name, &info);
+    if (err) return err;
+    if (!info->named_inputs)
+        return ERROR_IS_A_VARIABLE;
+
+    expression_list_init(args);
+    expression_list_copy(info->named_inputs, args);
+
+    expression_copy(info->value, body);
+    return ERROR_NO_ERROR;
+}
+
+error_t scope_get_value(scope_t* scope, char* name, expression_t* expr) {
+    variable_info_t* info;
+    error_t err = scope_get_variable_info(scope, name, &info);
+    if (err) return err;
+    if (info->named_inputs)
+        return ERROR_IS_A_FUNCTION;
+
+    expression_copy(info->value, expr);
+    return ERROR_NO_ERROR;
+}
+
+void expression_collapse_right(expression_t* expr) {
+    assert(EXPRESSION_IS_OPERATOR(expr));
+
+    expression_t* left = expr->operator.left;
+    expression_free(expr->operator.right);
+    *expr = *left;
+    free(left);
+}
+
+void expression_collapse_left(expression_t* expr) {
+    assert(EXPRESSION_IS_OPERATOR(expr) || EXPRESSION_IS_PREFIX(expr));
+
+    expression_t* right = EXPRESSION_RIGHT(expr);
+    if (EXPRESSION_LEFT(expr))
+        expression_free(EXPRESSION_LEFT(expr));
+
+    *expr = *right;
+    free(right);
 }

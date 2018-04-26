@@ -6,23 +6,26 @@
 #include "simplify/errors.h"
 #include "simplify/rbtree/rbtree.h"
 #include "simplify/expression/expr_types.h"
-#include "simplify/expression/stringify.h"
 
-/* evaluate an expression as much as possible
- * @expr the expression to simplify
- * @scope the where variables should be assigned and looked up.
- * @return returns an error
+/* check for a variable or function in the expression
+ *
+ * @expr the expression to search
+ * @var the variable to search for
  */
-error_t expression_evaluate(expression_t* expr, scope_t* scope);
+int expression_has_variable_or_function(expression_t* expr, variable_t var);
 
-/* isolate a variable on one side of an comparison operator.
- * If no comparison operator is present, append `= 0`
- * 
- * @expr the expression to work with
- * @var the variable to isolate
- * @return returns an error code
- */
-error_t expression_isolate_variable(expression_t* expr, variable_t var);
+/* get the name of the first variable that appears in an expression
+ *
+ * @expr the expression to search
+ * @return returns the variable's name, or NULL if it was not found
+ */ 
+variable_t expression_find_variable(expression_t* expr);
 
+/* get the name of the first function that appears in an expression
+ *
+ * @expr the expression to search
+ * @return returns the function's name, or NULL if it was not found
+ */ 
+variable_t expression_find_function(expression_t* expr);
 
 #endif  // SIMPLIFY_EXPRESSION_EXPRESSION_H_

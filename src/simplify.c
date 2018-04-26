@@ -1,10 +1,13 @@
 /* Copyright Ian Shehadeh 2018 */
 
-#include "simplify/expression/expression.h"
 #include "simplify/parser.h"
 #include "simplify/lexer.h"
 #include "simplify/errors.h"
 #include "flags/flags.h"
+
+#include "simplify/expression/evaluate.h"
+#include "simplify/expression/isolate.h"
+#include "simplify/expression/stringify.h"
 
 #define VERSION "0.1.2"
 #define DATE __DATE__
