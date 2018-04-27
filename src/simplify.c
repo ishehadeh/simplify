@@ -6,6 +6,7 @@
 #include "flags/flags.h"
 
 #include "simplify/expression/evaluate.h"
+#include "simplify/expression/simplify.h"
 #include "simplify/expression/isolate.h"
 #include "simplify/expression/stringify.h"
 
@@ -123,6 +124,9 @@ int main(int argc, char** argv) {
         if (err) goto error;
 
         err = expression_evaluate(&expr, &scope);
+        if (err) goto error;
+
+        err = expression_simplify(&expr);
         if (err) goto error;
 
         if (isolation_target) {
