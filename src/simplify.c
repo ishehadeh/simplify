@@ -126,8 +126,9 @@ int main(int argc, char** argv) {
         err = expression_evaluate(&expr, &scope);
         if (err) goto error;
 
-        err = expression_simplify(&expr);
-        if (err) goto error;
+        // complex simplification isn't ready yet... SERIOUSLY. It will CONSTANTLY segfault
+        // err = expression_simplify(&expr);
+        // if (err) goto error;
 
         if (isolation_target) {
             err = expression_isolate_variable(&expr, isolation_target);
