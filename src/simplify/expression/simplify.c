@@ -2,7 +2,7 @@
 
 #include "simplify/expression/simplify.h"
 
-error_t _expression_simplify_recursive(expression_t* expr) {
+error_t _expression_collapse_variables(expression_t* expr) {
     if (EXPRESSION_IS_OPERATOR(expr)) {
         if (EXPRESSION_IS_VARIABLE(expr->operator.right)) {
             expression_t* left = EXPRESSION_LEFT(expr);
