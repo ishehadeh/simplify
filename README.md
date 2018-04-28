@@ -10,7 +10,7 @@ For example:
 Simplify also works with multiple variables:
 
 `simplify --isolate y '2 + x * y^4 = 10`\
-`y = 8 / x \ 4`.
+`y = (8 / x) \ 4`.
 
 Variables can also be assigned in an expression:
 
