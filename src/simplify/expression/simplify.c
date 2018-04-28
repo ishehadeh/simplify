@@ -24,7 +24,7 @@ error_t _expression_collapse_variables_recursive(expression_t* expr) {
                                                       expr->operator.infix,
                                                       &count);
         } else if (EXPRESSION_IS_OPERATOR(expr->operator.right)) {
-            return _expression_collapse_variables(expr->operator.right);
+            return _expression_collapse_variables_recursive(expr->operator.right);
         } else {
             return ERROR_NO_ERROR;
         }
