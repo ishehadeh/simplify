@@ -81,15 +81,17 @@
 Simplify may just evaluate the expression, if that is possible, for example, <code>2 + 2</code> will be
 <code>simplify</code>'d to <code>4</code>.</p>
 
+<p>Simplify takes a series of expressions, it prints a simplified version for each of them.</p>
+
 <p>Simplify can also work with unknowns. By default, it will try to evaluate as much as possible around any unknowns.
-Simplify can also solve for an unknown, using the <code>-i</code> flag. <code>-i</code> will try to isolate that variable on one side of
-an equality operator (<code>:</code>, <code>=</code>, <code>&lt;</code>, or <code>></code>), it appends <code>= 0</code> to the equation if no equality operator is present.
-For more information on how to write <code>simplify</code> expressions see <span class="man-ref">simplify<span class="s">(7)</span></span></p>
+By using the <code>-i</code> flag, simplify can also solve for an unknown. <code>-i</code> will try to isolate that variable on one side of
+a comparison or assignment operator (<code>:</code>, <code>=</code>, <code>&lt;</code>, or <code>></code>), it appends <code>= 0</code> to the equation if no equality operator is present.
+For more information on how to write <code>simplify</code> expressions see <span class="man-ref">simplify<span class="s">(7)</span></span>.</p>
 
 <h2 id="OPTIONS">OPTIONS</h2>
 
 <dl>
-<dt><code>-q</code>, <code>--quiet</code></dt><dd><p> Only print errors, ignore all the expression's results</p></dd>
+<dt><code>-q</code>, <code>--quiet</code></dt><dd><p> Only print errors, ignore all the expressions' results</p></dd>
 <dt><code>-v</code>, <code>--verbose</code></dt><dd><p> Print status updates while running</p></dd>
 <dt><code>-f</code>, <code>--file</code>=[<strong>FILE</strong>]</dt><dd><p> Evaluate <code>FILE</code> before any other expressions.</p></dd>
 <dt><code>-i</code>, <code>--isolate</code>=[<strong>VARIABLE</strong>]</dt><dd><p> Try to isolate <strong>VARIABLE</strong> on one side of an equality operator.</p></dd>

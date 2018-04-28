@@ -13,13 +13,16 @@
 Simplify takes a series of expression and tries to reduce them to their simplest form\. Simplify may just evaluate the expression, if that is possible, for example, \fB2 + 2\fR will be \fBsimplify\fR\'d to \fB4\fR\.
 .
 .P
-Simplify can also work with unknowns\. By default, it will try to evaluate as much as possible around any unknowns\. Simplify can also solve for an unknown, using the \fB\-i\fR flag\. \fB\-i\fR will try to isolate that variable on one side of an equality operator (\fB:\fR, \fB=\fR, \fB<\fR, or \fB>\fR), it appends \fB= 0\fR to the equation if no equality operator is present\. For more information on how to write \fBsimplify\fR expressions see simplify(7)
+Simplify takes a series of expressions, it prints a simplified version for each of them\.
+.
+.P
+Simplify can also work with unknowns\. By default, it will try to evaluate as much as possible around any unknowns\. By using the \fB\-i\fR flag, simplify can also solve for an unknown\. \fB\-i\fR will try to isolate that variable on one side of a comparison or assignment operator (\fB:\fR, \fB=\fR, \fB<\fR, or \fB>\fR), it appends \fB= 0\fR to the equation if no equality operator is present\. For more information on how to write \fBsimplify\fR expressions see simplify(7)\.
 .
 .SH "OPTIONS"
 .
 .TP
 \fB\-q\fR, \fB\-\-quiet\fR
-Only print errors, ignore all the expression\'s results
+Only print errors, ignore all the expressions\' results
 .
 .TP
 \fB\-v\fR, \fB\-\-verbose\fR

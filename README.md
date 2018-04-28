@@ -1,6 +1,6 @@
 # Simplify
 
-Simplify evaluates a mathematician expression, putting it in it's simplest terms.
+Simplify evaluates a mathematical expression, putting it in it's simplest terms.
 
 For example:
 
@@ -31,12 +31,12 @@ Simplify depends on [GMP](https://www.gmplib.org) and [MPFR](https://www.mpfr.or
 The simplify CLI takes a series of expressions, it tries to shorten each one as much as possible,
 assigns any variables or functions it can, then prints the result.
 
-To demonstrate lets do a few unit conversions.
+To demonstrate let's do a few unit conversions.
 
 Define a series of variables, `B: 1`, `Kb: B * 1024`, `Mb: Kb * 1024` `Gb: Mb * 1024`.
 Using these variables lets try converting 20 Megabytes into bytes: this could be written as `x = 20 * Mb` or `x = 20Mb`.
 
-Lets try a more complicated expression. We have a 100Kb file, on a 120Gb disk.
+Let's try a more complicated expression. We have a 100Kb file, on a 120Gb disk.
 How much of the disk is left in Megabytes? `x = (120Gb - 100Kib) / Mb`
 
 assuming your in the build directory created in __Building__, the command to execute
