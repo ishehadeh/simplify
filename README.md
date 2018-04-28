@@ -1,6 +1,6 @@
 # Simplify
 
-Simplify evaluates a mathematical expression, putting it in it's simplest terms.
+Simplify evaluates a mathematical expression, putting it in its simplest terms.
 
 For example:
 
