@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<struct id="rbtree" name="rbtree" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <field id="rbtree::root" name="root">
+    <type name="rbtree_node" qualifier="*" ref="rbtree_node#rbtree_node" />
+  </field>
+</struct>

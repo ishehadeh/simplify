@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
+<typedef id="error_t" name="error_t" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <brief> Enumerates all errors that may occur.</brief>
+  <doc>Error also has the value `ERROR_NO_ERROR`, meaning no error occurred. This value
+will always be zero, so it's safe to check if an error occurred with `if (error) { ... }`.
+</doc>
+  <type name="error" ref="index#error" />
+  <function id="error_string" name="error_string">
+    <brief> get a description of the error</brief>
+    <return>
+      <doc>returns a static string describing the error</doc>
+      <type builtin="yes" name="char" qualifier=" const *" />
+    </return>
+    <argument id="error_string::err" name="err">
+      <type name="error_t" ref="error_t#error_t" />
+    </argument>
+  </function>
+</typedef>

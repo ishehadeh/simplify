@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<struct id="Expression Structures::expression_number" name="expression_number" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <field id="Expression Structures::expression_number::type" name="type">
+    <type name="expression_type_t" ref="index#expression_type_t" />
+  </field>
+  <field id="Expression Structures::expression_number::value" name="value">
+    <type name="mpfr_t" />
+  </field>
+</struct>

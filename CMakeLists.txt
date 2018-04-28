@@ -13,14 +13,14 @@ file(GLOB MANUALS "${CMAKE_SOURCE_DIR}/docs/simplify.*.md")
 string(REPLACE ";" "\t" HEADERS_STR "${HEADERS}")
 string(REPLACE ";" "\t" SOURCES_STR "${SOURCES}")
 string(REPLACE ";" "\t" MANUALS_STR "${MANUALS}")
-set(CLDOC_FLAGS ${CLDOC_FLAGS} --language c --output ${CMAKE_SOURCE_DIR}/docs ${HEADERS_STR})
+set(CLDOC_FLAGS ${CLDOC_FLAGS} --language c --output ${CMAKE_SOURCE_DIR}/docs/libsimplify ${HEADERS_STR})
 
 find_package(GMP REQUIRED)
 find_package(MPFR REQUIRED)
 
 find_program(CLDOC cldoc cldoc.py DOC "c/c++/obj-c documentation generator")
 find_program(RONN  ronn  ronn.rb  DOC "markdown to man converter")
-find_program(GCOV  gcov  DOC "GNU test coverage tool")
+find_program(GCOV  gcov           DOC "GNU test coverage tool")
 
 
 set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wall -Wextra -std=c99 -Werror")

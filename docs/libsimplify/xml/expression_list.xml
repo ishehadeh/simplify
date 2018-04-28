@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<struct id="expression_list" name="expression_list" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <field id="expression_list::value" name="value">
+    <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+  </field>
+  <field id="expression_list::next" name="next">
+    <type name="expression_list" qualifier="*" ref="expression_list#expression_list" />
+  </field>
+</struct>

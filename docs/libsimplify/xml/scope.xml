@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<struct id="scope" name="scope" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <field id="scope::parent" name="parent">
+    <type name="scope_t" qualifier="*" ref="scope_t#scope_t" />
+  </field>
+  <field id="scope::variables" name="variables">
+    <type name="rbtree_t" ref="rbtree_t#rbtree_t" />
+  </field>
+  <field id="scope::boolean" name="boolean">
+    <type builtin="yes" name="int" />
+  </field>
+</struct>

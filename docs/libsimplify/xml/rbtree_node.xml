@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='utf-8'?>
+<struct id="rbtree_node" name="rbtree_node" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <field id="rbtree_node::color" name="color">
+    <type name="rbtree_color_t" ref="index#rbtree_color_t" />
+  </field>
+  <field id="rbtree_node::left" name="left">
+    <type name="rbtree_node" qualifier="*" ref="rbtree_node#rbtree_node" />
+  </field>
+  <field id="rbtree_node::right" name="right">
+    <type name="rbtree_node" qualifier="*" ref="rbtree_node#rbtree_node" />
+  </field>
+  <field id="rbtree_node::parent" name="parent">
+    <type name="rbtree_node" qualifier="*" ref="rbtree_node#rbtree_node" />
+  </field>
+  <field id="rbtree_node::data" name="data">
+    <type builtin="yes" name="void" qualifier="*" />
+  </field>
+  <field id="rbtree_node::key" name="key">
+    <type builtin="yes" name="char" qualifier="*" />
+  </field>
+</struct>

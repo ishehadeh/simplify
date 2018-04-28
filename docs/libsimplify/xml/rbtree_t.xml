@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='utf-8'?>
+<typedef id="rbtree_t" name="rbtree_t" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <brief> A Red-Black Tree</brief>
+  <doc>A Red-Black Tree is a type of self-balancing binary search tree.
+</doc>
+  <type name="rbtree" ref="rbtree#rbtree" />
+  <function id="rbtree_clean" name="rbtree_clean">
+    <brief> free all resources from a tree (both keys and data)</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="rbtree_clean::tree" name="tree">
+      <type name="rbtree_t" qualifier="*" ref="rbtree_t#rbtree_t" />
+    </argument>
+    <argument id="rbtree_clean::data_cleaner" name="data_cleaner">
+      <type class="function" qualifier="*">
+        <result>
+          <type builtin="yes" name="void" />
+        </result>
+        <arguments>
+          <type builtin="yes" name="void" qualifier="*" />
+        </arguments>
+      </type>
+    </argument>
+  </function>
+  <function id="rbtree_init" name="rbtree_init">
+    <brief> initialize an rbtree</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="rbtree_init::tree" name="tree">
+      <type name="rbtree_t" qualifier="*" ref="rbtree_t#rbtree_t" />
+    </argument>
+  </function>
+  <function id="rbtree_insert" name="rbtree_insert">
+    <brief> insert a new item into the tree</brief>
+    <return>
+      <doc>an error code</doc>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="rbtree_insert::tree" name="tree">
+      <type name="rbtree_t" qualifier="*" ref="rbtree_t#rbtree_t" />
+    </argument>
+    <argument id="rbtree_insert::key" name="key">
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+    <argument id="rbtree_insert::data" name="data">
+      <type builtin="yes" name="void" qualifier="*" />
+    </argument>
+  </function>
+  <function id="rbtree_search" name="rbtree_search">
+    <brief> get an item from the tree</brief>
+    <return>
+      <doc>an error is returned if the key is not found, and `data_out` is not assigned to.</doc>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="rbtree_search::tree" name="tree">
+      <type name="rbtree_t" qualifier="*" ref="rbtree_t#rbtree_t" />
+    </argument>
+    <argument id="rbtree_search::key" name="key">
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+    <argument id="rbtree_search::data_out" name="data_out">
+      <type builtin="yes" name="void" qualifier="**" />
+    </argument>
+  </function>
+</typedef>

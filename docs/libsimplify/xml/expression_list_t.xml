@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='utf-8'?>
+<typedef id="expression_list_t" name="expression_list_t" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <brief> A singly linked list of expressions</brief>
+  <type name="expression_list" ref="expression_list#expression_list" />
+  <function id="expression_list_append" name="expression_list_append">
+    <brief> append a new element to the end of `list`</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="expression_list_append::list" name="list">
+      <type name="expression_list_t" qualifier="*" ref="expression_list_t#expression_list_t" />
+    </argument>
+    <argument id="expression_list_append::expr" name="expr">
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+  </function>
+  <function id="expression_list_copy" name="expression_list_copy">
+    <brief> copy all elements in one list to another</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="expression_list_copy::list1" name="list1">
+      <type name="expression_list_t" qualifier="*" ref="expression_list_t#expression_list_t" />
+    </argument>
+    <argument id="expression_list_copy::list2" name="list2">
+      <type name="expression_list_t" qualifier="*" ref="expression_list_t#expression_list_t" />
+    </argument>
+  </function>
+  <function id="expression_list_free" name="expression_list_free">
+    <brief> free all expressions and units in the list</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="expression_list_free::list" name="list">
+      <doc>the list to clean</doc>
+      <type name="expression_list_t" qualifier="*" ref="expression_list_t#expression_list_t" />
+    </argument>
+  </function>
+  <function id="expression_list_init" name="expression_list_init">
+    <brief> initialize an expression list</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="expression_list_init::list" name="list">
+      <doc>the list to initialize</doc>
+      <type name="expression_list_t" qualifier="*" ref="expression_list_t#expression_list_t" />
+    </argument>
+  </function>
+  <function id="expression_list_pop" name="expression_list_pop">
+    <brief> free the last element of the list (that may be `list` itself)</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="expression_list_pop::list" name="list">
+      <type name="expression_list_t" qualifier="*" ref="expression_list_t#expression_list_t" />
+    </argument>
+  </function>
+</typedef>

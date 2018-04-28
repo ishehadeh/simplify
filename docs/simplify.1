@@ -1,0 +1,41 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "SIMPLIFY" "1" "April 2018" "" ""
+.
+.SH "NAME"
+\fBsimplify\fR \- rewrite a mathematical expression in it\'s simplest terms
+.
+.SH "SYNOPSIS"
+\fBsimplify\fR [\fB\-q\fR] [\fB\-v\fR] [\fB\-f\fR \fIFILE\fR] [\fB\-i\fR \fIVARIABLE\fR] [\fB\-d\fR \fIVARIABLE\fR=\fIEXPR\fR] \.\.\.EXPRESSION
+.
+.SH "DESCIPTION"
+Simplify takes a series of expression and tries to reduce them to their simplest form\. Simplify may just evaluate the expression, if that is possible, for example, \fB2 + 2\fR will be \fBsimplify\fR\'d to \fB4\fR\.
+.
+.P
+Simplify can also work with unknowns\. By default, it will try to evaluate as much as possible around any unknowns\. Simplify can also solve for an unknown, using the \fB\-i\fR flag\. \fB\-i\fR will try to isolate that variable on one side of an equality operator (\fB:\fR, \fB=\fR, \fB<\fR, or \fB>\fR), it appends \fB= 0\fR to the equation if no equality operator is present\. For more information on how to write \fBsimplify\fR expressions see simplify(7)
+.
+.SH "OPTIONS"
+.
+.TP
+\fB\-q\fR, \fB\-\-quiet\fR
+Only print errors, ignore all the expression\'s results
+.
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+Print status updates while running
+.
+.TP
+\fB\-f\fR, \fB\-\-file\fR=[\fBFILE\fR]
+Evaluate \fBFILE\fR before any other expressions\.
+.
+.TP
+\fB\-i\fR, \fB\-\-isolate\fR=[\fBVARIABLE\fR]
+Try to isolate \fBVARIABLE\fR on one side of an equality operator\.
+.
+.TP
+\fB\-d\fR, \fB\-\-define\fR=[\fBVARIABLE\fR=\fBEXPRESSION\fR]
+Define \fBVARIABLE\fR as \fBEXPRESSION\fR, do try to evaluate either side simplify
+.
+.SH "SEE ALSO"
+simplify(7)

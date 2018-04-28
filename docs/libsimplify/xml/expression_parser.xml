@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<struct id="expression_parser" name="expression_parser" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <field id="expression_parser::lexer" name="lexer">
+    <type name="lexer_t" qualifier="*" ref="lexer_t#lexer_t" />
+  </field>
+  <field id="expression_parser::previous" name="previous">
+    <type name="token_t" ref="index#token_t" />
+  </field>
+</struct>

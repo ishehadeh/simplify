@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<struct id="Expression Structures::expression_variable" name="expression_variable" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <field id="Expression Structures::expression_variable::type" name="type">
+    <type name="expression_type_t" ref="index#expression_type_t" />
+  </field>
+  <field id="Expression Structures::expression_variable::value" name="value">
+    <type name="variable_t" ref="index#variable_t" />
+  </field>
+  <field id="Expression Structures::expression_variable::binding" name="binding">
+    <type name="scope_t" qualifier="*" ref="scope_t#scope_t" />
+  </field>
+</struct>

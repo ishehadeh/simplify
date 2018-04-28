@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='utf-8'?>
+<typedef id="lexer_t" name="lexer_t" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <brief> lexical analyzer</brief>
+  <doc>The lexer walks through a buffer or file, picking out tokens
+</doc>
+  <type name="lexer" ref="lexer#lexer" />
+  <function id="lexer_clean" name="lexer_clean">
+    <brief> free all the lexer's resources, except the file</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="lexer_clean::lexer" name="lexer">
+      <doc>the lexer to clean</doc>
+      <type name="lexer_t" qualifier="*" ref="lexer_t#lexer_t" />
+    </argument>
+  </function>
+  <function id="lexer_init_from_file" name="lexer_init_from_file">
+    <brief> initialize a lexer from a file</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="lexer_init_from_file::lexer" name="lexer">
+      <doc>the lexer to initialize</doc>
+      <type name="lexer_t" qualifier="*" ref="lexer_t#lexer_t" />
+    </argument>
+    <argument id="lexer_init_from_file::file" name="file">
+      <doc>the file read</doc>
+      <type name="FILE" qualifier="*" />
+    </argument>
+  </function>
+  <function id="lexer_init_from_string" name="lexer_init_from_string">
+    <brief> initialize lexer from a null terminated string</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="lexer_init_from_string::lexer" name="lexer">
+      <doc>the lexer to initialize</doc>
+      <type name="lexer_t" qualifier="*" ref="lexer_t#lexer_t" />
+    </argument>
+    <argument id="lexer_init_from_string::buffer" name="buffer">
+      <doc>the buffer to read, the buffer is copied</doc>
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+  </function>
+  <function id="lexer_next" name="lexer_next">
+    <brief> draw the next token from the lexer</brief>
+    <return>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="lexer_next::lexer" name="lexer">
+      <doc>the lexer to draw from</doc>
+      <type name="lexer_t" qualifier="*" ref="lexer_t#lexer_t" />
+    </argument>
+    <argument id="lexer_next::token" name="token">
+      <doc>a location to store the token</doc>
+      <type name="token_t" qualifier="*" ref="index#token_t" />
+    </argument>
+  </function>
+</typedef>

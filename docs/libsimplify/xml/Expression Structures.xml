@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<category id="Expression Structures" name="Expression Structures" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <struct name="expression_function" ref="Expression Structures::expression_function#Expression Structures::expression_function" />
+  <struct name="expression_number" ref="Expression Structures::expression_number#Expression Structures::expression_number" />
+  <struct name="expression_operator" ref="Expression Structures::expression_operator#Expression Structures::expression_operator" />
+  <struct name="expression_prefix" ref="Expression Structures::expression_prefix#Expression Structures::expression_prefix" />
+  <struct name="expression_variable" ref="Expression Structures::expression_variable#Expression Structures::expression_variable" />
+</category>

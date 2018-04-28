@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<struct id="token" name="token" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <field id="token::type" name="type">
+    <type name="token_type_t" ref="index#token_type_t" />
+  </field>
+  <field id="token::start" name="start">
+    <type builtin="yes" name="char" qualifier="*" />
+  </field>
+  <field id="token::length" name="length">
+    <type name="size_t" />
+  </field>
+</struct>

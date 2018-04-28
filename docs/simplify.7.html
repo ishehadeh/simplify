@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv='content-type' value='text/html;charset=utf8'>
+  <meta name='generator' value='Ronn/v0.7.3 (http://github.com/rtomayko/ronn/tree/0.7.3)'>
+  <title>simplify(7) - expression syntax for simplify</title>
+  <style type='text/css' media='all'>
+  /* style: man */
+  body#manpage {margin:0}
+  .mp {max-width:100ex;padding:0 9ex 1ex 4ex}
+  .mp p,.mp pre,.mp ul,.mp ol,.mp dl {margin:0 0 20px 0}
+  .mp h2 {margin:10px 0 0 0}
+  .mp > p,.mp > pre,.mp > ul,.mp > ol,.mp > dl {margin-left:8ex}
+  .mp h3 {margin:0 0 0 4ex}
+  .mp dt {margin:0;clear:left}
+  .mp dt.flush {float:left;width:8ex}
+  .mp dd {margin:0 0 0 9ex}
+  .mp h1,.mp h2,.mp h3,.mp h4 {clear:left}
+  .mp pre {margin-bottom:20px}
+  .mp pre+h2,.mp pre+h3 {margin-top:22px}
+  .mp h2+pre,.mp h3+pre {margin-top:5px}
+  .mp img {display:block;margin:auto}
+  .mp h1.man-title {display:none}
+  .mp,.mp code,.mp pre,.mp tt,.mp kbd,.mp samp,.mp h3,.mp h4 {font-family:monospace;font-size:14px;line-height:1.42857142857143}
+  .mp h2 {font-size:16px;line-height:1.25}
+  .mp h1 {font-size:20px;line-height:2}
+  .mp {text-align:justify;background:#fff}
+  .mp,.mp code,.mp pre,.mp pre code,.mp tt,.mp kbd,.mp samp {color:#131211}
+  .mp h1,.mp h2,.mp h3,.mp h4 {color:#030201}
+  .mp u {text-decoration:underline}
+  .mp code,.mp strong,.mp b {font-weight:bold;color:#131211}
+  .mp em,.mp var {font-style:italic;color:#232221;text-decoration:none}
+  .mp a,.mp a:link,.mp a:hover,.mp a code,.mp a pre,.mp a tt,.mp a kbd,.mp a samp {color:#0000ff}
+  .mp b.man-ref {font-weight:normal;color:#434241}
+  .mp pre {padding:0 4ex}
+  .mp pre code {font-weight:normal;color:#434241}
+  .mp h2+pre,h3+pre {padding-left:0}
+  ol.man-decor,ol.man-decor li {margin:3px 0 10px 0;padding:0;float:left;width:33%;list-style-type:none;text-transform:uppercase;color:#999;letter-spacing:1px}
+  ol.man-decor {width:100%}
+  ol.man-decor li.tl {text-align:left}
+  ol.man-decor li.tc {text-align:center;letter-spacing:4px}
+  ol.man-decor li.tr {text-align:right;float:right}
+  </style>
+</head>
+<!--
+  The following styles are deprecated and will be removed at some point:
+  div#man, div#man ol.man, div#man ol.head, div#man ol.man.
+
+  The .man-page, .man-decor, .man-head, .man-foot, .man-title, and
+  .man-navigation should be used instead.
+-->
+<body id='manpage'>
+  <div class='mp' id='man'>
+
+  <div class='man-navigation' style='display:none'>
+    <a href="#NAME">NAME</a>
+    <a href="#SYNOPSIS">SYNOPSIS</a>
+    <a href="#DESCRIPTION">DESCRIPTION</a>
+    <a href="#EXAMPLES">EXAMPLES</a>
+  </div>
+
+  <ol class='man-decor man-head man head'>
+    <li class='tl'>simplify(7)</li>
+    <li class='tc'></li>
+    <li class='tr'>simplify(7)</li>
+  </ol>
+
+  <h2 id="NAME">NAME</h2>
+<p class="man-name">
+  <code>simplify</code> - <span class="man-whatis">expression syntax for simplify</span>
+</p>
+
+<h2 id="SYNOPSIS">SYNOPSIS</h2>
+
+<h3 id="Operator-List">Operator List</h3>
+
+<ol>
+<li><code>+</code> addition, or as a prefix to make a number positive.</li>
+<li><code>-</code> subtraction, or as a prefix to make a number negative.</li>
+<li><code>*</code> multiplication</li>
+<li><code>/</code> division</li>
+<li><code>^</code> exponent</li>
+<li><code>\</code> root</li>
+<li><code>=</code> equality</li>
+<li><code>&lt;</code> less than</li>
+<li><code>&gt;</code> greater than</li>
+<li><code>:</code> assignment</li>
+</ol>
+
+
+<h3 id="Variable-syntax-">Variable syntax:</h3>
+
+<p>Variables are a sequence of at least one letter (uppercase or lowercase), or underscores.
+Variables can be assigned to with the <code>:</code> operator.</p>
+
+<h3 id="Function-syntax">Function syntax</h3>
+
+<p>Function names follow the same rules as variable names. Following the function's name is a paramater list
+surrounded by parentheses. Parematers are seperated by commas. The parameter list cannot be empty.</p>
+
+<h2 id="DESCRIPTION">DESCRIPTION</h2>
+
+<h3 id="Operators-1-4-Basic-Operations">Operators 1 - 4, Basic Operations</h3>
+
+<p>The first 4 operators (<code>+</code>, <code>-</code>, <code>*</code> and <code>/</code>) perform basic arithmetic operations.
+For the sake of brevity in expressions, it's possible to omit them in some cases.</p>
+
+<p>When a number and a variable are adjacent, in any order, a multiplication operator is implied.
+For instance <code>2x</code> and <code>x2</code> are equivalent to <code>2 * x</code>. Similarly, when a number is used as a prefix
+to left parentheses, the multiplication operator is implied. For example <code>2(x + 5)</code> is equivalent to
+<code>2 * (x + 5)</code>.</p>
+
+<h3 id="Operators-5-6-Exponents-and-Roots">Operators 5 - 6, Exponents and Roots</h3>
+
+<p>Operators 5 and 6 (<code>^</code> and <code>\</code>) perform power and root operations.</p>
+
+<p>The <code>^</code> operator's left operand is the number to be operated on. The right operand
+is the exponent. For instance <code>2^4</code> is equivalent to <code>2 * 2 * 2 * 2</code>.</p>
+
+<p>The <code>\</code> operator's left operand is the number to be operated on. The right operand
+is the root. The root <strong>must</strong> be an integer, if it is not it will be rounded,
+For example <code>27 \ 3.34</code> is equivalent to <code>27 \ 3</code>.</p>
+
+<h3 id="Operators-7-9-Comparison-Operators">Operators 7 - 9, Comparison Operators</h3>
+
+<p>Operators 7 to 9 (<code>=</code>, <code>&lt;</code>, and <code>></code>) are the comparison operators. They imply
+that the user is comparing their left and right operands. Depending on the
+how the <code>simplify</code> command was invoked they may perform different operations.</p>
+
+<p>By default, these operators check if their left operand is
+<em>equal</em>, <em>less than</em>, or <em>greater than</em>, their right operand, respectively.
+If all equality operations in an expression are true then the expression's result
+is <code>true</code> otherwise the expression's result is <code>false</code></p>
+
+<p>Alternatively, if the <code>-i</code> flag was specified with a variable the expression will not
+evaluate to <code>true</code> or <code>false</code>. Instead the variable specified will be isolated on one side
+of an equality operator. Note the value of the expression does not change, this operation only makes the
+variable's value more clear.</p>
+
+<h3 id="Operator-10-Assignment">Operator 10, Assignment</h3>
+
+<p>Operator 10 (<code>:</code>) is the assignment operator. It assumes its left operand is a variable or function.
+If it's left operand is variable than the right operand is simplified and then assigned to it's left operand.
+Otherwise, the left operand is immediately assigned to the function named in the right operand.</p>
+
+<h3 id="Parentheses">Parentheses</h3>
+
+<p>Parentheses serve two purposes: to encase functions parameters or to indicate an expression should have a higher
+priority. The latter case is assumed if the parentheses are not immediately preceded by an identifier. If <code>(</code> occurs,
+then a <code>)</code> must follow eventually, otherwise <code>simplify</code> throws an error.</p>
+
+<h3 id="Variables">Variables</h3>
+
+<p>Variables associate a name with an expression. The name consists of lowercase letters, capital letters, and underscores.
+Variables can be assigned to using the <code>:</code> operator. The expression being assigned will be simplified before assignment.</p>
+
+<h3 id="Functions">Functions</h3>
+
+<p>Functions are similar to variables, the only difference is they take a parameter list when defined or called, and their definition
+is not evaluated. Function's argument list is surrounded by parentheses (<code>(</code> and <code>)</code>). When defining a function every argument must
+contain a variable. Arguments are separated by commas (<code>,</code>). A function may not have zero arguments.</p>
+
+<p>Function parameters can be defined as an expression. When the function is called the variable in the expression will be isolated
+automatically.</p>
+
+<h2 id="EXAMPLES">EXAMPLES</h2>
+
+<p>If an expression can be evaluated it will be:</p>
+
+<p><code>$ simplify '2 + 2'</code></p>
+
+<p><code>4</code></p>
+
+<p>If part of an expression is unkown, the unkown will be evaluated around:</p>
+
+<p><code>$ simplify 'x + 2 ^ 5'</code></p>
+
+<p><code>x + 32</code></p>
+
+<p>Variables can be assigned to using the <code>:</code> operator:</p>
+
+<p><code>$ simplify 'x : 2 + 5'</code></p>
+
+<p><code>7</code></p>
+
+<p>Functions are similar to variables, except they take an argument list:</p>
+
+<p><code>$ simplify 'f(x) : x * 3' 'f(10)'</code></p>
+
+<p><code>x * 3</code></p>
+
+<p><code>30</code></p>
+
+<p>Functions can take multiple arguments:</p>
+
+<p><code>$ simplify 'avg(x, y) : (x + y) / 2' 'avg(5, 10)'</code></p>
+
+<p><code>(x + y) / 2</code></p>
+
+<p><code>7.5</code></p>
+
+
+  <ol class='man-decor man-foot man foot'>
+    <li class='tl'></li>
+    <li class='tc'>April 2018</li>
+    <li class='tr'>simplify(7)</li>
+  </ol>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,325 @@
+<?xml version='1.0' encoding='utf-8'?>
+<index xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <category name="Expression Structures" ref="Expression Structures#Expression Structures">
+    <struct name="expression_function" ref="Expression Structures::expression_function#Expression Structures::expression_function" />
+    <struct name="expression_number" ref="Expression Structures::expression_number#Expression Structures::expression_number" />
+    <struct name="expression_operator" ref="Expression Structures::expression_operator#Expression Structures::expression_operator" />
+    <struct name="expression_prefix" ref="Expression Structures::expression_prefix#Expression Structures::expression_prefix" />
+    <struct name="expression_variable" ref="Expression Structures::expression_variable#Expression Structures::expression_variable" />
+  </category>
+  <struct name="expression_list" ref="expression_list#expression_list" />
+  <struct name="expression_parser" ref="expression_parser#expression_parser" />
+  <struct name="lexer" ref="lexer#lexer" />
+  <struct name="rbtree" ref="rbtree#rbtree" />
+  <struct name="rbtree_node" ref="rbtree_node#rbtree_node" />
+  <struct name="scope" ref="scope#scope" />
+  <struct name="token" ref="token#token" />
+  <struct name="variable_info" ref="variable_info#variable_info" />
+  <enum anonymous="yes" id="error" name="error">
+    <enumvalue id="ERROR_NO_ERROR" name="ERROR_NO_ERROR" value="0" />
+    <enumvalue id="ERROR_INVALID_TOKEN" name="ERROR_INVALID_TOKEN" value="1" />
+    <enumvalue id="ERROR_INVALID_CHARACTER" name="ERROR_INVALID_CHARACTER" value="2" />
+    <enumvalue id="ERROR_INVALID_PREFIX" name="ERROR_INVALID_PREFIX" value="3" />
+    <enumvalue id="ERROR_INVALID_OPERATOR" name="ERROR_INVALID_OPERATOR" value="4" />
+    <enumvalue id="ERROR_INVALID_NUMBER" name="ERROR_INVALID_NUMBER" value="5" />
+    <enumvalue id="ERROR_INVALID_IDENTIFIER" name="ERROR_INVALID_IDENTIFIER" value="6" />
+    <enumvalue id="ERROR_FAILED_TO_ALLOCATE" name="ERROR_FAILED_TO_ALLOCATE" value="7" />
+    <enumvalue id="ERROR_FAILED_TO_REALLOCATE" name="ERROR_FAILED_TO_REALLOCATE" value="8" />
+    <enumvalue id="ERROR_UNABLE_TO_OPEN_FILE" name="ERROR_UNABLE_TO_OPEN_FILE" value="9" />
+    <enumvalue id="ERROR_FILE_CLOSED_UNEXPECTEDLY" name="ERROR_FILE_CLOSED_UNEXPECTEDLY" value="10" />
+    <enumvalue id="ERROR_NUMBER_IS_NAN" name="ERROR_NUMBER_IS_NAN" value="11" />
+    <enumvalue id="ERROR_NUMBER_IS_INFINITY" name="ERROR_NUMBER_IS_INFINITY" value="12" />
+    <enumvalue id="ERROR_CANNOT_COMPARE" name="ERROR_CANNOT_COMPARE" value="13" />
+    <enumvalue id="ERROR_UNEXPECTED_EOF" name="ERROR_UNEXPECTED_EOF" value="14" />
+    <enumvalue id="ERROR_UNEXPECTED_EOL" name="ERROR_UNEXPECTED_EOL" value="15" />
+    <enumvalue id="ERROR_STRAY_RIGHT_PAREN" name="ERROR_STRAY_RIGHT_PAREN" value="16" />
+    <enumvalue id="ERROR_STRAY_LEFT_PAREN" name="ERROR_STRAY_LEFT_PAREN" value="17" />
+    <enumvalue id="ERROR_NONEXISTANT_KEY" name="ERROR_NONEXISTANT_KEY" value="18" />
+    <enumvalue id="ERROR_VARIABLE_NOT_PRESENT" name="ERROR_VARIABLE_NOT_PRESENT" value="19" />
+    <enumvalue id="ERROR_INVALID_ASSIGNMENT_EXPRESSION" name="ERROR_INVALID_ASSIGNMENT_EXPRESSION" value="20" />
+    <enumvalue id="ERROR_UNRECOGNIZED_ARGUMENT" name="ERROR_UNRECOGNIZED_ARGUMENT" value="21" />
+    <enumvalue id="ERROR_IS_A_FUNCTION" name="ERROR_IS_A_FUNCTION" value="22" />
+    <enumvalue id="ERROR_IS_A_VARIABLE" name="ERROR_IS_A_VARIABLE" value="23" />
+    <enumvalue id="ERROR_MISSING_ARGUMENTS" name="ERROR_MISSING_ARGUMENTS" value="24" />
+  </enum>
+  <enum anonymous="yes" id="expression_type" name="expression_type">
+    <enumvalue id="EXPRESSION_TYPE_NUMBER" name="EXPRESSION_TYPE_NUMBER" value="0" />
+    <enumvalue id="EXPRESSION_TYPE_PREFIX" name="EXPRESSION_TYPE_PREFIX" value="1" />
+    <enumvalue id="EXPRESSION_TYPE_OPERATOR" name="EXPRESSION_TYPE_OPERATOR" value="2" />
+    <enumvalue id="EXPRESSION_TYPE_VARIABLE" name="EXPRESSION_TYPE_VARIABLE" value="3" />
+    <enumvalue id="EXPRESSION_TYPE_FUNCTION" name="EXPRESSION_TYPE_FUNCTION" value="4" />
+  </enum>
+  <enum anonymous="yes" id="operator_precedence" name="operator_precedence">
+    <enumvalue id="OPERATOR_PRECEDENCE_MINIMUM" name="OPERATOR_PRECEDENCE_MINIMUM" value="0" />
+    <enumvalue id="OPERATOR_PRECEDENCE_ASSIGN" name="OPERATOR_PRECEDENCE_ASSIGN" value="1" />
+    <enumvalue id="OPERATOR_PRECEDENCE_COMPARE" name="OPERATOR_PRECEDENCE_COMPARE" value="2" />
+    <enumvalue id="OPERATOR_PRECEDENCE_SUM" name="OPERATOR_PRECEDENCE_SUM" value="3" />
+    <enumvalue id="OPERATOR_PRECEDENCE_PRODUCT" name="OPERATOR_PRECEDENCE_PRODUCT" value="4" />
+    <enumvalue id="OPERATOR_PRECEDENCE_EXPONENT" name="OPERATOR_PRECEDENCE_EXPONENT" value="5" />
+    <enumvalue id="OPERATOR_PRECEDENCE_MAXIMUM" name="OPERATOR_PRECEDENCE_MAXIMUM" value="6" />
+  </enum>
+  <enum anonymous="yes" id="rbtree_color" name="rbtree_color">
+    <enumvalue id="RBTREE_COLOR_RED" name="RBTREE_COLOR_RED" value="0" />
+    <enumvalue id="RBTREE_COLOR_BLACK" name="RBTREE_COLOR_BLACK" value="1" />
+  </enum>
+  <enum anonymous="yes" id="token_type" name="token_type">
+    <enumvalue id="TOKEN_TYPE_OPERATOR" name="TOKEN_TYPE_OPERATOR" value="0" />
+    <enumvalue id="TOKEN_TYPE_NUMBER" name="TOKEN_TYPE_NUMBER" value="1" />
+    <enumvalue id="TOKEN_TYPE_IDENTIFIER" name="TOKEN_TYPE_IDENTIFIER" value="2" />
+    <enumvalue id="TOKEN_TYPE_LEFT_PAREN" name="TOKEN_TYPE_LEFT_PAREN" value="3" />
+    <enumvalue id="TOKEN_TYPE_RIGHT_PAREN" name="TOKEN_TYPE_RIGHT_PAREN" value="4" />
+    <enumvalue id="TOKEN_TYPE_COMMA" name="TOKEN_TYPE_COMMA" value="5" />
+    <enumvalue id="TOKEN_TYPE_EOF" name="TOKEN_TYPE_EOF" value="6" />
+  </enum>
+  <union id="expression" name="expression">
+    <field id="expression::type" name="type">
+      <type name="expression_type_t" ref="index#expression_type_t" />
+    </field>
+    <field id="expression::number" name="number">
+      <type name="expression_number" ref="Expression Structures::expression_number#Expression Structures::expression_number" />
+    </field>
+    <field id="expression::variable" name="variable">
+      <type name="expression_variable" ref="Expression Structures::expression_variable#Expression Structures::expression_variable" />
+    </field>
+    <field id="expression::prefix" name="prefix">
+      <type name="expression_prefix" ref="Expression Structures::expression_prefix#Expression Structures::expression_prefix" />
+    </field>
+    <field id="expression::operator" name="operator">
+      <type name="expression_operator" ref="Expression Structures::expression_operator#Expression Structures::expression_operator" />
+    </field>
+    <field id="expression::function" name="function">
+      <type name="expression_function" ref="Expression Structures::expression_function#Expression Structures::expression_function" />
+    </field>
+  </union>
+  <typedef name="error_t" ref="error_t#error_t">
+    <brief> Enumerates all errors that may occur.</brief>
+    <type name="error" ref="index#error" />
+  </typedef>
+  <typedef name="expression_list_t" ref="expression_list_t#expression_list_t">
+    <brief> A singly linked list of expressions</brief>
+    <type name="expression_list" ref="expression_list#expression_list" />
+  </typedef>
+  <typedef name="expression_parser_t" ref="expression_parser_t#expression_parser_t">
+    <brief> transforms a stream of tokens into an expression.</brief>
+    <type name="expression_parser" ref="expression_parser#expression_parser" />
+  </typedef>
+  <typedef name="expression_t" ref="expression_t#expression_t">
+    <brief> A parsed mathmatical expression.</brief>
+    <type name="expression" ref="index#expression" />
+  </typedef>
+  <typedef id="expression_type_t" name="expression_type_t">
+    <brief> Enumerates the values that can be held in `expression_t`.</brief>
+    <type name="expression_type" ref="index#expression_type" />
+  </typedef>
+  <typedef name="lexer_t" ref="lexer_t#lexer_t">
+    <brief> lexical analyzer</brief>
+    <type name="lexer" ref="lexer#lexer" />
+  </typedef>
+  <typedef id="operator_precedence_t" name="operator_precedence_t">
+    <brief> Operator precedence enumerates the different precedence levels for groups of operators.</brief>
+    <type name="operator_precedence" ref="index#operator_precedence" />
+  </typedef>
+  <typedef name="operator_t" ref="operator_t#operator_t">
+    <brief> Specifies an operator's type.</brief>
+    <type builtin="yes" name="char" />
+  </typedef>
+  <typedef id="rbtree_color_t" name="rbtree_color_t">
+    <brief> Either Red, or Black</brief>
+    <type name="rbtree_color" ref="index#rbtree_color" />
+  </typedef>
+  <typedef id="rbtree_node_t" name="rbtree_node_t">
+    <brief> A node in the Red-Black Tree</brief>
+    <type name="rbtree_node" ref="rbtree_node#rbtree_node" />
+  </typedef>
+  <typedef name="rbtree_t" ref="rbtree_t#rbtree_t">
+    <brief> A Red-Black Tree</brief>
+    <type name="rbtree" ref="rbtree#rbtree" />
+  </typedef>
+  <typedef name="scope_t" ref="scope_t#scope_t">
+    <brief> A scope holds information about an expression's local variables and functions</brief>
+    <type name="scope" ref="scope#scope" />
+  </typedef>
+  <typedef id="token_t" name="token_t">
+    <brief> A token labels part of a buffer</brief>
+    <type name="token" ref="token#token" />
+  </typedef>
+  <typedef id="token_type_t" name="token_type_t">
+    <brief> Enumerates the different kinds of tokens</brief>
+    <type name="token_type" ref="index#token_type" />
+  </typedef>
+  <typedef name="variable_info_t" ref="variable_info_t#variable_info_t">
+    <brief> Holds information about a variable, constant, or function</brief>
+    <type name="variable_info" ref="variable_info#variable_info" />
+  </typedef>
+  <typedef id="variable_t" name="variable_t">
+    <brief> A variable is a null terminated string.</brief>
+    <type builtin="yes" name="char" qualifier="*" />
+  </typedef>
+  <function id="approximate_number" name="approximate_number">
+    <brief> try to trim a floating point number that was convert to a string, to improve accuracy</brief>
+    <return>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="approximate_number::str" name="str">
+      <doc>the string to edit</doc>
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+    <argument id="approximate_number::tolerance" name="tolerance">
+      <doc>how easily the string should be rounded off. (five is probably a good default for this parameter)</doc>
+      <type builtin="yes" name="int" />
+    </argument>
+  </function>
+  <function id="expression_evaluate" name="expression_evaluate">
+    <brief> evaluate an expression as much as possible</brief>
+    <return>
+      <doc>returns an error</doc>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="expression_evaluate::expr" name="expr">
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+    <argument id="expression_evaluate::scope" name="scope">
+      <type name="scope_t" qualifier="*" ref="scope_t#scope_t" />
+    </argument>
+  </function>
+  <function id="expression_fprint" name="expression_fprint">
+    <brief> print an expression to `file`</brief>
+    <return>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="expression_fprint::expr" name="expr">
+      <doc>the expression to print</doc>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+    <argument id="expression_fprint::file" name="file">
+      <doc>the file to write to</doc>
+      <type name="FILE" qualifier="*" />
+    </argument>
+  </function>
+  <function id="expression_isolate_variable" name="expression_isolate_variable">
+    <brief> isolate a variable on one side of an comparison operator.</brief>
+    <doc>If no comparison operator is present, append `= 0`
+
+</doc>
+    <return>
+      <doc>returns an error code</doc>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="expression_isolate_variable::expr" name="expr">
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+    <argument id="expression_isolate_variable::var" name="var">
+      <type name="variable_t" ref="index#variable_t" />
+    </argument>
+  </function>
+  <function id="expression_print" name="expression_print">
+    <brief> print an expression to stdout</brief>
+    <return>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="expression_print::expr" name="expr">
+      <doc>the expression to print</doc>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+  </function>
+  <function id="expression_simplify" name="expression_simplify">
+    <brief> try to make `expr` as short as possible by combining child expressions</brief>
+    <return>
+      <doc>returns an error code</doc>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="expression_simplify::expr" name="expr">
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+  </function>
+  <function id="isident" name="isident">
+    <brief> check if a character is a valid identifier</brief>
+    <return>
+      <type builtin="yes" name="int" />
+    </return>
+    <argument id="isident::c" name="c">
+      <doc>the character to check</doc>
+      <type builtin="yes" name="char" />
+    </argument>
+  </function>
+  <function id="number_to_buffer" name="number_to_buffer">
+    <brief> convert a number to a string</brief>
+    <return>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="number_to_buffer::number" name="number">
+      <doc>the number to convert</doc>
+      <type name="mpfr_t" />
+    </argument>
+    <argument id="number_to_buffer::buf" name="buf">
+      <doc>the buffer that the number should be stored in</doc>
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+    <argument id="number_to_buffer::len" name="len">
+      <doc>the max length of the number, 0 for no maximum</doc>
+      <type name="size_t" />
+    </argument>
+  </function>
+  <function id="operator_to_buffer" name="operator_to_buffer">
+    <brief> convert an operator to a string</brief>
+    <return>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="operator_to_buffer::op" name="op">
+      <doc>the operator to convert</doc>
+      <type name="operator_t" ref="operator_t#operator_t" />
+    </argument>
+    <argument id="operator_to_buffer::buf" name="buf">
+      <doc>the buffer that the operator should be stored in</doc>
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+    <argument id="operator_to_buffer::len" name="len">
+      <doc>the max length of the operator, 0 for no maximum</doc>
+      <type name="size_t" />
+    </argument>
+  </function>
+  <function id="parse_file" name="parse_file">
+    <brief> parses an expression from a file</brief>
+    <return>
+      <doc>returns an error code</doc>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="parse_file::source" name="source">
+      <type name="FILE" qualifier="*" />
+    </argument>
+    <argument id="parse_file::result" name="result">
+      <type name="expression_list_t" qualifier="*" ref="expression_list_t#expression_list_t" />
+    </argument>
+  </function>
+  <function id="parse_string" name="parse_string">
+    <brief> parses an expression from a string</brief>
+    <return>
+      <doc>returns an error code</doc>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="parse_string::source" name="source">
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+    <argument id="parse_string::result" name="result">
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+  </function>
+  <function id="variable_to_buffer" name="variable_to_buffer">
+    <brief> convert a variable to a string</brief>
+    <return>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="variable_to_buffer::var" name="var">
+      <doc>the variable to convert</doc>
+      <type name="variable_t" ref="index#variable_t" />
+    </argument>
+    <argument id="variable_to_buffer::buf" name="buf">
+      <doc>the buffer that the variable should be stored in</doc>
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+    <argument id="variable_to_buffer::len" name="len">
+      <doc>the max length of the variable, 0 for no maximum</doc>
+      <type name="size_t" />
+    </argument>
+  </function>
+</index>

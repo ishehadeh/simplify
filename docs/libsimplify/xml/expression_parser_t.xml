@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='utf-8'?>
+<typedef id="expression_parser_t" name="expression_parser_t" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <brief> transforms a stream of tokens into an expression.</brief>
+  <type name="expression_parser" ref="expression_parser#expression_parser" />
+  <function id="expression_parser_clean" name="expression_parser_clean">
+    <brief> clean all resources associated with a parser</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="expression_parser_clean::parser" name="parser">
+      <doc>the parser to clean</doc>
+      <type name="expression_parser_t" qualifier="*" ref="expression_parser_t#expression_parser_t" />
+    </argument>
+  </function>
+  <function id="expression_parser_init" name="expression_parser_init">
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="expression_parser_init::parser" name="parser">
+      <type name="expression_parser_t" qualifier="*" ref="expression_parser_t#expression_parser_t" />
+    </argument>
+    <argument id="expression_parser_init::lexer" name="lexer">
+      <type name="lexer_t" qualifier="*" ref="lexer_t#lexer_t" />
+    </argument>
+  </function>
+  <function id="parser_parse_expression" name="parser_parse_expression">
+    <brief> parse an expression</brief>
+    <doc>NOTE: most of the time it's safer and easier to use the `parse_string` or `parse_file` functions
+
+</doc>
+    <return>
+      <doc>returns an error code</doc>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="parser_parse_expression::parser" name="parser">
+      <type name="expression_parser_t" qualifier="*" ref="expression_parser_t#expression_parser_t" />
+    </argument>
+    <argument id="parser_parse_expression::result" name="result">
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+  </function>
+</typedef>

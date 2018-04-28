@@ -1,0 +1,130 @@
+<?xml version='1.0' encoding='utf-8'?>
+<typedef id="scope_t" name="scope_t" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <brief> A scope holds information about an expression's local variables and functions</brief>
+  <type name="scope" ref="scope#scope" />
+  <function id="scope_clean" name="scope_clean">
+    <brief> clean all resources associated with a scope</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="scope_clean::scope" name="scope">
+      <type name="scope_t" qualifier="*" ref="scope_t#scope_t" />
+    </argument>
+  </function>
+  <function id="scope_define" name="scope_define">
+    <brief> define a variable in the scope</brief>
+    <return>
+      <doc>return an error code</doc>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="scope_define::scope" name="scope">
+      <type name="scope_t" qualifier="*" ref="scope_t#scope_t" />
+    </argument>
+    <argument id="scope_define::variable" name="variable">
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+    <argument id="scope_define::value" name="value">
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+  </function>
+  <function id="scope_define_constant" name="scope_define_constant">
+    <brief> define a constant in the scope</brief>
+    <return>
+      <doc>return an error code</doc>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="scope_define_constant::scope" name="scope">
+      <type name="scope_t" qualifier="*" ref="scope_t#scope_t" />
+    </argument>
+    <argument id="scope_define_constant::variable" name="variable">
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+    <argument id="scope_define_constant::value" name="value">
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+  </function>
+  <function id="scope_define_function" name="scope_define_function">
+    <brief> define a function in the scope</brief>
+    <return>
+      <doc>return an error code</doc>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="scope_define_function::scope" name="scope">
+      <type name="scope_t" qualifier="*" ref="scope_t#scope_t" />
+    </argument>
+    <argument id="scope_define_function::name" name="name">
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+    <argument id="scope_define_function::value" name="value">
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+    <argument id="scope_define_function::args" name="args">
+      <type name="expression_list_t" qualifier="*" ref="expression_list_t#expression_list_t" />
+    </argument>
+  </function>
+  <function id="scope_get_function" name="scope_get_function">
+    <brief> search a scope for a function</brief>
+    <return>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="scope_get_function::scope" name="scope">
+      <doc>the scope to search</doc>
+      <type name="scope_t" qualifier="*" ref="scope_t#scope_t" />
+    </argument>
+    <argument id="scope_get_function::name" name="name">
+      <doc>the name to look for</doc>
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+    <argument id="scope_get_function::body" name="body">
+      <doc>location for function's body</doc>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+    <argument id="scope_get_function::args" name="args">
+      <doc>location for argument list</doc>
+      <type name="expression_list_t" qualifier="*" ref="expression_list_t#expression_list_t" />
+    </argument>
+  </function>
+  <function id="scope_get_value" name="scope_get_value">
+    <brief> get the value of a variable or constant</brief>
+    <return>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="scope_get_value::scope" name="scope">
+      <doc>the scope to search</doc>
+      <type name="scope_t" qualifier="*" ref="scope_t#scope_t" />
+    </argument>
+    <argument id="scope_get_value::name" name="name">
+      <doc>the name to look for</doc>
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+    <argument id="scope_get_value::expr" name="expr">
+      <doc>location for result</doc>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+  </function>
+  <function id="scope_get_variable_info" name="scope_get_variable_info">
+    <brief> get information about a variable</brief>
+    <return>
+      <doc>returns an error code</doc>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="scope_get_variable_info::scope" name="scope">
+      <type name="scope_t" qualifier="*" ref="scope_t#scope_t" />
+    </argument>
+    <argument id="scope_get_variable_info::variable" name="variable">
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+    <argument id="scope_get_variable_info::value" name="value">
+      <type name="variable_info_t" qualifier="**" ref="variable_info_t#variable_info_t" />
+    </argument>
+  </function>
+  <function id="scope_init" name="scope_init">
+    <brief> Initialize a scope</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="scope_init::scope" name="scope">
+      <type name="scope_t" qualifier="*" ref="scope_t#scope_t" />
+    </argument>
+  </function>
+</typedef>

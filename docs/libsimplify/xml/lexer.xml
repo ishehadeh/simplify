@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
+<struct id="lexer" name="lexer" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <field id="lexer::token" name="token">
+    <type name="token_t" ref="index#token_t" />
+  </field>
+  <field id="lexer::source" name="source">
+    <type name="FILE" qualifier="*" />
+  </field>
+  <field id="lexer::buffer" name="buffer">
+    <type builtin="yes" name="char" qualifier="*" />
+  </field>
+  <field id="lexer::buffer_length" name="buffer_length">
+    <type name="size_t" />
+  </field>
+  <field id="lexer::buffer_position" name="buffer_position">
+    <type name="size_t" />
+  </field>
+</struct>

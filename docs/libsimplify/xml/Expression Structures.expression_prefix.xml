@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<struct id="Expression Structures::expression_prefix" name="expression_prefix" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <field id="Expression Structures::expression_prefix::type" name="type">
+    <type name="expression_type_t" ref="index#expression_type_t" />
+  </field>
+  <field id="Expression Structures::expression_prefix::prefix" name="prefix">
+    <type name="operator_t" ref="operator_t#operator_t" />
+  </field>
+  <field id="Expression Structures::expression_prefix::right" name="right">
+    <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+  </field>
+</struct>

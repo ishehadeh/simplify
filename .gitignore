@@ -1,8 +1,3 @@
 .vscode
 build
 vgcore.*
-docs/*.[0-9]
-docs/*.html
-docs/xml
-docs/*.markdown
-docs/search.json

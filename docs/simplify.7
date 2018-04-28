@@ -1,0 +1,141 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "SIMPLIFY" "7" "April 2018" "" ""
+.
+.SH "NAME"
+\fBsimplify\fR \- expression syntax for simplify
+.
+.SH "SYNOPSIS"
+.
+.SS "Operator List"
+.
+.IP "1." 4
+\fB+\fR addition, or as a prefix to make a number positive\.
+.
+.IP "2." 4
+\fB\-\fR subtraction, or as a prefix to make a number negative\.
+.
+.IP "3." 4
+\fB*\fR multiplication
+.
+.IP "4." 4
+\fB/\fR division
+.
+.IP "5." 4
+\fB^\fR exponent
+.
+.IP "6." 4
+\fB\e\fR root
+.
+.IP "7." 4
+\fB=\fR equality
+.
+.IP "8." 4
+\fB<\fR less than
+.
+.IP "9." 4
+\fB>\fR greater than
+.
+.IP "10." 4
+\fB:\fR assignment
+.
+.IP "" 0
+.
+.SS "Variable syntax:"
+Variables are a sequence of at least one letter (uppercase or lowercase), or underscores\. Variables can be assigned to with the \fB:\fR operator\.
+.
+.SS "Function syntax"
+Function names follow the same rules as variable names\. Following the function\'s name is a paramater list surrounded by parentheses\. Parematers are seperated by commas\. The parameter list cannot be empty\.
+.
+.SH "DESCRIPTION"
+.
+.SS "Operators 1 \- 4, Basic Operations"
+The first 4 operators (\fB+\fR, \fB\-\fR, \fB*\fR and \fB/\fR) perform basic arithmetic operations\. For the sake of brevity in expressions, it\'s possible to omit them in some cases\.
+.
+.P
+When a number and a variable are adjacent, in any order, a multiplication operator is implied\. For instance \fB2x\fR and \fBx2\fR are equivalent to \fB2 * x\fR\. Similarly, when a number is used as a prefix to left parentheses, the multiplication operator is implied\. For example \fB2(x + 5)\fR is equivalent to \fB2 * (x + 5)\fR\.
+.
+.SS "Operators 5 \- 6, Exponents and Roots"
+Operators 5 and 6 (\fB^\fR and \fB\e\fR) perform power and root operations\.
+.
+.P
+The \fB^\fR operator\'s left operand is the number to be operated on\. The right operand is the exponent\. For instance \fB2^4\fR is equivalent to \fB2 * 2 * 2 * 2\fR\.
+.
+.P
+The \fB\e\fR operator\'s left operand is the number to be operated on\. The right operand is the root\. The root \fBmust\fR be an integer, if it is not it will be rounded, For example \fB27 \e 3\.34\fR is equivalent to \fB27 \e 3\fR\.
+.
+.SS "Operators 7 \- 9, Comparison Operators"
+Operators 7 to 9 (\fB=\fR, \fB<\fR, and \fB>\fR) are the comparison operators\. They imply that the user is comparing their left and right operands\. Depending on the how the \fBsimplify\fR command was invoked they may perform different operations\.
+.
+.P
+By default, these operators check if their left operand is \fIequal\fR, \fIless than\fR, or \fIgreater than\fR, their right operand, respectively\. If all equality operations in an expression are true then the expression\'s result is \fBtrue\fR otherwise the expression\'s result is \fBfalse\fR
+.
+.P
+Alternatively, if the \fB\-i\fR flag was specified with a variable the expression will not evaluate to \fBtrue\fR or \fBfalse\fR\. Instead the variable specified will be isolated on one side of an equality operator\. Note the value of the expression does not change, this operation only makes the variable\'s value more clear\.
+.
+.SS "Operator 10, Assignment"
+Operator 10 (\fB:\fR) is the assignment operator\. It assumes its left operand is a variable or function\. If it\'s left operand is variable than the right operand is simplified and then assigned to it\'s left operand\. Otherwise, the left operand is immediately assigned to the function named in the right operand\.
+.
+.SS "Parentheses"
+Parentheses serve two purposes: to encase functions parameters or to indicate an expression should have a higher priority\. The latter case is assumed if the parentheses are not immediately preceded by an identifier\. If \fB(\fR occurs, then a \fB)\fR must follow eventually, otherwise \fBsimplify\fR throws an error\.
+.
+.SS "Variables"
+Variables associate a name with an expression\. The name consists of lowercase letters, capital letters, and underscores\. Variables can be assigned to using the \fB:\fR operator\. The expression being assigned will be simplified before assignment\.
+.
+.SS "Functions"
+Functions are similar to variables, the only difference is they take a parameter list when defined or called, and their definition is not evaluated\. Function\'s argument list is surrounded by parentheses (\fB(\fR and \fB)\fR)\. When defining a function every argument must contain a variable\. Arguments are separated by commas (\fB,\fR)\. A function may not have zero arguments\.
+.
+.P
+Function parameters can be defined as an expression\. When the function is called the variable in the expression will be isolated automatically\.
+.
+.SH "EXAMPLES"
+If an expression can be evaluated it will be:
+.
+.P
+\fB$ simplify \'2 + 2\'\fR
+.
+.P
+\fB4\fR
+.
+.P
+If part of an expression is unkown, the unkown will be evaluated around:
+.
+.P
+\fB$ simplify \'x + 2 ^ 5\'\fR
+.
+.P
+\fBx + 32\fR
+.
+.P
+Variables can be assigned to using the \fB:\fR operator:
+.
+.P
+\fB$ simplify \'x : 2 + 5\'\fR
+.
+.P
+\fB7\fR
+.
+.P
+Functions are similar to variables, except they take an argument list:
+.
+.P
+\fB$ simplify \'f(x) : x * 3\' \'f(10)\'\fR
+.
+.P
+\fBx * 3\fR
+.
+.P
+\fB30\fR
+.
+.P
+Functions can take multiple arguments:
+.
+.P
+\fB$ simplify \'avg(x, y) : (x + y) / 2\' \'avg(5, 10)\'\fR
+.
+.P
+\fB(x + y) / 2\fR
+.
+.P
+\fB7\.5\fR

@@ -1,0 +1,237 @@
+<?xml version='1.0' encoding='utf-8'?>
+<typedef id="expression_t" name="expression_t" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <brief> A parsed mathmatical expression.</brief>
+  <doc>An expression is a union of four structures:
+
+- number
+
+- prefix
+
+- variable
+
+- operator
+
+Which one of these structures is currently in use is stored in the `type` option.
+The EXPRESSION_IS_XXX macros can be used to conveniently check the type of an expression.
+See the Expression Structures category for more information on each structure.
+</doc>
+  <type name="expression" ref="index#expression" />
+  <function id="expression_clean" name="expression_clean">
+    <brief> free all memory referenced by expression recursively, but not expression itself.</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="expression_clean::expression" name="expression">
+      <doc>the expression to clean</doc>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+  </function>
+  <function id="expression_collapse_left" name="expression_collapse_left">
+    <brief> free the left branch of an expression, make the expressions equal to it's right branch</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="expression_collapse_left::expr" name="expr">
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+  </function>
+  <function id="expression_collapse_right" name="expression_collapse_right">
+    <brief> free the right branch of an expression, make the expressions equal to it's left branch</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="expression_collapse_right::expr" name="expr">
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+  </function>
+  <function id="expression_copy" name="expression_copy">
+    <brief> deep copy expression into expression2.</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="expression_copy::expression" name="expression">
+      <doc>the source expression</doc>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+    <argument id="expression_copy::expression2" name="expression2">
+      <doc>the destination expression</doc>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+  </function>
+  <function id="expression_find_function" name="expression_find_function">
+    <brief> get the name of the first function that appears in an expression</brief>
+    <return>
+      <doc>returns the function's name, or NULL if it was not found</doc>
+      <type name="variable_t" ref="index#variable_t" />
+    </return>
+    <argument id="expression_find_function::expr" name="expr">
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+  </function>
+  <function id="expression_find_variable" name="expression_find_variable">
+    <brief> get the name of the first variable that appears in an expression</brief>
+    <return>
+      <doc>returns the variable's name, or NULL if it was not found</doc>
+      <type name="variable_t" ref="index#variable_t" />
+    </return>
+    <argument id="expression_find_variable::expr" name="expr">
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+  </function>
+  <function id="expression_free" name="expression_free">
+    <brief> free all memory referenced by the expression and the expression.</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="expression_free::expression" name="expression">
+      <doc>the expression to free</doc>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+  </function>
+  <function id="expression_has_variable_or_function" name="expression_has_variable_or_function">
+    <brief> check for a variable or function in the expression</brief>
+    <return>
+      <type builtin="yes" name="int" />
+    </return>
+    <argument id="expression_has_variable_or_function::expr" name="expr">
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+    <argument id="expression_has_variable_or_function::var" name="var">
+      <type name="variable_t" ref="index#variable_t" />
+    </argument>
+  </function>
+  <function id="expression_init_function" name="expression_init_function">
+    <brief> initialize a function expression</brief>
+    <doc>NOTE: this function copies the value `name` is pointing to up through `length`.
+</doc>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="expression_init_function::expression" name="expression">
+      <doc>the expression to initialize</doc>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+    <argument id="expression_init_function::name" name="name">
+      <doc>the function's name</doc>
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+    <argument id="expression_init_function::length" name="length">
+      <doc>the length of the function's name</doc>
+      <type name="size_t" />
+    </argument>
+    <argument id="expression_init_function::arguments" name="arguments">
+      <type name="expression_list_t" qualifier="*" ref="expression_list_t#expression_list_t" />
+    </argument>
+  </function>
+  <function id="expression_init_number" name="expression_init_number">
+    <brief> initialize a new number expression</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="expression_init_number::expression" name="expression">
+      <doc>the expression to initialize</doc>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+    <argument id="expression_init_number::number" name="number">
+      <doc>the number to use as the expression's initial value</doc>
+      <type name="mpfr_t" />
+    </argument>
+  </function>
+  <function id="expression_init_number_d" name="expression_init_number_d">
+    <brief> initialize a new number expression with a double</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="expression_init_number_d::expression" name="expression">
+      <doc>the expression to initialize</doc>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+    <argument id="expression_init_number_d::number" name="number">
+      <doc>the number to use as the expression initial value</doc>
+      <type builtin="yes" name="double" />
+    </argument>
+  </function>
+  <function id="expression_init_number_si" name="expression_init_number_si">
+    <brief> initialize a new number expression with an integer</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="expression_init_number_si::expression" name="expression">
+      <doc>the expression to initialize</doc>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+    <argument id="expression_init_number_si::number" name="number">
+      <doc>the number to use as the expression initial value</doc>
+      <type builtin="yes" name="int" />
+    </argument>
+  </function>
+  <function id="expression_init_operator" name="expression_init_operator">
+    <brief> initialize an operator expression</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="expression_init_operator::expression" name="expression">
+      <doc>the expression to initialize</doc>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+    <argument id="expression_init_operator::left" name="left">
+      <doc>the left side of the operator expression</doc>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+    <argument id="expression_init_operator::operator" name="operator">
+      <doc>the infix operator in the expression</doc>
+      <type name="operator_t" ref="operator_t#operator_t" />
+    </argument>
+    <argument id="expression_init_operator::right" name="right">
+      <doc>the right side of the operator expression</doc>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+  </function>
+  <function id="expression_init_prefix" name="expression_init_prefix">
+    <brief> initialize a prefix expression</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="expression_init_prefix::expression" name="expression">
+      <doc>the expression to initialize</doc>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+    <argument id="expression_init_prefix::operator" name="operator">
+      <doc>the prefix operator in the expression</doc>
+      <type name="operator_t" ref="operator_t#operator_t" />
+    </argument>
+    <argument id="expression_init_prefix::right" name="right">
+      <doc>the expression to the right of the prefix</doc>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+  </function>
+  <function id="expression_init_variable" name="expression_init_variable">
+    <brief> initialize a variable expression</brief>
+    <doc>NOTE: this function copies the value `name` is pointing to up through `length`.
+</doc>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="expression_init_variable::expression" name="expression">
+      <doc>the expression to initialize</doc>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+    <argument id="expression_init_variable::name" name="name">
+      <doc>the variable's name</doc>
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+    <argument id="expression_init_variable::length" name="length">
+      <doc>the length of the variable's name</doc>
+      <type name="size_t" />
+    </argument>
+  </function>
+  <function id="expression_is_comparison" name="expression_is_comparison">
+    <brief> check if the expression is an operator expression that compares it's left &amp; right branches.</brief>
+    <return>
+      <type builtin="yes" name="int" />
+    </return>
+    <argument id="expression_is_comparison::expr" name="expr">
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+  </function>
+</typedef>

@@ -3,9 +3,6 @@ simplify(7) -- expression syntax for simplify
 
 ## SYNOPSIS
 
-The simplify expression syntax contains 10 built-in operators.
-Simplify also supports variable's and functions, so expressions can be reused.
-
 ### Operator List
 
 1. `+` addition, or as a prefix to make a number positive.
@@ -21,17 +18,17 @@ Simplify also supports variable's and functions, so expressions can be reused.
 
 ### Variable syntax:
 
-Variable's are a sequence at least one uppercase letter, lowercase letter, or underscores.
+Variables are a sequence of at least one letter (uppercase or lowercase), or underscores.
 Variables can be assigned to with the `:` operator.
 
 ### Function syntax
 
-Function's names are the same as variables. Function's parameters come after the name, surrounded by `(` and `)`.
-Individual arguments must be separated by a comma.
+Function names follow the same rules as variable names. Following the function's name is a parameter list
+surrounded by parentheses. Parameters are separated by commas. The parameter list cannot be empty.
 
 ## DESCRIPTION
 
-### Basic Operations
+### Operators 1 - 4, Basic Operations
 
 The first 4 operators (`+`, `-`, `*` and `/`) perform basic arithmetic operations.
 For the sake of brevity in expressions, it's possible to omit them in some cases.
@@ -41,7 +38,7 @@ For instance `2x` and `x2` are equivalent to `2 * x`. Similarly, when a number i
 to left parentheses, the multiplication operator is implied. For example `2(x + 5)` is equivalent to
 `2 * (x + 5)`.
 
-### Exponents and Roots
+### Operators 5 - 6, Exponents and Roots
 
 Operators 5 and 6 (`^` and `\`) perform power and root operations.
 
@@ -52,7 +49,7 @@ The `\` operator's left operand is the number to be operated on. The right opera
 is the root. The root __must__ be an integer, if it is not it will be rounded,
 For example `27 \ 3.34` is equivalent to `27 \ 3`.
 
-### Equality Operators
+### Operators 7 - 9, Comparison Operators
 
 Operators 7 to 9 (`=`, `<`, and `>`) are the comparison operators. They imply
 that the user is comparing their left and right operands. Depending on the
@@ -68,7 +65,7 @@ evaluate to `true` or `false`. Instead the variable specified will be isolated o
 of an equality operator. Note the value of the expression does not change, this operation only makes the
 variable's value more clear.
 
-### Assignment
+### Operator 10, Assignment
 
 Operator 10 (`:`) is the assignment operator. It assumes its left operand is a variable or function.
 If it's left operand is variable than the right operand is simplified and then assigned to it's left operand.
@@ -93,3 +90,39 @@ contain a variable. Arguments are separated by commas (`,`). A function may not 
 
 Function parameters can be defined as an expression. When the function is called the variable in the expression will be isolated
 automatically.
+
+## EXAMPLES
+
+If an expression can be evaluated it will be:
+
+`$ simplify '2 + 2'`
+
+`4`
+
+If part of an expression is unknown, that part will be ignored:
+
+`$ simplify 'x + 2 ^ 5'`
+
+`x + 32`
+
+Variables can be assigned to using the `:` operator:
+
+`$ simplify 'x : 2 + 5'`
+
+`7`
+
+Functions are similar to variables, except they take an argument list:
+
+`$ simplify 'f(x) : x * 3' 'f(10)'`
+
+`x * 3`
+
+`30`
+
+Functions can take multiple arguments:
+
+`$ simplify 'avg(x, y) : (x + y) / 2' 'avg(5, 10)'`
+
+`(x + y) / 2`
+
+`7.5`
