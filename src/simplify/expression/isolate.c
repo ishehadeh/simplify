@@ -4,6 +4,32 @@
 #include "simplify/expression/expression.h"
 
 
+void _expression_invert_operand(expression_t* expr) {
+    switch (expr->operator.infix) {
+        case '+':
+            expr->operator.infix = '-';
+            break;
+        case '-':
+            expr->operator.infix = '+';
+            break;
+        case '/':
+            expr->operator.infix = '*';
+            break;
+        case '*':
+        case '(':
+            expr->operator.infix = '/';
+            break;
+        case '^':
+            expr->operator.infix = '\\';
+            break;
+        case '\\':
+            expr->operator.infix = '^';
+            break;
+        default:
+            break;
+    }
+}
+
 error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t** target, variable_t var) {
     switch (expr->type) {
         case EXPRESSION_TYPE_NUMBER:
@@ -24,39 +50,18 @@ error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t*
 
             expression_t* new_target = malloc(sizeof(expression_t));
             new_target->type = EXPRESSION_TYPE_OPERATOR;
+            new_target->operator.infix = expr->operator.infix;
 
-            new_target->operator.left  = *target;
             if (expression_has_variable_or_function(expr->operator.left, var)) {
                 new_target->operator.right = expr->operator.right;
+                new_target->operator.left  = *target;
+                _expression_invert_operand(new_target);
             } else if (expression_has_variable_or_function(expr->operator.right, var)) {
-                new_target->operator.right = expr->operator.left;
+                new_target->operator.left = expr->operator.left;
+                new_target->operator.right = *target;
             } else {
                 free(new_target);
                 return ERROR_VARIABLE_NOT_PRESENT;
-            }
-
-            switch (expr->operator.infix) {
-                case '+':
-                    new_target->operator.infix = '-';
-                    break;
-                case '-':
-                    new_target->operator.infix = '+';
-                    break;
-                case '/':
-                    new_target->operator.infix = '*';
-                    break;
-                case '*':
-                case '(':
-                    new_target->operator.infix = '/';
-                    break;
-                case '^':
-                    new_target->operator.infix = '\\';
-                    break;
-                case '\\':
-                    new_target->operator.infix = '^';
-                    break;
-                default:
-                    break;
             }
 
             *target = new_target;
@@ -74,18 +79,26 @@ error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t*
         }
         case EXPRESSION_TYPE_PREFIX:
         {
-            switch (EXPRESSION_OPERATOR(expr)) {
-                case '+':
-                    break;
-                case '-':
-                    mpfr_neg(expr->prefix.right->number.value, expr->prefix.right->number.value, MPFR_RNDF);
-                    break;
-                default:
-                    return ERROR_INVALID_PREFIX;
+            if (expression_has_variable_or_function(expr->prefix.right, var)) {
+                expression_t* new_target = malloc(sizeof(expression_t));
+                new_target->type = EXPRESSION_TYPE_PREFIX;
+                new_target->prefix.right = *target;
+                switch (EXPRESSION_OPERATOR(expr)) {
+                    case '+':
+                    case '-':
+                        new_target->prefix.prefix = '-';
+                        break;
+                    default:
+                        return ERROR_INVALID_PREFIX;
+                }
+                *target = new_target;
+                if (!_expression_isolate_variable_recursive(expr->prefix.right, target, var)) {
+                    *expr = *expr->prefix.right;
+                } else {
+                    return ERROR_VARIABLE_NOT_PRESENT;
+                }
+                return ERROR_NO_ERROR;
             }
-            expression_t num = *expr->prefix.right;
-            free(expr->prefix.right);
-            *expr = num;
             return ERROR_VARIABLE_NOT_PRESENT;
         }
         case EXPRESSION_TYPE_FUNCTION:
@@ -107,7 +120,7 @@ error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t*
 error_t expression_isolate_variable(expression_t* expr, variable_t var) {
     if (!expression_has_variable_or_function(expr, var))
         return ERROR_VARIABLE_NOT_PRESENT;
-    
+
     if (!expression_is_comparison(expr) && expr->operator.infix != ':') {
         expression_t* new_left = malloc(sizeof(expression_t));
 
