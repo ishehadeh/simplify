@@ -57,7 +57,7 @@ int _expression_has_variable_or_function_recursive(expression_t* expr, variable_
         }
         case EXPRESSION_TYPE_PREFIX:
         {
-            if (_expression_has_variable_or_function_recursive(expr->operator.right, var))
+            if (_expression_has_variable_or_function_recursive(expr->prefix.right, var))
                 return 1;
             return 0;
         }

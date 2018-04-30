@@ -28,4 +28,14 @@ variable_t expression_find_variable(expression_t* expr);
  */ 
 variable_t expression_find_function(expression_t* expr);
 
+/* swap an operator expression's left and right branch
+ * 
+ * @expr _expr->type must be EXPRESSION_TYPE_OPERATOR_ expression to swap
+ */
+static inline void expression_swap(expression_t* expr) {
+    expression_t* lx = EXPRESSION_LEFT(expr);
+    expr->operator.left = EXPRESSION_RIGHT(expr);
+    expr->operator.right = lx;
+}
+
 #endif  // SIMPLIFY_EXPRESSION_EXPRESSION_H_

@@ -50,8 +50,8 @@ void expression_init_function(expression_t* expr, char* name, size_t len, expres
 void expression_clean(expression_t* expr) {
     switch (expr->type) {
         case EXPRESSION_TYPE_PREFIX:
-            expression_clean(expr->operator.right);
-            free(expr->operator.right);
+            expression_clean(expr->prefix.right);
+            free(expr->prefix.right);
             break;
         case EXPRESSION_TYPE_OPERATOR:
             expression_clean(expr->operator.left);
