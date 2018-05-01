@@ -2,6 +2,7 @@
 
 #include "simplify/errors.h"
 #include "simplify/expression/expr_types.h"
+#include "simplify/expression/evaluate.h"
 
 void expression_init_operator(expression_t* expr,  expression_t* left, operator_t op, expression_t* right) {
     expr->type = EXPRESSION_TYPE_OPERATOR;
@@ -177,21 +178,72 @@ void expression_list_copy(expression_list_t* list1, expression_list_t* list2) {
 void variable_info_free(variable_info_t* info) {
     if (info->named_inputs)
         expression_list_free(info->named_inputs);
-    expression_free(info->value);
+    if (!info->is_internal)
+        expression_free(info->value.expression);
     free(info);
 }
 
-error_t scope_get_function(scope_t* scope, char* name, expression_t* body, expression_list_t* args) {
+
+error_t _scope_run_function(scope_t* scope, variable_t name, expression_list_t* arg_values, expression_t* out) {
+    scope_t fn_scope;
+    variable_info_t* func_info;
+    expression_list_t* arg_defs = malloc(sizeof(expression_list_t));
+    error_t err;
+
+    scope_init(&fn_scope);
+
+    err = scope_get_variable_info(scope, name, &func_info);
+    if (err)
+        goto cleanup;
+
+    if (err) goto cleanup;
+
+    expression_list_init(arg_defs);
+    expression_list_copy(func_info->named_inputs, arg_defs);
+    expression_t* arg_def;
+    expression_t* arg_value;
+
+    expression_list_t* resolved_arguments = malloc(sizeof(expression_list_t));
+    expression_list_init(resolved_arguments);
+    EXPRESSION_LIST_FOREACH2(arg_def, arg_value, arg_defs, arg_values) {
+        expression_t* op_expr = malloc(sizeof(expression_t));
+
+        expression_evaluate(arg_value, scope);
+        expression_init_operator(op_expr, arg_def, ':', arg_value);
+
+        err = expression_evaluate(op_expr, &fn_scope);
+        if (err) goto cleanup;
+
+        expression_list_append(resolved_arguments, op_expr);
+    }
+    expression_t* body = NULL;
+
+    fn_scope.parent = scope;
+    if (!func_info->is_internal) {
+        body = malloc(sizeof(expression_t));
+        expression_copy(func_info->value.expression, body);
+
+        err = expression_evaluate(body, &fn_scope);
+    } else {
+        err = func_info->value.internal(resolved_arguments, &fn_scope, &body);
+    }
+    expression_list_free(resolved_arguments);
+
+    if (body && !err)
+        *out = *body;
+cleanup:
+    scope_clean(&fn_scope);
+    return err;
+}
+
+error_t scope_call(scope_t* scope, char* name, expression_list_t* args, expression_t* out) {
     variable_info_t* info;
     error_t err = scope_get_variable_info(scope, name, &info);
     if (err) return err;
     if (!info->named_inputs)
         return ERROR_IS_A_VARIABLE;
 
-    expression_list_init(args);
-    expression_list_copy(info->named_inputs, args);
-
-    expression_copy(info->value, body);
+    _scope_run_function(scope, name, args, out);
     return ERROR_NO_ERROR;
 }
 
@@ -202,7 +254,15 @@ error_t scope_get_value(scope_t* scope, char* name, expression_t* expr) {
     if (info->named_inputs)
         return ERROR_IS_A_FUNCTION;
 
-    expression_copy(info->value, expr);
+    if (info->is_internal) {
+        expression_t* new_expr = NULL;
+        err = info->value.internal(NULL, scope, &new_expr);
+        if (err) return err;
+        if (new_expr)
+            *expr = *new_expr;
+    } else {
+        expression_copy(info->value.expression, expr);
+    }
     return ERROR_NO_ERROR;
 }
 

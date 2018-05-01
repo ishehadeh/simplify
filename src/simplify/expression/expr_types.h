@@ -98,6 +98,10 @@ typedef struct expression_list expression_list_t;
  */
 typedef enum operator_precedence operator_precedence_t;
 
+/* a variable, constant, or function's value
+ */
+typedef union variable_value variable_value_t;
+
 enum operator_precedence {
     OPERATOR_PRECEDENCE_MINIMUM,
     OPERATOR_PRECEDENCE_ASSIGN,
@@ -116,13 +120,29 @@ enum expression_type {
     EXPRESSION_TYPE_FUNCTION,
 };
 
+/* A function pointer which be invoked as a `simplify` function with expression_evaluate.
+ *
+ * This function pointer takes an expression list, its arguments, as the first value.
+ * every argument operator expression with it's left hand being a variable (the argument),
+ * it's operator is an assignment operator, and it's right hand side is the variable's value.
+ * the second argument is the function's scope, it has no values by default.
+ * the third argument is a pointer to and expression pointer. The pointer is NULL by default.
+ * By the time this expression returns __must__ point to a valid expression, allocated on the heap.
+ * If it does not than the callback should return an error to explain why.
+ */
+typedef error_t(*simplify_func_t)(expression_list_t*, scope_t*, expression_t**);
+
+union variable_value {
+    simplify_func_t internal;
+    expression_t*   expression;
+};
 
 struct variable_info {
     int                constant;
+    int                is_internal;
     expression_list_t* named_inputs;
-    expression_t*      value;
+    variable_value_t   value;
 };
-
 
 struct scope {
     scope_t* parent;
@@ -348,7 +368,8 @@ static inline void scope_init(scope_t* scope) {
  */
 static inline error_t scope_define(scope_t* scope, char* variable, expression_t* value) {
     variable_info_t* info = malloc(sizeof(variable_info_t));
-    info->value = value;
+    info->value.expression = value;
+    info->is_internal = 0;
     info->named_inputs = NULL;
     info->constant = 0;
     return rbtree_insert(&scope->variables, variable, info);
@@ -363,7 +384,8 @@ static inline error_t scope_define(scope_t* scope, char* variable, expression_t*
  */
 static inline error_t scope_define_constant(scope_t* scope, char* variable, expression_t* value) {
     variable_info_t* info = malloc(sizeof(variable_info_t));
-    info->value = value;
+    info->value.expression = value;
+    info->is_internal = 0;
     info->named_inputs = NULL;
     info->constant = 0;
     return rbtree_insert(&scope->variables, variable, info);
@@ -379,10 +401,11 @@ static inline error_t scope_define_constant(scope_t* scope, char* variable, expr
  */
 static inline error_t scope_define_function(scope_t* scope,
                                             char* name,
-                                            expression_t* value,
+                                            expression_t* body,
                                             expression_list_t* args) {
     variable_info_t* info = malloc(sizeof(variable_info_t));
-    info->value = value;
+    info->value.expression = body;
+    info->is_internal = 0;
     info->named_inputs = args;
     info->constant = 0;
     return rbtree_insert(&scope->variables, name, info);
@@ -411,19 +434,19 @@ static inline error_t scope_get_variable_info(scope_t* scope, char* variable, va
 /* get the value of a variable or constant
  * @scope the scope to search
  * @name the name to look for
- * @expr location for result
+ * @expr variable's value
  * @return returns an error code
  */
 error_t scope_get_value(scope_t* scope, char* name, expression_t* expr);
 
-/* search a scope for a function
+/* call a function
  * @scope the scope to search
  * @name the name to look for
- * @body location for function's body
  * @args location for argument list
+ * @expr the output expression
  * @return returns an error code
  */
-error_t scope_get_function(scope_t* scope, char* name, expression_t* body, expression_list_t* args);
+error_t scope_call(scope_t* scope, char* name, expression_list_t* args, expression_t* expr);
 
 /* free variable's information
  *
