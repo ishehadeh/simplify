@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <stdarg.h>
 
 #include <gmp.h>
 #include <mpfr.h>
@@ -438,6 +439,70 @@ static inline error_t scope_get_variable_info(scope_t* scope, char* variable, va
  * @return returns an error code
  */
 error_t scope_get_value(scope_t* scope, char* name, expression_t* expr);
+
+/* create a new internal variable
+ * @scope the scope to insert into
+ * @name the name of the item
+ * @callback the callback that will create the variable's value
+ * @return returns an error code
+ */
+static inline error_t scope_define_internal_variable(scope_t* scope, char* name, simplify_func_t callback) {
+    variable_info_t* info = malloc(sizeof(variable_info_t));
+    info->value.internal = callback;
+    info->is_internal = 1;
+    info->named_inputs = NULL;
+    info->constant = 0;
+    return rbtree_insert(&scope->variables, name, info);
+}
+
+/* create a new internal constant
+ * @scope the scope to insert into
+ * @name the name of the item
+ * @callback the callback that will create the constant's value (the result doesn't always have to be the same, but it __really__ should)
+ * @return returns an error code
+ */
+static inline error_t scope_define_internal_const(scope_t* scope, char* name, simplify_func_t callback) {
+    variable_info_t* info = malloc(sizeof(variable_info_t));
+    info->value.internal = callback;
+    info->is_internal = 1;
+    info->named_inputs = NULL;
+    info->constant = 1;
+    return rbtree_insert(&scope->variables, name, info);
+}
+
+
+/* create a new internal constant
+ * @scope the scope to insert into
+ * @name the name of the item
+ * @callback the callback that will create the variable's value
+ * @args the number of arguments to this function
+ * @...  the function's arguments
+ * @return returns an error code
+ */
+static inline error_t scope_define_internal_function(scope_t* scope,
+                                                     char* name,
+                                                     simplify_func_t callback,
+                                                     int args, ...) {
+    variable_info_t* info = malloc(sizeof(variable_info_t));
+    expression_list_t* arg_list = malloc(sizeof(expression_list_t*));
+    expression_list_init(arg_list);
+
+    va_list ap;
+    va_start(ap, args);
+    for (int i = 0; i < args; ++i) {
+        expression_t* expr = malloc(sizeof(expression_t));
+        char* argname = va_arg(ap, char*);
+        expression_init_variable(expr, argname, strlen(argname));
+        expression_list_append(arg_list, expr);
+    }
+    va_end(ap);
+
+    info->value.internal = callback;
+    info->is_internal = 1;
+    info->named_inputs = arg_list;
+    info->constant = 0;
+    return rbtree_insert(&scope->variables, name, info);
+}
 
 /* call a function
  * @scope the scope to search

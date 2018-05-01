@@ -98,12 +98,31 @@ error_t execute_file(char* fname, scope_t* scope) {
     return ERROR_NO_ERROR;
 }
 
+error_t builtin_pi(expression_list_t* args, scope_t* scope, expression_t** out) {
+    if (args)
+        return ERROR_IS_A_VARIABLE;
+    (void)args;
+    (void)scope;
+
+    *out = malloc(sizeof(expression_t));
+    mpfr_t num;
+    mpfr_init(num);
+    mpfr_const_pi(num, MPFR_RNDF);
+    expression_init_number(*out, num);
+    mpfr_clear(num);
+
+    return ERROR_NO_ERROR;
+}
+
+
 int main(int argc, char** argv) {
     int verbosity = 0;
     variable_t isolation_target = NULL;
     scope_t scope;
 
     scope_init(&scope);
+
+    scope_define_internal_const(&scope, "pi", builtin_pi);
 
     error_t err = ERROR_NO_ERROR;
     PARSE_FLAGS(
