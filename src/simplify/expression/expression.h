@@ -52,7 +52,15 @@ static inline expression_t* expression_new_prefix(operator_t op, expression_t* r
     return x;
 }
 
-static inline expression_t* expression_new_number(double num) {
+
+static inline expression_t* expression_new_number(mpfr_t num) {
+    expression_t* x = malloc(sizeof(expression_t));
+    expression_init_number(x, num);
+    return x;
+}
+
+
+static inline expression_t* expression_new_number_d(double num) {
     expression_t* x = malloc(sizeof(expression_t));
     expression_init_number_d(x, num);
     return x;

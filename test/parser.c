@@ -10,32 +10,32 @@ int main() {
         expression_t* expr;
     } __string_expr_pairs[] = {
         { "2 * 5.5",
-            expression_new_operator(expression_new_number(2), '*', expression_new_number(5.5))
+            expression_new_operator(expression_new_number_d(2), '*', expression_new_number_d(5.5))
         },
         {
             "2.5x",
-            expression_new_operator(expression_new_number(2.5), '*', expression_new_variable("x"))
+            expression_new_operator(expression_new_number_d(2.5), '*', expression_new_variable("x"))
         },
         { "2 * ( 5 + 9 )",
             expression_new_operator(
-                expression_new_number(2),
+                expression_new_number_d(2),
                 '*',
-                expression_new_operator(expression_new_number(5), '+', expression_new_number(9))),
+                expression_new_operator(expression_new_number_d(5), '+', expression_new_number_d(9))),
         },
         { "2 + 3^2 * 5.5",
             expression_new_operator(
-                expression_new_number(2),
+                expression_new_number_d(2),
                 '+',
                 expression_new_operator(
-                    expression_new_operator(expression_new_number(3), '^', expression_new_number(2)),
+                    expression_new_operator(expression_new_number_d(3), '^', expression_new_number_d(2)),
                     '*',
-                    expression_new_number(5.5)))
+                    expression_new_number_d(5.5)))
         },
         { "1 \\ 2 = 73",
             expression_new_operator(
-                expression_new_operator(expression_new_number(1), '\\', expression_new_number(2)),
+                expression_new_operator(expression_new_number_d(1), '\\', expression_new_number_d(2)),
                 '=',
-                expression_new_number(73))
+                expression_new_number_d(73))
         },
         { "p = n * 8 - t",
             expression_new_operator(
@@ -45,7 +45,7 @@ int main() {
                     expression_new_operator(
                         expression_new_variable("n"),
                         '*',
-                        expression_new_number(8)),
+                        expression_new_number_d(8)),
                     '-',
                     expression_new_variable("t")))
         },
@@ -53,22 +53,22 @@ int main() {
             expression_new_operator(
                 expression_new_operator(
                     expression_new_operator(
-                        expression_new_number(10),
+                        expression_new_number_d(10),
                         '*',
-                        expression_new_number(20)),
+                        expression_new_number_d(20)),
                     '*',
                     expression_new_operator(
-                        expression_new_number(30),
+                        expression_new_number_d(30),
                         '^',
-                        expression_new_number(1))),
+                        expression_new_number_d(1))),
                 '*',
-                expression_new_number(40))
+                expression_new_number_d(40))
         },
         { "2 * -5.5",
             expression_new_operator(
-                expression_new_number(2),
+                expression_new_number_d(2),
                 '*',
-                expression_new_prefix('-', expression_new_number(5.5)))
+                expression_new_prefix('-', expression_new_number_d(5.5)))
         },
         { "f(x, y)",
             expression_new_function(
@@ -79,17 +79,17 @@ int main() {
         { "4 * (3 * x) \\ 4 - 36",
             expression_new_operator(
                 expression_new_operator(
-                    expression_new_number(4),
+                    expression_new_number_d(4),
                     '*',
                     expression_new_operator(
                         expression_new_operator(
-                            expression_new_number(3),
+                            expression_new_number_d(3),
                             '+',
                             expression_new_variable("x")),
                         '\\',
-                        expression_new_number(4))),
+                        expression_new_number_d(4))),
                 '-',
-                expression_new_number(36))
+                expression_new_number_d(36))
         },
         { "f(x + 2) : 5 * x * 3",
             expression_new_operator(
@@ -98,33 +98,33 @@ int main() {
                     expression_new_operator(
                         expression_new_variable("x"),
                         '+',
-                        expression_new_number(2))),
+                        expression_new_number_d(2))),
                 ':',
                 expression_new_operator(
                     expression_new_operator(
-                        expression_new_number(5),
+                        expression_new_number_d(5),
                         '*',
                         expression_new_variable("x")),
                     '*',
-                    expression_new_number(3))),
+                    expression_new_number_d(3))),
         },
         { "x^ 3 * 5(6 + 0 \\ 1)",
             expression_new_operator(
                 expression_new_operator(
                     expression_new_variable("x"),
                     '^',
-                    expression_new_number(3)),
+                    expression_new_number_d(3)),
                 '*',
                 expression_new_operator(
-                    expression_new_number(5),
+                    expression_new_number_d(5),
                     '*',
                     expression_new_operator(
-                        expression_new_number(6),
+                        expression_new_number_d(6),
                         '+',
                         expression_new_operator(
-                            expression_new_number(0),
+                            expression_new_number_d(0),
                             '\\',
-                            expression_new_number(1)))))
+                            expression_new_number_d(1)))))
         }
     };
 

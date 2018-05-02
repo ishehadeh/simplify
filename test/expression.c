@@ -18,43 +18,43 @@ int main() {
         expression_t* expr;
     } __string_expr_pairs[] = {
         { "2 * 5.5", OP_EVALUATE,
-            expression_new_number(11),
+            expression_new_number_d(11),
         },
         { "2 * 9x", OP_EVALUATE,
             expression_new_operator(
-                expression_new_number(18),
+                expression_new_number_d(18),
                 '*',
                 expression_new_variable("x"))
         },
         { "4 \\ 2 = 5", OP_EVALUATE,
-            expression_new_number(5)
+            expression_new_number_d(5)
         },
         { "x ^ 3 * 5(6 + 0 \\ 1)", OP_EVALUATE,
             expression_new_operator(
                 expression_new_operator(
                     expression_new_variable("x"),
                     '^',
-                    expression_new_number(3)),
+                    expression_new_number_d(3)),
                 '*',
-                expression_new_number(30))
+                expression_new_number_d(30))
         },
         {"(0 - x) = 1", OP_EVALUATE | OP_ISOLATE_X,
             expression_new_operator(
                 expression_new_variable("x"),
                 '=',
-                expression_new_number(-1))
+                expression_new_number_d(-1))
         },
         {"5 / x = 2", OP_EVALUATE | OP_ISOLATE_X,
             expression_new_operator(
                 expression_new_variable("x"),
                 '=',
-                expression_new_number(2.5))
+                expression_new_number_d(2.5))
         },
         {"4 \\ x = 2", OP_EVALUATE | OP_ISOLATE_X,
             expression_new_operator(
                 expression_new_variable("x"),
                 '=',
-                expression_new_number(2))
+                expression_new_number_d(2))
         }
     };
 

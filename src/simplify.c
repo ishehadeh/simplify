@@ -3,6 +3,7 @@
 #include "simplify/parser.h"
 #include "simplify/lexer.h"
 #include "simplify/errors.h"
+#include "simplify/builtins.h"
 #include "flags/flags.h"
 
 #include "simplify/expression/evaluate.h"
@@ -108,12 +109,12 @@ error_t builtin_pi(expression_list_t* args, scope_t* scope, expression_t** out) 
     mpfr_t num;
     mpfr_init(num);
     mpfr_const_pi(num, MPFR_RNDF);
-    expression_init_number(*out, num);
+    *out = expression_new_number(num);
     mpfr_clear(num);
+
 
     return ERROR_NO_ERROR;
 }
-
 
 int main(int argc, char** argv) {
     int verbosity = 0;
@@ -123,6 +124,12 @@ int main(int argc, char** argv) {
     scope_init(&scope);
 
     scope_define_internal_const(&scope, "pi", builtin_pi);
+    ADD_BUILTIN(&scope, cos);
+    ADD_BUILTIN(&scope, sin);
+    ADD_BUILTIN(&scope, tan);
+    ADD_BUILTIN(&scope, acos);
+    ADD_BUILTIN(&scope, asin);
+    ADD_BUILTIN(&scope, atan);
 
     error_t err = ERROR_NO_ERROR;
     PARSE_FLAGS(
