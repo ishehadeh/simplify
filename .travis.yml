@@ -1,0 +1,13 @@
+langauge: c
+compiler:
+ - clang
+ - gcc
+install: ./get-deps.sh
+
+script:
+ - mkdir build
+ - cd build
+ - cmake ..
+ - cmake --build .
+
+before_scipt: ./deps/cpplint.py

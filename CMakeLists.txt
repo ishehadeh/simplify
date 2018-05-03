@@ -15,6 +15,10 @@ string(REPLACE ";" "\t" SOURCES_STR "${SOURCES}")
 string(REPLACE ";" "\t" MANUALS_STR "${MANUALS}")
 set(CLDOC_FLAGS ${CLDOC_FLAGS} --language c --output ${CMAKE_SOURCE_DIR}/docs/libsimplify ${HEADERS_STR})
 
+if(EXISTS ${CMAKE_SOURCE_DIR}/deps/root)
+    set(CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/deps/root")
+endif()
+
 find_package(GMP REQUIRED)
 find_package(MPFR REQUIRED)
 
