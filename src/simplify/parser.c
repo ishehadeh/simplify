@@ -103,8 +103,8 @@ error_t _parser_parse_expression_list_precedence(expression_parser_t* parser,
     error_t err = _parser_parse_expression_precedence_recursive(parser, next, precedence);
     if (err) return err;
     expression_list_append(list, next);
-    while (parser->previous.type == TOKEN_TYPE_COMMA) {
 
+    while (parser->previous.type == TOKEN_TYPE_COMMA) {
         _parser_next_token(parser, NULL);
         expression_t* next = malloc(sizeof(expression_t));
         error_t err = _parser_parse_expression_precedence_recursive(parser, next, precedence);
@@ -147,12 +147,15 @@ error_t _parser_parse_identifier(expression_parser_t* parser, expression_t* expr
 
         expression_list_init(expr->function.parameters);
 
+        token_t tok;
         err = _parser_next_token(parser, NULL);
         if (err) return err;
+        _parser_peek_token(parser, &tok);
 
-        error_t err = _parser_parse_expression_list_precedence(parser,
-                                                               expr->function.parameters,
-                                                               OPERATOR_PRECEDENCE_ASSIGN);
+        if (tok.type != TOKEN_TYPE_RIGHT_PAREN)
+            err = _parser_parse_expression_list_precedence(parser,
+                                                            expr->function.parameters,
+                                                            OPERATOR_PRECEDENCE_ASSIGN);
         _parser_next_token(parser, NULL);
         if (err) {
             expression_list_free(expr->function.parameters);

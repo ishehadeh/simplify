@@ -2,6 +2,7 @@
 
 #include "simplify/errors.h"
 #include "simplify/expression/expr_types.h"
+#include "simplify/expression/evaluate.h"
 
 void expression_init_operator(expression_t* expr,  expression_t* left, operator_t op, expression_t* right) {
     expr->type = EXPRESSION_TYPE_OPERATOR;
@@ -34,7 +35,7 @@ void expression_init_number_d(expression_t* expr, double value) {
     mpfr_init_set_d(expr->number.value, value, MPFR_RNDF);
 }
 
-void expression_init_number_si(expression_t* expr, int value) {
+void expression_init_number_si(expression_t* expr, long value) {
     expr->type = EXPRESSION_TYPE_NUMBER;
     mpfr_init_set_si(expr->number.value, value, MPFR_RNDF);
 }
@@ -151,6 +152,16 @@ inline operator_precedence_t operator_precedence(operator_t op) {
     }
 }
 
+void expression_list_free(expression_list_t* list) {
+    expression_list_t* last = NULL;
+    while (list) {
+        if (list->value) expression_free(list->value);
+        last = list;
+        list = list->next;
+        free(last);
+    }
+}
+
 void expression_list_append(expression_list_t* list, expression_t* expr) {
     if (!list->value) {
         list->value = expr;
@@ -177,21 +188,147 @@ void expression_list_copy(expression_list_t* list1, expression_list_t* list2) {
 void variable_info_free(variable_info_t* info) {
     if (info->named_inputs)
         expression_list_free(info->named_inputs);
-    expression_free(info->value);
+    if (!info->is_internal)
+        expression_free(info->value.expression);
     free(info);
 }
 
-error_t scope_get_function(scope_t* scope, char* name, expression_t* body, expression_list_t* args) {
+
+error_t scope_define(scope_t* scope, char* variable, expression_t* value) {
+    variable_info_t* info = malloc(sizeof(variable_info_t));
+    info->value.expression = value;
+    info->is_internal = 0;
+    info->named_inputs = NULL;
+    info->constant = 0;
+    return rbtree_insert(&scope->variables, variable, info);
+}
+
+error_t scope_define_constant(scope_t* scope, char* variable, expression_t* value) {
+    variable_info_t* info = malloc(sizeof(variable_info_t));
+    info->value.expression = value;
+    info->is_internal = 0;
+    info->named_inputs = NULL;
+    info->constant = 0;
+    return rbtree_insert(&scope->variables, variable, info);
+}
+
+error_t scope_get_variable_info(scope_t* scope, char* variable, variable_info_t** value) {
+    error_t err = rbtree_search(&scope->variables, variable, (void**)value);
+
+    /* check the parent scope(s) for the variable */
+    scope_t* parent = scope->parent;
+    while (err && parent != NULL) {
+        err = rbtree_search(&parent->variables, variable, (void**)value);
+        parent = parent->parent;
+    }
+    return err;
+}
+
+error_t scope_define_internal_variable(scope_t* scope, char* name, simplify_func_t callback) {
+    variable_info_t* info = malloc(sizeof(variable_info_t));
+    info->value.internal = callback;
+    info->is_internal = 1;
+    info->named_inputs = NULL;
+    info->constant = 0;
+    return rbtree_insert(&scope->variables, name, info);
+}
+
+error_t scope_define_internal_const(scope_t* scope, char* name, simplify_func_t callback) {
+    variable_info_t* info = malloc(sizeof(variable_info_t));
+    info->value.internal = callback;
+    info->is_internal = 1;
+    info->named_inputs = NULL;
+    info->constant = 1;
+    return rbtree_insert(&scope->variables, name, info);
+}
+
+error_t scope_define_function(scope_t* scope, char* name, expression_t* body, expression_list_t* args) {
+    variable_info_t* info = malloc(sizeof(variable_info_t));
+    info->value.expression = body;
+    info->is_internal = 0;
+    info->named_inputs = args;
+    info->constant = 0;
+    return rbtree_insert(&scope->variables, name, info);
+}
+
+error_t scope_define_internal_function(scope_t* scope, char* name, simplify_func_t callback, int args, ...) {
+    variable_info_t* info = malloc(sizeof(variable_info_t));
+    expression_list_t* arg_list = malloc(sizeof(expression_list_t));
+    expression_list_init(arg_list);
+
+    va_list ap;
+    va_start(ap, args);
+    for (int i = 0; i < args; ++i) {
+        expression_t* expr = malloc(sizeof(expression_t));
+        char* argname = va_arg(ap, char*);
+        expression_init_variable(expr, argname, strlen(argname));
+        expression_list_append(arg_list, expr);
+    }
+    va_end(ap);
+
+    info->value.internal = callback;
+    info->is_internal = 1;
+    info->named_inputs = arg_list;
+    info->constant = 0;
+    return rbtree_insert(&scope->variables, name, info);
+}
+
+
+error_t _scope_run_function(scope_t* scope, variable_t name, expression_list_t* arg_values, expression_t* out) {
+    scope_t fn_scope;
+    variable_info_t* func_info;
+    expression_list_t* arg_defs = malloc(sizeof(expression_list_t));
+    error_t err;
+
+    scope_init(&fn_scope);
+
+    err = scope_get_variable_info(scope, name, &func_info);
+    if (err)
+        goto cleanup;
+
+    if (err) goto cleanup;
+
+    expression_list_init(arg_defs);
+    expression_list_copy(func_info->named_inputs, arg_defs);
+    expression_t* arg_def;
+    expression_t* arg_value;
+
+    EXPRESSION_LIST_FOREACH2(arg_def, arg_value, arg_defs, arg_values) {
+        expression_t* op_expr = malloc(sizeof(expression_t));
+
+        expression_evaluate(arg_value, scope);
+        expression_init_operator(op_expr, arg_def, ':', arg_value);
+
+        err = expression_evaluate(op_expr, &fn_scope);
+        if (err) goto cleanup;
+    }
+    expression_t* body = NULL;
+
+    fn_scope.parent = scope;
+    if (!func_info->is_internal) {
+        body = malloc(sizeof(expression_t));
+        expression_copy(func_info->value.expression, body);
+
+        err = expression_evaluate(body, &fn_scope);
+    } else {
+        err = func_info->value.internal(&fn_scope, &body);
+    }
+
+    if (body && !err)
+        *out = *body;
+cleanup:
+    scope_clean(&fn_scope);
+    return err;
+}
+
+error_t scope_call(scope_t* scope, char* name, expression_list_t* args, expression_t* out) {
     variable_info_t* info;
     error_t err = scope_get_variable_info(scope, name, &info);
     if (err) return err;
     if (!info->named_inputs)
         return ERROR_IS_A_VARIABLE;
 
-    expression_list_init(args);
-    expression_list_copy(info->named_inputs, args);
-
-    expression_copy(info->value, body);
+    _scope_run_function(scope, name, args, out);
     return ERROR_NO_ERROR;
 }
 
@@ -202,7 +339,15 @@ error_t scope_get_value(scope_t* scope, char* name, expression_t* expr) {
     if (info->named_inputs)
         return ERROR_IS_A_FUNCTION;
 
-    expression_copy(info->value, expr);
+    if (info->is_internal) {
+        expression_t* new_expr = NULL;
+        err = info->value.internal(scope, &new_expr);
+        if (err) return err;
+        if (new_expr)
+            *expr = *new_expr;
+    } else {
+        expression_copy(info->value.expression, expr);
+    }
     return ERROR_NO_ERROR;
 }
 

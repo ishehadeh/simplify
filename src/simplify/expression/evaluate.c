@@ -20,11 +20,16 @@ error_t _expression_evaluate_recursive(expression_t* expr, scope_t* scope);
 error_t _expression_apply_comparison(expression_t* expr, scope_t* scope) {
     assert(EXPRESSION_IS_OPERATOR(expr));
 
-    if (scope->boolean != 0) {
+    if (scope->boolean != EXPRESSION_RESULT_BOOLEAN_FALSE) {
         int x = mpfr_cmp(expr->operator.left->number.value, expr->operator.right->number.value);
-        scope->boolean = ((expr->operator.infix == '<' && x < 0)
-                            || (expr->operator.infix == '>' && x > 0)
-                            || (expr->operator.infix == '=' && x == 0));
+        if (expr->operator.infix == '<' && x < 0)
+            scope->boolean = EXPRESSION_RESULT_BOOLEAN_TRUE;
+        else if (expr->operator.infix == '>' && x > 0)
+            scope->boolean = EXPRESSION_RESULT_BOOLEAN_TRUE;
+        else if (expr->operator.infix == '=' && x == 0)
+            scope->boolean = EXPRESSION_RESULT_BOOLEAN_TRUE;
+        else
+            scope->boolean = EXPRESSION_RESULT_BOOLEAN_FALSE;
     }
 
     expression_collapse_left(expr);
@@ -194,77 +199,13 @@ error_t _expression_substitute_variable(expression_t* expr, scope_t* scope) {
     if (!err) {
         expression_clean(expr);
         *expr = variable_value;
+        _expression_evaluate_recursive(expr, scope);
     } else if (!expr->variable.binding) {
         /* couldn't find the variable. let future executor know that this is the
             scope where the variable's value should be found */
         expr->variable.binding = scope;
     }
     return ERROR_NO_ERROR;
-}
-
-/* substitute a function expression with the functions value, and resolve it's arguments.
- *
- * @expr the function expression to run
- * @scope the scope to search for the function
- * @returns returns an error code
- */
-error_t _expression_run_function(expression_t* expr, scope_t* scope) {
-    assert(EXPRESSION_IS_FUNCTION(expr));
-
-    scope_t fn_scope;
-    expression_t body;
-    expression_list_t args_def;
-    error_t err;
-
-    scope_init(&fn_scope);
-
-    err = scope_get_function(scope, expr->function.name, &body, &args_def);
-    if (err == ERROR_NONEXISTANT_KEY) {
-        err = ERROR_NO_ERROR;
-        goto cleanup;
-    }
-
-    if (err) goto cleanup;
-
-    expression_t* arg_def;
-    expression_t* arg_value;
-
-    EXPRESSION_LIST_FOREACH2(arg_def, arg_value, &args_def, expr->function.parameters) {
-        expression_t op_expr;
-
-        expression_evaluate(arg_value, scope);
-        expression_init_operator(&op_expr, arg_def, ':', arg_value);
-
-        err = expression_evaluate(&op_expr, &fn_scope);
-        if (err) goto cleanup;
-
-        expression_clean(&op_expr);
-    }
-
-    fn_scope.parent = scope;
-    err = expression_evaluate(&body, &fn_scope);
-    if (err) goto cleanup;
-
-    /* cleanup the list, but not any expression in the list */
-    expression_list_t* next_def = args_def.next;
-    expression_list_t* next_param = expr->function.parameters;
-    while (next_def && next_param) {
-        expression_list_t* curr = next_def;
-        next_def = next_def->next;
-        free(curr);
-
-        curr = next_param;
-        next_param = next_param->next;
-        free(curr);
-    }
-
-    /* everything but the name has been cleaned or is in use */
-    free(expr->function.name);
-
-    *expr = body;
-cleanup:
-    scope_clean(&fn_scope);
-    return err;
 }
 
 error_t _expression_evaluate_recursive(expression_t* expr, scope_t* scope) {
@@ -275,7 +216,7 @@ error_t _expression_evaluate_recursive(expression_t* expr, scope_t* scope) {
         case EXPRESSION_TYPE_VARIABLE:
             return _expression_substitute_variable(expr, scope);
         case EXPRESSION_TYPE_FUNCTION:
-            return _expression_run_function(expr, scope);
+            return scope_call(scope, expr->function.name, expr->function.parameters, expr);
         case EXPRESSION_TYPE_PREFIX:
             return _expression_apply_prefix(expr, scope);
         case EXPRESSION_TYPE_OPERATOR:

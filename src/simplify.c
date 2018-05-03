@@ -1,8 +1,11 @@
 /* Copyright Ian Shehadeh 2018 */
 
+#include <time.h>
+
 #include "simplify/parser.h"
 #include "simplify/lexer.h"
 #include "simplify/errors.h"
+#include "simplify/builtins.h"
 #include "flags/flags.h"
 
 #include "simplify/expression/evaluate.h"
@@ -98,12 +101,114 @@ error_t execute_file(char* fname, scope_t* scope) {
     return ERROR_NO_ERROR;
 }
 
+error_t builtin_pi(scope_t* scope, expression_t** out) {
+    (void)scope;
+
+    *out = malloc(sizeof(expression_t));
+    mpfr_t num;
+    mpfr_init(num);
+    mpfr_const_pi(num, MPFR_RNDF);
+    *out = expression_new_number(num);
+    mpfr_clear(num);
+
+
+    return ERROR_NO_ERROR;
+}
+
+DEFINE_MPFR_FUNCTION(cos)
+DEFINE_MPFR_FUNCTION(sin)
+DEFINE_MPFR_FUNCTION(tan)
+DEFINE_MPFR_FUNCTION(acos)
+DEFINE_MPFR_FUNCTION(asin)
+DEFINE_MPFR_FUNCTION(atan)
+DEFINE_MPFR_FUNCTION(sec)
+DEFINE_MPFR_FUNCTION(csc)
+DEFINE_MPFR_FUNCTION(cot)
+DEFINE_MPFR_FUNCTION(cosh)
+DEFINE_MPFR_FUNCTION(sinh)
+DEFINE_MPFR_FUNCTION(tanh)
+DEFINE_MPFR_FUNCTION(acosh)
+DEFINE_MPFR_FUNCTION(asinh)
+DEFINE_MPFR_FUNCTION(atanh)
+DEFINE_MPFR_FUNCTION(sech)
+DEFINE_MPFR_FUNCTION(csch)
+DEFINE_MPFR_FUNCTION(coth)
+
+DEFINE_MPFR_FUNCTION_NRND(ceil)
+DEFINE_MPFR_FUNCTION_NRND(floor)
+DEFINE_MPFR_FUNCTION_NRND(round)
+DEFINE_MPFR_FUNCTION_NRND(roundeven)
+DEFINE_MPFR_FUNCTION_NRND(trunc)
+DEFINE_MPFR_FUNCTION(log)
+DEFINE_MPFR_FUNCTION(frac)
+
+DEFINE_MPFR_FUNCTION2(min)
+DEFINE_MPFR_FUNCTION2(max)
+
+DEFINE_MPFR_CONST(pi)
+DEFINE_MPFR_CONST(euler)
+DEFINE_MPFR_CONST(catalan)
+
+static gmp_randstate_t _g_rand_state;
+
+error_t builtin_func_random(scope_t* scope, expression_t** out) {
+    (void)scope;
+
+    mpfr_t num;
+    mpfr_init(num);
+
+    mpfr_urandom(num, _g_rand_state, MPFR_RNDN);
+    *out = expression_new_number(num);
+    mpfr_clear(num);
+
+    return ERROR_NO_ERROR;
+}
+
 int main(int argc, char** argv) {
     int verbosity = 0;
     variable_t isolation_target = NULL;
     scope_t scope;
 
     scope_init(&scope);
+    gmp_randinit_default(_g_rand_state);
+    gmp_randseed_ui(_g_rand_state, (unsigned long)time(NULL));
+
+    EXPORT_BUILTIN_FUNCTION(&scope, cos);
+    EXPORT_BUILTIN_FUNCTION(&scope, sin);
+    EXPORT_BUILTIN_FUNCTION(&scope, tan);
+    EXPORT_BUILTIN_FUNCTION(&scope, acos);
+    EXPORT_BUILTIN_FUNCTION(&scope, asin);
+    EXPORT_BUILTIN_FUNCTION(&scope, atan);
+    EXPORT_BUILTIN_FUNCTION(&scope, sec);
+    EXPORT_BUILTIN_FUNCTION(&scope, csc);
+    EXPORT_BUILTIN_FUNCTION(&scope, cot);
+    EXPORT_BUILTIN_FUNCTION(&scope, cosh);
+    EXPORT_BUILTIN_FUNCTION(&scope, sinh);
+    EXPORT_BUILTIN_FUNCTION(&scope, tanh);
+    EXPORT_BUILTIN_FUNCTION(&scope, acosh);
+    EXPORT_BUILTIN_FUNCTION(&scope, asinh);
+    EXPORT_BUILTIN_FUNCTION(&scope, atanh);
+    EXPORT_BUILTIN_FUNCTION(&scope, sech);
+    EXPORT_BUILTIN_FUNCTION(&scope, csch);
+    EXPORT_BUILTIN_FUNCTION(&scope, coth);
+
+    EXPORT_BUILTIN_FUNCTION(&scope, ceil);
+    EXPORT_BUILTIN_FUNCTION(&scope, floor);
+    EXPORT_BUILTIN_FUNCTION(&scope, round);
+    EXPORT_BUILTIN_FUNCTION(&scope, roundeven);
+    EXPORT_BUILTIN_FUNCTION(&scope, trunc);
+    EXPORT_BUILTIN_FUNCTION(&scope, log);
+    EXPORT_BUILTIN_FUNCTION(&scope, frac);
+    EXPORT_BUILTIN_FUNCTION(&scope, random);
+
+    EXPORT_BUILTIN_FUNCTION2(&scope, min);
+    EXPORT_BUILTIN_FUNCTION2(&scope, max);
+
+    EXPORT_BUILTIN_CONST(&scope, pi);
+    EXPORT_BUILTIN_CONST(&scope, euler);
+    EXPORT_BUILTIN_CONST(&scope, catalan);
+
+    ALIAS(&scope, e, euler);
 
     error_t err = ERROR_NO_ERROR;
     PARSE_FLAGS(
@@ -137,12 +242,10 @@ int main(int argc, char** argv) {
             }
         }
         if (verbosity >= 0) {
-            if (scope.boolean != -1) {
-                if (scope.boolean) {
-                    puts(TRUE_STRING);
-                } else {
-                    puts(FALSE_STRING);
-                }
+            if (scope.boolean == EXPRESSION_RESULT_BOOLEAN_TRUE) {
+                puts(TRUE_STRING);
+            } else if (scope.boolean == EXPRESSION_RESULT_BOOLEAN_FALSE) {
+                puts(FALSE_STRING);
             } else {
                 expression_print(&expr);
                 puts("");
