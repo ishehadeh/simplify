@@ -20,23 +20,29 @@ if [[ ! -d deps/gmp-$GMP_VERSION ]]; then
     $CURL "https://gmplib.org/download/gmp/gmp-$GMP_VERSION.tar.xz" | $TAR -xJC deps
 fi
 
-$CURL https://raw.githubusercontent.com/google/styleguide/gh-pages/cpplint/cpplint.py > deps/cpplint.py
+if [[ ! -f deps/cpplint.py ]]; then
+    $CURL https://raw.githubusercontent.com/cpplint/cpplint/master/cpplint.py > deps/cpplint.py
+fi
 
 # Build GMP
-pushd deps/gmp-$GMP_VERSION
+if [[ ! -f $ROOT_DIR/usr/local/lib/libgmp.a ]]; then
+    pushd deps/gmp-$GMP_VERSION
 
-mkdir -p build && cd build
-../configure
-$MAKE
-$MAKE install DESTDIR="$ROOT_DIR"
-popd
+    mkdir -p build && cd build
+    ../configure
+    $MAKE
+    $MAKE install DESTDIR="$ROOT_DIR"
+    popd
+fi
 
 # Build MPFR
-pushd deps/mpfr-$MPFR_VERSION
+if [[ ! -f $ROOT_DIR/usr/local/lib/libmpfr.a ]]; then
+    pushd deps/mpfr-$MPFR_VERSION
 
-mkdir -p build && cd build
-../configure --with-gmp-build=../../gmp-$GMP_VERSION/build
-$MAKE
-$MAKE install DESTDIR="$ROOT_DIR"
+    mkdir -p build && cd build
+    ../configure --with-gmp-build=../../gmp-$GMP_VERSION/build
+    $MAKE
+    $MAKE install DESTDIR="$ROOT_DIR"
 
-popd
+    popd
+fi

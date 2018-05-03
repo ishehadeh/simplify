@@ -1,4 +1,6 @@
 langauge: c
+python:
+  - "2.7"
 
 sudo: required
 dist: trusty
@@ -15,6 +17,7 @@ env:
     - CTEST_BUILD_FLAGS=-j4
 
 script:
+ - python ./deps/cpplint.py ./src/**/*.* ./src/*.*
  - mkdir build
  - cd build
  - cmake ..
@@ -30,5 +33,3 @@ addons:
 cache:
   directories:
     - ./deps
-
-before_scipt: ./deps/cpplint.py
