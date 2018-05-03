@@ -1,14 +1,31 @@
 langauge: c
+
+sudo: required
+dist: trusty
+
 compiler:
  - clang
  - gcc
+
 install: bash ./get-deps.sh
+
+env:
+  global:
+    - CTEST_EXT_COLOR_OUTPUT=TRUE
+    - CTEST_BUILD_FLAGS=-j4
 
 script:
  - mkdir build
  - cd build
  - cmake ..
  - cmake --build .
+ - ctest -VV
+
+addons:
+  apt:
+    packages:
+      - valgrind
+
 
 cache:
   directories:
