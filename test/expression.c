@@ -6,10 +6,14 @@
 #include "simplify/expression/isolate.h"
 #include "simplify/expression/simplify.h"
 #include "simplify/expression/evaluate.h"
+#include "simplify/builtins.h"
 
 #define OP_EVALUATE         1
 #define OP_ISOLATE_X        2
 #define OP_COMPLEX_SIMPLIFY 4
+
+DEFINE_MPFR_FUNCTION(cos)
+DEFINE_MPFR_CONST(pi)
 
 int main() {
     struct {
@@ -55,6 +59,9 @@ int main() {
                 expression_new_variable("x"),
                 '=',
                 expression_new_number_d(2))
+        },
+        {"cos(pi2)", OP_EVALUATE,
+            expression_new_number_si(1),
         }
     };
 
@@ -70,6 +77,9 @@ int main() {
             FATAL("failed to parse string \"%s\": %s", __string_expr_pairs[i].string, error_string(err));
 
         scope_init(&scope);
+        EXPORT_MPFR_FUNCTION(&scope, cos);
+        EXPORT_MPFR_CONST(&scope, pi);
+
 
         if (__string_expr_pairs[i].ops & OP_EVALUATE) {
             err = expression_evaluate(&expr, &scope);
