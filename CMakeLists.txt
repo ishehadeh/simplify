@@ -6,7 +6,6 @@ set(CMAKE_EXPORT_COMPILE_COMMAND ON)
 
 include(CTest)
 
-include_directories("${CMAKE_SOURCE_DIR}/src" "${CMAKE_SOURCE_DIR}")
 file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/src/simplify/*.c" "${CMAKE_SOURCE_DIR}/src/simplify/*/*.c")
 file(GLOB HEADERS "${CMAKE_SOURCE_DIR}/src/simplify/*.h" "${CMAKE_SOURCE_DIR}/src/simplify/*/*.h")
 file(GLOB MANUALS "${CMAKE_SOURCE_DIR}/docs/simplify.*.md")
@@ -26,7 +25,7 @@ find_program(CLDOC cldoc cldoc.py DOC "c/c++/obj-c documentation generator")
 find_program(RONN  ronn  ronn.rb  DOC "markdown to man converter")
 find_program(GCOV  gcov           DOC "GNU test coverage tool")
 
-
+include_directories("${CMAKE_SOURCE_DIR}/src" "${CMAKE_SOURCE_DIR}" "${GMP_INCLUDE_DIR}" "${MPFR_INCLUDES}")
 set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wall -Wextra -std=c99 -Werror")
 
 add_custom_target("docs")
