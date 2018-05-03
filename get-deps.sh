@@ -4,7 +4,7 @@ set -e
 MPFR_VERSION="4.0.1"
 GMP_VERSION="6.1.2"
 
-ROOT_DIR=`realpath ./deps/root`
+ROOT_DIR="$PWD/deps/root"
 
 CURL=`which curl`
 TAR=`which tar`
