@@ -10,4 +10,8 @@ script:
  - cmake ..
  - cmake --build .
 
+cache:
+  directories:
+    - ./deps
+
 before_scipt: ./deps/cpplint.py
