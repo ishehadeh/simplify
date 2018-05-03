@@ -113,6 +113,31 @@ error_t builtin_pi(scope_t* scope, expression_t** out) {
     return ERROR_NO_ERROR;
 }
 
+DEFINE_MPFR_FUNCTION(cos)
+DEFINE_MPFR_FUNCTION(sin)
+DEFINE_MPFR_FUNCTION(tan)
+DEFINE_MPFR_FUNCTION(acos)
+DEFINE_MPFR_FUNCTION(asin)
+DEFINE_MPFR_FUNCTION(atan)
+DEFINE_MPFR_FUNCTION(sec)
+DEFINE_MPFR_FUNCTION(csc)
+DEFINE_MPFR_FUNCTION(cot)
+DEFINE_MPFR_FUNCTION(cosh)
+DEFINE_MPFR_FUNCTION(sinh)
+DEFINE_MPFR_FUNCTION(tanh)
+DEFINE_MPFR_FUNCTION(acosh)
+DEFINE_MPFR_FUNCTION(asinh)
+DEFINE_MPFR_FUNCTION(atanh)
+DEFINE_MPFR_FUNCTION(sech)
+DEFINE_MPFR_FUNCTION(csch)
+DEFINE_MPFR_FUNCTION(coth)
+
+DEFINE_MPFR_FUNCTION(log)
+
+DEFINE_MPFR_CONST(pi)
+DEFINE_MPFR_CONST(euler)
+DEFINE_MPFR_CONST(catalan)
+
 int main(int argc, char** argv) {
     int verbosity = 0;
     variable_t isolation_target = NULL;
@@ -126,10 +151,20 @@ int main(int argc, char** argv) {
     EXPORT_MPFR_FUNCTION(&scope, acos);
     EXPORT_MPFR_FUNCTION(&scope, asin);
     EXPORT_MPFR_FUNCTION(&scope, atan);
-    EXPORT_MPFR_FUNCTION(&scope, log);
     EXPORT_MPFR_FUNCTION(&scope, sec);
     EXPORT_MPFR_FUNCTION(&scope, csc);
     EXPORT_MPFR_FUNCTION(&scope, cot);
+    EXPORT_MPFR_FUNCTION(&scope, cosh);
+    EXPORT_MPFR_FUNCTION(&scope, sinh);
+    EXPORT_MPFR_FUNCTION(&scope, tanh);
+    EXPORT_MPFR_FUNCTION(&scope, acosh);
+    EXPORT_MPFR_FUNCTION(&scope, asinh);
+    EXPORT_MPFR_FUNCTION(&scope, atanh);
+    EXPORT_MPFR_FUNCTION(&scope, sech);
+    EXPORT_MPFR_FUNCTION(&scope, csch);
+    EXPORT_MPFR_FUNCTION(&scope, coth);
+
+    EXPORT_MPFR_FUNCTION(&scope, log);
 
     EXPORT_MPFR_CONST(&scope, pi);
     EXPORT_MPFR_CONST(&scope, euler);

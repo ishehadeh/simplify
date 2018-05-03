@@ -8,7 +8,7 @@
 
 /* this file includes utilities for creating builtin functions and constants */
 
-#define EXPORT_MPFR_FUNCTION(SCOPE, NAME) \
+#define DEFINE_MPFR_FUNCTION(NAME) \
 error_t builtin_func_ ## NAME(scope_t* scope, expression_t** out) { \
     mpfr_t num; \
     mpfr_init(num); \
@@ -20,10 +20,12 @@ error_t builtin_func_ ## NAME(scope_t* scope, expression_t** out) { \
     *out = expression_new_number(num); \
     mpfr_clear(num); \
     return ERROR_NO_ERROR; \
-} \
-scope_define_internal_function((SCOPE), #NAME, builtin_func_ ## NAME, 1, "__arg0");
+}
 
-#define EXPORT_MPFR_CONST(SCOPE, NAME) \
+#define EXPORT_MPFR_FUNCTION(SCOPE, NAME) \
+    scope_define_internal_function((SCOPE), #NAME, builtin_func_ ## NAME, 1, "__arg0");
+
+#define DEFINE_MPFR_CONST(NAME) \
 error_t builtin_const_ ## NAME(scope_t* scope, expression_t** out) { \
     (void)scope; \
     mpfr_t num; \
@@ -32,8 +34,10 @@ error_t builtin_const_ ## NAME(scope_t* scope, expression_t** out) { \
     *out = expression_new_number(num); \
     mpfr_clear(num); \
     return ERROR_NO_ERROR; \
-} \
-scope_define_internal_const((SCOPE), #NAME, builtin_const_ ## NAME);
+}
+
+#define EXPORT_MPFR_CONST(SCOPE, NAME) \
+    scope_define_internal_const((SCOPE), #NAME, builtin_const_ ## NAME);
 
 #define ALIAS(SCOPE, X, Y) scope_define_constant((SCOPE), #X, expression_new_variable(#Y))
 
