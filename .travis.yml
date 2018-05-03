@@ -2,7 +2,7 @@ langauge: c
 compiler:
  - clang
  - gcc
-install: ./get-deps.sh
+install: bash ./get-deps.sh
 
 script:
  - mkdir build
