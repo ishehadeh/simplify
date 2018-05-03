@@ -199,6 +199,7 @@ int main(int argc, char** argv) {
     EXPORT_BUILTIN_FUNCTION(&scope, trunc);
     EXPORT_BUILTIN_FUNCTION(&scope, log);
     EXPORT_BUILTIN_FUNCTION(&scope, frac);
+    EXPORT_BUILTIN_FUNCTION(&scope, random);
 
     EXPORT_BUILTIN_FUNCTION2(&scope, min);
     EXPORT_BUILTIN_FUNCTION2(&scope, max);
@@ -206,9 +207,8 @@ int main(int argc, char** argv) {
     EXPORT_BUILTIN_CONST(&scope, pi);
     EXPORT_BUILTIN_CONST(&scope, euler);
     EXPORT_BUILTIN_CONST(&scope, catalan);
-    ALIAS(&scope, e, euler);
 
-    scope_define_internal_function(&scope, "random", builtin_func_random, 0);
+    ALIAS(&scope, e, euler);
 
     error_t err = ERROR_NO_ERROR;
     PARSE_FLAGS(
