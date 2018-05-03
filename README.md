@@ -1,5 +1,7 @@
 # Simplify
 
+[![Build Status](https://travis-ci.org/IanS5/simplify.svg?branch=master)](https://travis-ci.org/IanS5/simplify)
+
 Simplify evaluates a mathematical expression, putting it in its simplest terms.
 
 For example:
