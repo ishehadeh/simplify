@@ -1,5 +1,7 @@
 /* Copyright Ian Shehadeh 2018 */
 
+#include <time.h>
+
 #include "simplify/parser.h"
 #include "simplify/lexer.h"
 #include "simplify/errors.h"
@@ -147,12 +149,29 @@ DEFINE_MPFR_CONST(pi)
 DEFINE_MPFR_CONST(euler)
 DEFINE_MPFR_CONST(catalan)
 
+static gmp_randstate_t _g_rand_state;
+
+error_t builtin_func_random(scope_t* scope, expression_t** out) {
+    (void)scope;
+
+    mpfr_t num;
+    mpfr_init(num);
+
+    mpfr_urandom(num, _g_rand_state, MPFR_RNDN);
+    *out = expression_new_number(num);
+    mpfr_clear(num);
+
+    return ERROR_NO_ERROR;
+}
+
 int main(int argc, char** argv) {
     int verbosity = 0;
     variable_t isolation_target = NULL;
     scope_t scope;
 
     scope_init(&scope);
+    gmp_randinit_default(_g_rand_state);
+    gmp_randseed_ui(_g_rand_state, (unsigned long)time(NULL));
 
     EXPORT_MPFR_FUNCTION(&scope, cos);
     EXPORT_MPFR_FUNCTION(&scope, sin);
@@ -188,6 +207,8 @@ int main(int argc, char** argv) {
     EXPORT_MPFR_CONST(&scope, euler);
     EXPORT_MPFR_CONST(&scope, catalan);
     ALIAS(&scope, e, euler);
+
+    scope_define_internal_function(&scope, "random", builtin_func_random, 0);
 
     error_t err = ERROR_NO_ERROR;
     PARSE_FLAGS(
