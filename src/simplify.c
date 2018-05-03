@@ -132,7 +132,16 @@ DEFINE_MPFR_FUNCTION(sech)
 DEFINE_MPFR_FUNCTION(csch)
 DEFINE_MPFR_FUNCTION(coth)
 
+DEFINE_MPFR_FUNCTION_NRND(ceil)
+DEFINE_MPFR_FUNCTION_NRND(floor)
+DEFINE_MPFR_FUNCTION_NRND(round)
+DEFINE_MPFR_FUNCTION_NRND(roundeven)
+DEFINE_MPFR_FUNCTION_NRND(trunc)
 DEFINE_MPFR_FUNCTION(log)
+DEFINE_MPFR_FUNCTION(frac)
+
+DEFINE_MPFR_FUNCTION2(min)
+DEFINE_MPFR_FUNCTION2(max)
 
 DEFINE_MPFR_CONST(pi)
 DEFINE_MPFR_CONST(euler)
@@ -164,7 +173,16 @@ int main(int argc, char** argv) {
     EXPORT_MPFR_FUNCTION(&scope, csch);
     EXPORT_MPFR_FUNCTION(&scope, coth);
 
+    EXPORT_MPFR_FUNCTION(&scope, ceil);
+    EXPORT_MPFR_FUNCTION(&scope, floor);
+    EXPORT_MPFR_FUNCTION(&scope, round);
+    EXPORT_MPFR_FUNCTION(&scope, roundeven);
+    EXPORT_MPFR_FUNCTION(&scope, trunc);
     EXPORT_MPFR_FUNCTION(&scope, log);
+    EXPORT_MPFR_FUNCTION(&scope, frac);
+
+    EXPORT_MPFR_FUNCTION2(&scope, min);
+    EXPORT_MPFR_FUNCTION2(&scope, max);
 
     EXPORT_MPFR_CONST(&scope, pi);
     EXPORT_MPFR_CONST(&scope, euler);
