@@ -104,7 +104,6 @@ error_t _parser_parse_expression_list_precedence(expression_parser_t* parser,
     if (err) return err;
     expression_list_append(list, next);
     while (parser->previous.type == TOKEN_TYPE_COMMA) {
-
         _parser_next_token(parser, NULL);
         expression_t* next = malloc(sizeof(expression_t));
         error_t err = _parser_parse_expression_precedence_recursive(parser, next, precedence);

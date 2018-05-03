@@ -99,10 +99,7 @@ error_t execute_file(char* fname, scope_t* scope) {
     return ERROR_NO_ERROR;
 }
 
-error_t builtin_pi(expression_list_t* args, scope_t* scope, expression_t** out) {
-    if (args)
-        return ERROR_IS_A_VARIABLE;
-    (void)args;
+error_t builtin_pi(scope_t* scope, expression_t** out) {
     (void)scope;
 
     *out = malloc(sizeof(expression_t));
@@ -123,13 +120,20 @@ int main(int argc, char** argv) {
 
     scope_init(&scope);
 
-    scope_define_internal_const(&scope, "pi", builtin_pi);
-    ADD_BUILTIN(&scope, cos);
-    ADD_BUILTIN(&scope, sin);
-    ADD_BUILTIN(&scope, tan);
-    ADD_BUILTIN(&scope, acos);
-    ADD_BUILTIN(&scope, asin);
-    ADD_BUILTIN(&scope, atan);
+    EXPORT_MPFR_FUNCTION(&scope, cos);
+    EXPORT_MPFR_FUNCTION(&scope, sin);
+    EXPORT_MPFR_FUNCTION(&scope, tan);
+    EXPORT_MPFR_FUNCTION(&scope, acos);
+    EXPORT_MPFR_FUNCTION(&scope, asin);
+    EXPORT_MPFR_FUNCTION(&scope, atan);
+    EXPORT_MPFR_FUNCTION(&scope, log);
+    EXPORT_MPFR_FUNCTION(&scope, sec);
+    EXPORT_MPFR_FUNCTION(&scope, csc);
+    EXPORT_MPFR_FUNCTION(&scope, cot);
+
+    EXPORT_MPFR_CONST(&scope, pi);
+    EXPORT_MPFR_CONST(&scope, euler);
+    EXPORT_MPFR_CONST(&scope, catalan);
 
     error_t err = ERROR_NO_ERROR;
     PARSE_FLAGS(

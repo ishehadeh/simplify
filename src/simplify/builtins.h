@@ -6,13 +6,8 @@
 #include "simplify/errors.h"
 #include "simplify/expression/expression.h"
 
-#define ADD_BUILTIN(SCOPE, NAME) scope_define_internal_function((SCOPE), #NAME, builtin_func_ ## NAME, 1, "__arg0")
-
-#define _DEFINE_MPFR_BUILTIN(NAME) \
-error_t builtin_func_ ## NAME(expression_list_t* args, scope_t* scope, expression_t** out) { \
-    if (!args) \
-        return ERROR_IS_A_FUNCTION; \
-    (void)args; \
+#define EXPORT_MPFR_FUNCTION(SCOPE, NAME) \
+error_t builtin_func_ ## NAME(scope_t* scope, expression_t** out) { \
     mpfr_t num; \
     mpfr_init(num); \
     expression_t input; \
@@ -23,15 +18,19 @@ error_t builtin_func_ ## NAME(expression_list_t* args, scope_t* scope, expressio
     *out = expression_new_number(num); \
     mpfr_clear(num); \
     return ERROR_NO_ERROR; \
-}
+} \
+scope_define_internal_function((SCOPE), #NAME, builtin_func_ ## NAME, 1, "__arg0");
 
-_DEFINE_MPFR_BUILTIN(cos)
-_DEFINE_MPFR_BUILTIN(sin)
-_DEFINE_MPFR_BUILTIN(tan)
-
-_DEFINE_MPFR_BUILTIN(acos)
-_DEFINE_MPFR_BUILTIN(atan)
-_DEFINE_MPFR_BUILTIN(asin)
-
+#define EXPORT_MPFR_CONST(SCOPE, NAME) \
+error_t builtin_const_ ## NAME(scope_t* scope, expression_t** out) { \
+    (void)scope; \
+    mpfr_t num; \
+    mpfr_init(num); \
+    mpfr_const_ ## NAME(num, MPFR_RNDF); \
+    *out = expression_new_number(num); \
+    mpfr_clear(num); \
+    return ERROR_NO_ERROR; \
+} \
+scope_define_internal_const((SCOPE), #NAME, builtin_const_ ## NAME);
 
 #endif  // SIMPLIFY_BUILTINS_H_

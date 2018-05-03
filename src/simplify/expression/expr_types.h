@@ -121,17 +121,14 @@ enum expression_type {
     EXPRESSION_TYPE_FUNCTION,
 };
 
-/* A function pointer which be invoked as a `simplify` function with expression_evaluate.
+/* A function pointer which be invoked as a `simplify` function with scope_call.
  *
- * This function pointer takes an expression list, its arguments, as the first value.
- * every argument operator expression with it's left hand being a variable (the argument),
- * it's operator is an assignment operator, and it's right hand side is the variable's value.
- * the second argument is the function's scope, it has no values by default.
- * the third argument is a pointer to and expression pointer. The pointer is NULL by default.
- * By the time this expression returns __must__ point to a valid expression, allocated on the heap.
- * If it does not than the callback should return an error to explain why.
+ * This function will be passed a valid `scope_t`, and a pointer to a `NULL` expression pointer.
+ * The scope contains all of the function's arguments.
+ * By the time the callback exits the expression pointer __must__ be pointing to a valid value,
+ * unless an error is returned.
  */
-typedef error_t(*simplify_func_t)(expression_list_t*, scope_t*, expression_t**);
+typedef error_t(*simplify_func_t)(scope_t*, expression_t**);
 
 union variable_value {
     simplify_func_t internal;
@@ -484,7 +481,7 @@ static inline error_t scope_define_internal_function(scope_t* scope,
                                                      simplify_func_t callback,
                                                      int args, ...) {
     variable_info_t* info = malloc(sizeof(variable_info_t));
-    expression_list_t* arg_list = malloc(sizeof(expression_list_t*));
+    expression_list_t* arg_list = malloc(sizeof(expression_list_t));
     expression_list_init(arg_list);
 
     va_list ap;

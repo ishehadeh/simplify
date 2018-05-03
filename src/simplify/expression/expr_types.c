@@ -203,8 +203,6 @@ error_t _scope_run_function(scope_t* scope, variable_t name, expression_list_t* 
     expression_t* arg_def;
     expression_t* arg_value;
 
-    expression_list_t* resolved_arguments = malloc(sizeof(expression_list_t));
-    expression_list_init(resolved_arguments);
     EXPRESSION_LIST_FOREACH2(arg_def, arg_value, arg_defs, arg_values) {
         expression_t* op_expr = malloc(sizeof(expression_t));
 
@@ -213,8 +211,6 @@ error_t _scope_run_function(scope_t* scope, variable_t name, expression_list_t* 
 
         err = expression_evaluate(op_expr, &fn_scope);
         if (err) goto cleanup;
-
-        expression_list_append(resolved_arguments, op_expr);
     }
     expression_t* body = NULL;
 
@@ -225,9 +221,8 @@ error_t _scope_run_function(scope_t* scope, variable_t name, expression_list_t* 
 
         err = expression_evaluate(body, &fn_scope);
     } else {
-        err = func_info->value.internal(resolved_arguments, &fn_scope, &body);
+        err = func_info->value.internal(&fn_scope, &body);
     }
-    expression_list_free(resolved_arguments);
 
     if (body && !err)
         *out = *body;
@@ -256,7 +251,7 @@ error_t scope_get_value(scope_t* scope, char* name, expression_t* expr) {
 
     if (info->is_internal) {
         expression_t* new_expr = NULL;
-        err = info->value.internal(NULL, scope, &new_expr);
+        err = info->value.internal(scope, &new_expr);
         if (err) return err;
         if (new_expr)
             *expr = *new_expr;
