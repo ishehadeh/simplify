@@ -194,6 +194,7 @@ error_t _expression_substitute_variable(expression_t* expr, scope_t* scope) {
     if (!err) {
         expression_clean(expr);
         *expr = variable_value;
+        _expression_evaluate_recursive(expr, scope);
     } else if (!expr->variable.binding) {
         /* couldn't find the variable. let future executor know that this is the
             scope where the variable's value should be found */

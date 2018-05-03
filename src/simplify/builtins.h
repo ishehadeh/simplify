@@ -6,6 +6,8 @@
 #include "simplify/errors.h"
 #include "simplify/expression/expression.h"
 
+/* this file includes utilities for creating builtin functions and constants */
+
 #define EXPORT_MPFR_FUNCTION(SCOPE, NAME) \
 error_t builtin_func_ ## NAME(scope_t* scope, expression_t** out) { \
     mpfr_t num; \
@@ -32,5 +34,7 @@ error_t builtin_const_ ## NAME(scope_t* scope, expression_t** out) { \
     return ERROR_NO_ERROR; \
 } \
 scope_define_internal_const((SCOPE), #NAME, builtin_const_ ## NAME);
+
+#define ALIAS(SCOPE, X, Y) scope_define_constant((SCOPE), #X, expression_new_variable(#Y))
 
 #endif  // SIMPLIFY_BUILTINS_H_

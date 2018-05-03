@@ -134,6 +134,7 @@ int main(int argc, char** argv) {
     EXPORT_MPFR_CONST(&scope, pi);
     EXPORT_MPFR_CONST(&scope, euler);
     EXPORT_MPFR_CONST(&scope, catalan);
+    ALIAS(&scope, e, euler);
 
     error_t err = ERROR_NO_ERROR;
     PARSE_FLAGS(
