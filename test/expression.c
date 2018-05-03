@@ -77,8 +77,8 @@ int main() {
             FATAL("failed to parse string \"%s\": %s", __string_expr_pairs[i].string, error_string(err));
 
         scope_init(&scope);
-        EXPORT_MPFR_FUNCTION(&scope, cos);
-        EXPORT_MPFR_CONST(&scope, pi);
+        EXPORT_BUILTIN_FUNCTION(&scope, cos);
+        EXPORT_BUILTIN_CONST(&scope, pi);
 
 
         if (__string_expr_pairs[i].ops & OP_EVALUATE) {
