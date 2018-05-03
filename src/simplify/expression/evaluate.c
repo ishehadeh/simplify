@@ -20,11 +20,16 @@ error_t _expression_evaluate_recursive(expression_t* expr, scope_t* scope);
 error_t _expression_apply_comparison(expression_t* expr, scope_t* scope) {
     assert(EXPRESSION_IS_OPERATOR(expr));
 
-    if (scope->boolean != 0) {
+    if (scope->boolean != EXPRESSION_RESULT_BOOLEAN_FALSE) {
         int x = mpfr_cmp(expr->operator.left->number.value, expr->operator.right->number.value);
-        scope->boolean = ((expr->operator.infix == '<' && x < 0)
-                            || (expr->operator.infix == '>' && x > 0)
-                            || (expr->operator.infix == '=' && x == 0));
+        if (expr->operator.infix == '<' && x < 0)
+            scope->boolean = EXPRESSION_RESULT_BOOLEAN_TRUE;
+        else if (expr->operator.infix == '>' && x > 0)
+            scope->boolean = EXPRESSION_RESULT_BOOLEAN_TRUE;
+        else if (expr->operator.infix == '=' && x == 0)
+            scope->boolean = EXPRESSION_RESULT_BOOLEAN_TRUE;
+        else
+            scope->boolean = EXPRESSION_RESULT_BOOLEAN_FALSE;
     }
 
     expression_collapse_left(expr);

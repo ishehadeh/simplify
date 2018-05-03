@@ -35,7 +35,7 @@ void expression_init_number_d(expression_t* expr, double value) {
     mpfr_init_set_d(expr->number.value, value, MPFR_RNDF);
 }
 
-void expression_init_number_si(expression_t* expr, int value) {
+void expression_init_number_si(expression_t* expr, long value) {
     expr->type = EXPRESSION_TYPE_NUMBER;
     mpfr_init_set_si(expr->number.value, value, MPFR_RNDF);
 }
@@ -152,6 +152,16 @@ inline operator_precedence_t operator_precedence(operator_t op) {
     }
 }
 
+void expression_list_free(expression_list_t* list) {
+    expression_list_t* last = NULL;
+    while (list) {
+        if (list->value) expression_free(list->value);
+        last = list;
+        list = list->next;
+        free(last);
+    }
+}
+
 void expression_list_append(expression_list_t* list, expression_t* expr) {
     if (!list->value) {
         list->value = expr;
@@ -181,6 +191,86 @@ void variable_info_free(variable_info_t* info) {
     if (!info->is_internal)
         expression_free(info->value.expression);
     free(info);
+}
+
+
+error_t scope_define(scope_t* scope, char* variable, expression_t* value) {
+    variable_info_t* info = malloc(sizeof(variable_info_t));
+    info->value.expression = value;
+    info->is_internal = 0;
+    info->named_inputs = NULL;
+    info->constant = 0;
+    return rbtree_insert(&scope->variables, variable, info);
+}
+
+error_t scope_define_constant(scope_t* scope, char* variable, expression_t* value) {
+    variable_info_t* info = malloc(sizeof(variable_info_t));
+    info->value.expression = value;
+    info->is_internal = 0;
+    info->named_inputs = NULL;
+    info->constant = 0;
+    return rbtree_insert(&scope->variables, variable, info);
+}
+
+error_t scope_get_variable_info(scope_t* scope, char* variable, variable_info_t** value) {
+    error_t err = rbtree_search(&scope->variables, variable, (void**)value);
+
+    /* check the parent scope(s) for the variable */
+    scope_t* parent = scope->parent;
+    while (err && parent != NULL) {
+        err = rbtree_search(&parent->variables, variable, (void**)value);
+        parent = parent->parent;
+    }
+    return err;
+}
+
+error_t scope_define_internal_variable(scope_t* scope, char* name, simplify_func_t callback) {
+    variable_info_t* info = malloc(sizeof(variable_info_t));
+    info->value.internal = callback;
+    info->is_internal = 1;
+    info->named_inputs = NULL;
+    info->constant = 0;
+    return rbtree_insert(&scope->variables, name, info);
+}
+
+error_t scope_define_internal_const(scope_t* scope, char* name, simplify_func_t callback) {
+    variable_info_t* info = malloc(sizeof(variable_info_t));
+    info->value.internal = callback;
+    info->is_internal = 1;
+    info->named_inputs = NULL;
+    info->constant = 1;
+    return rbtree_insert(&scope->variables, name, info);
+}
+
+error_t scope_define_function(scope_t* scope, char* name, expression_t* body, expression_list_t* args) {
+    variable_info_t* info = malloc(sizeof(variable_info_t));
+    info->value.expression = body;
+    info->is_internal = 0;
+    info->named_inputs = args;
+    info->constant = 0;
+    return rbtree_insert(&scope->variables, name, info);
+}
+
+error_t scope_define_internal_function(scope_t* scope, char* name, simplify_func_t callback, int args, ...) {
+    variable_info_t* info = malloc(sizeof(variable_info_t));
+    expression_list_t* arg_list = malloc(sizeof(expression_list_t));
+    expression_list_init(arg_list);
+
+    va_list ap;
+    va_start(ap, args);
+    for (int i = 0; i < args; ++i) {
+        expression_t* expr = malloc(sizeof(expression_t));
+        char* argname = va_arg(ap, char*);
+        expression_init_variable(expr, argname, strlen(argname));
+        expression_list_append(arg_list, expr);
+    }
+    va_end(ap);
+
+    info->value.internal = callback;
+    info->is_internal = 1;
+    info->named_inputs = arg_list;
+    info->constant = 0;
+    return rbtree_insert(&scope->variables, name, info);
 }
 
 

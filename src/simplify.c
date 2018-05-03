@@ -168,12 +168,10 @@ int main(int argc, char** argv) {
             }
         }
         if (verbosity >= 0) {
-            if (scope.boolean != -1) {
-                if (scope.boolean) {
-                    puts(TRUE_STRING);
-                } else {
-                    puts(FALSE_STRING);
-                }
+            if (scope.boolean == EXPRESSION_RESULT_BOOLEAN_TRUE) {
+                puts(TRUE_STRING);
+            } else if (scope.boolean == EXPRESSION_RESULT_BOOLEAN_FALSE) {
+                puts(FALSE_STRING);
             } else {
                 expression_print(&expr);
                 puts("");

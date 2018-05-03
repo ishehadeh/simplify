@@ -84,7 +84,7 @@ int main() {
                     expression_new_operator(
                         expression_new_operator(
                             expression_new_number_d(3),
-                            '+',
+                            '*',
                             expression_new_variable("x")),
                         '\\',
                         expression_new_number_d(4))),
