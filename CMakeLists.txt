@@ -18,6 +18,10 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/deps/root/usr/local")
     set(CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/deps/root/usr/local")
 endif()
 
+if (SIMPLIFY_LINK_STATIC)
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+endif()
+
 find_package(GMP REQUIRED)
 find_package(MPFR REQUIRED)
 
@@ -63,13 +67,11 @@ endif()
 
 add_library(simplify STATIC ${SOURCES})
 
-
 add_executable(simplify-bin ${CMAKE_SOURCE_DIR}/src/simplify.c)
 set_target_properties(simplify-bin PROPERTIES OUTPUT_NAME simplify)
 
-target_link_libraries(simplify ${GMP_LIBRARIES})
 target_link_libraries(simplify ${MPFR_LIBRARIES})
-target_link_libraries(simplify m)
+target_link_libraries(simplify ${GMP_LIBRARIES})
 
 target_link_libraries(simplify-bin simplify)
 
