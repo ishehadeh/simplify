@@ -301,6 +301,7 @@ error_t _scope_run_function(scope_t* scope, variable_t name, expression_list_t* 
 
         err = expression_evaluate(op_expr, &fn_scope);
         if (err) goto cleanup;
+        expression_free(op_expr);
     }
     expression_t* body = NULL;
 
@@ -328,8 +329,12 @@ error_t scope_call(scope_t* scope, char* name, expression_list_t* args, expressi
     if (!info->named_inputs)
         return ERROR_IS_A_VARIABLE;
 
-    _scope_run_function(scope, name, args, out);
-    return ERROR_NO_ERROR;
+    expression_list_t* args_copy = malloc(sizeof(expression_list_t));
+    expression_list_init(args_copy);
+    expression_list_copy(args, args_copy);
+
+    err = _scope_run_function(scope, name, args_copy, out);
+    return err;
 }
 
 error_t scope_get_value(scope_t* scope, char* name, expression_t* expr) {

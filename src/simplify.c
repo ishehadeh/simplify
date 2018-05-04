@@ -263,6 +263,7 @@ error:
 cleanup:
     scope_clean(&scope);
     mpfr_free_cache();
+    gmp_randclear(_g_rand_state);
 
     return 0;
 }

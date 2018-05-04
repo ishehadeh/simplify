@@ -108,8 +108,8 @@ typedef union variable_value variable_value_t;
  *
  * This function will be passed a valid `scope_t`, and a pointer to a `NULL` expression pointer.
  * The scope contains all of the function's arguments.
- * By the time the callback exits the expression pointer __must__ be pointing to a valid value,
- * unless an error is returned.
+ * By the time the callback exits the expression pointer __must__ be pointing to a non-null value,
+ * or an error is returned, otherwise no action is taken.
  */
 typedef error_t(*simplify_func_t)(scope_t*, expression_t**);
 
