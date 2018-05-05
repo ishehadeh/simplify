@@ -24,7 +24,7 @@ script:
  - ctest -VV
 
 after_success:
-  - coveralls -e 'src/simplify.c' -e 'build' --root .. --gcov-options '\-lp'
+  - coveralls -e 'test' -e 'src/simplify.c' --root .. --gcov-options '\-lp'
 
 addons:
   apt:
