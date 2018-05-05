@@ -32,7 +32,7 @@ addons:
       - valgrind
 
 before_install:
-  - pip install --user cpp-coveralls
+  - pip install --user cpp-coveralls --gcov-options '\-lp'
 
 cache:
   directories:
