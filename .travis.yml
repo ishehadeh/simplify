@@ -24,7 +24,7 @@ script:
  - ctest -VV
 
 after_success:
-  - coveralls -E '.*test.*' --gcov-options '\-lp'
+  - coveralls -E '.*/test/*.c' --gcov-options '\-lp'
 
 addons:
   apt:
