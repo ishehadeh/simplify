@@ -1,6 +1,7 @@
 # Simplify
 
 [![Build Status](https://travis-ci.org/IanS5/simplify.svg?branch=master)](https://travis-ci.org/IanS5/simplify)
+[![Coverage Status](https://coveralls.io/repos/github/IanS5/simplify/badge.svg?branch=master)](https://coveralls.io/github/IanS5/simplify?branch=master)
 
 Simplify evaluates a mathematical expression, putting it in its simplest terms.
 
