@@ -47,7 +47,6 @@ struct token {
 
 struct lexer {
     token_t token;
-    FILE*   source;
 
     char*   buffer;
     size_t  buffer_length;
@@ -59,7 +58,6 @@ struct lexer {
  * @buffer the buffer to read, the buffer is copied
  */
 static inline void lexer_init_from_string(lexer_t* lexer, char* buffer) {
-    lexer->source = NULL;
     lexer->buffer_length = strlen(buffer);
     lexer->buffer = malloc(lexer->buffer_length);
     lexer->buffer_position = 0;
@@ -68,52 +66,23 @@ static inline void lexer_init_from_string(lexer_t* lexer, char* buffer) {
 }
 
 /* initialize a lexer from a file
+ *
+ * This function reads the file block-by-block into an intermediate buffer,
+ * instead of immediately checking it's length and reading the entire file.
+ * Generally it's optimal to use lexer_init_from_file, instead of this function.
+ * `lexer_init_from_file` will call this function if it can't determine the length anyway.
+ * 
  * @lexer the lexer to initialize
  * @file the file read
  */
-static inline void lexer_init_from_file_buffered(lexer_t* lexer, FILE* file) {
-    lexer->buffer = malloc(LEXER_FILE_BUFFER_SIZE);
-    char buffer[LEXER_FILE_BUFFER_SIZE];
-
-    buffer[LEXER_FILE_BUFFER_SIZE - 1] = 1;
-    lexer->buffer[0] = 0;
-    size_t size = 0;
-    while (fgets(buffer, LEXER_FILE_BUFFER_SIZE, file)) {
-        size_t buf_size = strlen(buffer);
-
-        lexer->buffer = realloc(lexer->buffer, size + buf_size + 1);
-        lexer->buffer = strncpy(lexer->buffer + size, buffer, buf_size);
-        size += buf_size;
-
-        buffer[LEXER_FILE_BUFFER_SIZE - 1] = 1;
-    }
-    lexer->source = NULL;
-    lexer->buffer_length = size;
-    lexer->buffer_position = 0;
-}
+void lexer_init_from_file_buffered(lexer_t* lexer, FILE* file);
 
 /* initialize a lexer from a file
  * @lexer the lexer to initialize
  * @file the file read
  */
-static inline void lexer_init_from_file(lexer_t* lexer, FILE* file) {
-    fseek(file, 0, SEEK_END);
-    size_t len = (size_t)ftell(file);
-    if (len == (size_t)-1) {
-        lexer_init_from_file_buffered(lexer, file);
-        return;
-    }
 
-    lexer->source = file;
-    lexer->buffer = malloc(len + 1);
-    lexer->buffer_length = len;
-    lexer->buffer_position = 0;
-
-    lexer->buffer[len] = 0;
-    printf("%s\n", lexer->buffer);
-    fseek(file, 0, SEEK_SET);
-    fread(lexer->buffer, len, 1, file);
-}
+void lexer_init_from_file(lexer_t* lexer, FILE* file);
 
 /* free all the lexer's resources, except the file
  * @lexer the lexer to clean

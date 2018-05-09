@@ -1,10 +1,14 @@
 /* Copyright Ian Shehadeh 2018 */
 
 #include <time.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/select.h>
+
+#if defined(_WIN32) || defined(_WIN64)
+#   include "io.h"
+#elif defined(unix) || defined(__unix__) || defined(__unix) || defined(__APPLE__) || defined(__MACH__)
+#   include <unistd.h>
+#else
+#   error "Your system doesn't appear to be Windows or unix-like!"
+#endif
 
 #include "simplify/parser.h"
 #include "simplify/lexer.h"
@@ -252,16 +256,8 @@ int main(int argc, char** argv) {
 
     if (err) goto error;
 
-    fd_set readfds;
-    FD_ZERO(&readfds);
-    FD_SET(STDIN_FILENO, &readfds);
 
-    struct timeval timeout;
-    timeout.tv_sec = 0;
-    timeout.tv_usec = 0;
-
-
-    if (stdin && select(1, &readfds, NULL, NULL, &timeout)) {
+    if (stdin && !isatty(STDIN_FILENO)) {
         expression_t* expr;
         expression_list_t* expr_list = malloc(sizeof(expression_list_t));
         expression_list_init(expr_list);
