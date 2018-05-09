@@ -10,6 +10,10 @@
 
 #include "simplify/errors.h"
 
+#ifndef LEXER_FILE_BUFFER_SIZE
+#   define LEXER_FILE_BUFFER_SIZE 1024
+#endif
+
 /* lexical analyzer
  * The lexer walks through a buffer or file, picking out tokens
  */
@@ -67,9 +71,37 @@ static inline void lexer_init_from_string(lexer_t* lexer, char* buffer) {
  * @lexer the lexer to initialize
  * @file the file read
  */
+static inline void lexer_init_from_file_buffered(lexer_t* lexer, FILE* file) {
+    lexer->buffer = malloc(LEXER_FILE_BUFFER_SIZE);
+    char buffer[LEXER_FILE_BUFFER_SIZE];
+
+    buffer[LEXER_FILE_BUFFER_SIZE - 1] = 1;
+    lexer->buffer[0] = 0;
+    size_t size = 0;
+    while (fgets(buffer, LEXER_FILE_BUFFER_SIZE, file)) {
+        size += strlen(buffer);
+
+        lexer->buffer = realloc(lexer->buffer, size + 1);
+        lexer->buffer = strcat(lexer->buffer, buffer);
+
+        buffer[LEXER_FILE_BUFFER_SIZE - 1] = 1;
+    }
+    lexer->source = NULL;
+    lexer->buffer_length = size;
+    lexer->buffer_position = 0;
+}
+
+/* initialize a lexer from a file
+ * @lexer the lexer to initialize
+ * @file the file read
+ */
 static inline void lexer_init_from_file(lexer_t* lexer, FILE* file) {
     fseek(file, 0, SEEK_END);
     size_t len = (size_t)ftell(file);
+    if (len == (size_t)-1) {
+        lexer_init_from_file_buffered(lexer, file);
+        return;
+    }
 
     lexer->source = file;
     lexer->buffer = malloc(len + 1);
@@ -77,6 +109,7 @@ static inline void lexer_init_from_file(lexer_t* lexer, FILE* file) {
     lexer->buffer_position = 0;
 
     lexer->buffer[len] = 0;
+    printf("%s\n", lexer->buffer);
     fseek(file, 0, SEEK_SET);
     fread(lexer->buffer, len, 1, file);
 }

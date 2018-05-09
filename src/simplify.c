@@ -1,6 +1,10 @@
 /* Copyright Ian Shehadeh 2018 */
 
 #include <time.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/select.h>
 
 #include "simplify/parser.h"
 #include "simplify/lexer.h"
@@ -70,12 +74,7 @@ error_t execute_file(char* fname, scope_t* scope) {
         free_fname = 1;
     }
 
-    FILE* f;
-    if (fname[0] == '-' && fname[1] == 0) {
-        f = stdin;
-    } else {
-        f = fopen(fname, "r");
-    }
+    FILE* f = fopen(fname, "r");
     if (!f)
         return ERROR_UNABLE_TO_OPEN_FILE;
 
@@ -112,6 +111,37 @@ error_t builtin_pi(scope_t* scope, expression_t** out) {
     mpfr_clear(num);
 
 
+    return ERROR_NO_ERROR;
+}
+
+error_t simplify_and_print(scope_t* scope, expression_t* expr, char* isolate_target, int print) {
+    error_t      err;
+
+    err = expression_evaluate(expr, scope);
+    if (err) return err;
+
+    err = expression_simplify(expr);
+    if (err) return err;
+
+    if (isolate_target) {
+        err = expression_isolate_variable(expr, isolate_target);
+        if (!err) {
+            err = expression_evaluate(expr, scope);
+            if (err) return err;
+        }
+    }
+    if (print) {
+        if (scope->boolean == EXPRESSION_RESULT_BOOLEAN_TRUE) {
+            puts(TRUE_STRING);
+        } else if (scope->boolean == EXPRESSION_RESULT_BOOLEAN_FALSE) {
+            puts(FALSE_STRING);
+        } else {
+            expression_print(expr);
+            puts("");
+        }
+    }
+
+    scope->boolean = -1;
     return ERROR_NO_ERROR;
 }
 
@@ -221,38 +251,42 @@ int main(int argc, char** argv) {
     )
 
     if (err) goto error;
-    if (!flag_argc) goto cleanup;
+
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(STDIN_FILENO, &readfds);
+
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 0;
+
+
+    if (stdin && select(1, &readfds, NULL, NULL, &timeout)) {
+        expression_t* expr;
+        expression_list_t* expr_list = malloc(sizeof(expression_list_t));
+        expression_list_init(expr_list);
+
+        err = parse_file(stdin, expr_list);
+        if (err) goto error;
+
+        EXPRESSION_LIST_FOREACH(expr, expr_list) {
+            err = simplify_and_print(&scope, expr, isolation_target, verbosity >= 0);
+            if (err) goto error;
+        }
+
+        expression_list_free(expr_list);
+    }
+    if (err) goto error;
 
     for (int i = 0; i < flag_argc; ++i) {
         expression_t expr;
         err = parse_string(flag_argv[i], &expr);
         if (err) goto error;
 
-        err = expression_evaluate(&expr, &scope);
+        err = simplify_and_print(&scope, &expr, isolation_target, verbosity >= 0);
         if (err) goto error;
 
-        err = expression_simplify(&expr);
-        if (err) goto error;
-
-        if (isolation_target) {
-            err = expression_isolate_variable(&expr, isolation_target);
-            if (!err) {
-                err = expression_evaluate(&expr, &scope);
-                if (err) goto error;
-            }
-        }
-        if (verbosity >= 0) {
-            if (scope.boolean == EXPRESSION_RESULT_BOOLEAN_TRUE) {
-                puts(TRUE_STRING);
-            } else if (scope.boolean == EXPRESSION_RESULT_BOOLEAN_FALSE) {
-                puts(FALSE_STRING);
-            } else {
-                expression_print(&expr);
-                puts("");
-            }
-        }
         expression_clean(&expr);
-        scope.boolean = -1;
     }
 
     goto cleanup;
