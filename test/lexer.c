@@ -88,7 +88,14 @@ int main() {
         lexer_init_from_string(&lexer, __string_token_pairs[i].string);
         fwrite(__string_token_pairs[i].string, strlen(__string_token_pairs[i].string), 1, f);
         fflush(f);
-        lexer_init_from_file(&flexer, f);
+        fseek(f, 0, SEEK_SET);
+
+        // switch file read methods every other string
+        if (i % 2 == 0) {
+            lexer_init_from_file(&flexer, f);
+        } else {
+            lexer_init_from_file_buffered(&flexer, f);
+        }
         fclose(f);
 
         for (int j = 0; ; ++j) {
