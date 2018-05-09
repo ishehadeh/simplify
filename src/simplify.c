@@ -1,9 +1,11 @@
 /* Copyright Ian Shehadeh 2018 */
 
 #include <time.h>
+#include <stdio.h>
 
 #if defined(_WIN32) || defined(_WIN64)
-#   include "io.h"
+#   include <io.h>
+#   define STDIN_FILENO (_fileno(stdin))
 #elif defined(unix) || defined(__unix__) || defined(__unix) || defined(__APPLE__) || defined(__MACH__)
 #   include <unistd.h>
 #else
