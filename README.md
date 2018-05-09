@@ -21,32 +21,18 @@ Variables can also be assigned in an expression:
 `2`\
 `-3`
 
+For a more detailed explanation check out the [wiki](https://github.com/IanS5/simplify/wiki).
+
 ## Building
 
 Simplify depends on [GMP](https://www.gmplib.org) and [MPFR](https://www.mpfr.org)
+You can use the `get-deps.sh` script to download them, but most package managers will
+have up-to-date prebuilt versions.
 
-1. `mkdir build; cd build`
-2. `cmake ..`
-3. `cmake --build .`
-
-## Getting Started
-
-The simplify CLI takes a series of expressions, it tries to shorten each one as much as possible,
-assigns any variables or functions it can, then prints the result.
-
-To demonstrate let's do a few unit conversions.
-
-Define a series of variables, `B: 1`, `Kb: B * 1024`, `Mb: Kb * 1024` `Gb: Mb * 1024`.
-Using these variables lets try converting 20 Megabytes into bytes: this could be written as `x = 20 * Mb` or `x = 20Mb`.
-
-Let's try a more complicated expression. We have a 100Kb file, on a 120Gb disk.
-How much of the disk is left in Megabytes? `x = (120Gb - 100Kib) / Mb`
-
-assuming your in the build directory created in __Building__, the command to execute
-this may look a bit like `./simplify 'B: 1' 'Kb: B * 1024' 'Mb: Kb * 1024' 'Gb: Mb * 1024' 'x = (120Gb - 100Kb) / Mb'`
-
-For more information on the CLI see [simplify.1.md](docs/simplify.1.md).
-For more information on the expression syntax see [simplify.7.md](docs/simplify.7.md)
+1. `./get-deps.sh` _[optional]_
+2. `mkdir build; cd build`
+3. `cmake ..`
+4. `cmake --build .`
 
 ## Testing
 
