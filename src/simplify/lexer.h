@@ -79,10 +79,11 @@ static inline void lexer_init_from_file_buffered(lexer_t* lexer, FILE* file) {
     lexer->buffer[0] = 0;
     size_t size = 0;
     while (fgets(buffer, LEXER_FILE_BUFFER_SIZE, file)) {
-        size += strlen(buffer);
+        size_t buf_size = strlen(buffer);
 
-        lexer->buffer = realloc(lexer->buffer, size + 1);
-        lexer->buffer = strcat(lexer->buffer, buffer);
+        lexer->buffer = realloc(lexer->buffer, size + buf_size + 1);
+        lexer->buffer = strncpy(lexer->buffer + size, buffer, buf_size);
+        size += buf_size;
 
         buffer[LEXER_FILE_BUFFER_SIZE - 1] = 1;
     }
