@@ -16,20 +16,6 @@
  */
 int expression_has_variable_or_function(expression_t* expr, variable_t var);
 
-/* get the name of the first variable that appears in an expression
- *
- * @expr the expression to search
- * @return returns the variable's name, or NULL if it was not found
- */ 
-variable_t expression_find_variable(expression_t* expr);
-
-/* get the name of the first function that appears in an expression
- *
- * @expr the expression to search
- * @return returns the function's name, or NULL if it was not found
- */ 
-variable_t expression_find_function(expression_t* expr);
-
 /* swap an operator expression's left and right branch
  * 
  * @expr _expr->type must be EXPRESSION_TYPE_OPERATOR_ expression to swap
