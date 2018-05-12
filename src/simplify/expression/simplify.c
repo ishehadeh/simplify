@@ -18,6 +18,7 @@ operator_t _operator_collapsed_equivelent(operator_t op) {
     return 0;
 }
 
+// TODO(IanS5): solve when the far left operator has a higher precedence (e.g. 3 * x * x * x * 10)
 error_t _expression_collapse_variables_recursive(expression_t* expr) {
     switch (expr->type) {
         case EXPRESSION_TYPE_NUMBER:
