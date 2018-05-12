@@ -11,6 +11,8 @@
 #define OP_EVALUATE         1
 #define OP_ISOLATE_X        2
 #define OP_COMPLEX_SIMPLIFY 4
+#define OP_BOOLEAN_TRUE     8
+#define OP_BOOLEAN_FALSE    16
 
 DEFINE_MPFR_FUNCTION(cos)
 DEFINE_MPFR_CONST(pi)
@@ -30,8 +32,20 @@ int main() {
                 '*',
                 expression_new_variable("x"))
         },
-        { "4 \\ 2 = 5", OP_EVALUATE,
+        { "4 \\ 2 = 5", OP_EVALUATE | OP_BOOLEAN_FALSE,
             expression_new_number_d(5)
+        },
+        { "4 < 10", OP_EVALUATE | OP_BOOLEAN_TRUE,
+            expression_new_number_d(10)
+        },
+        { "9 > 51", OP_EVALUATE | OP_BOOLEAN_FALSE,
+            expression_new_number_d(51)
+        },
+        { "9 > 2", OP_EVALUATE | OP_BOOLEAN_TRUE,
+            expression_new_number_d(2)
+        },
+        { "9 = 9", OP_EVALUATE | OP_BOOLEAN_TRUE,
+            expression_new_number_d(9)
         },
         { "x ^ 3 * 5(6 + 0 \\ 1)", OP_EVALUATE,
             expression_new_operator(
@@ -101,6 +115,14 @@ int main() {
             err = expression_evaluate(&expr, &scope);
             if (err)
                 FATAL("failed to evaluate (pass 2) \"%s\": %s", __string_expr_pairs[i].string, error_string(err));
+        }
+        
+        if (__string_expr_pairs[i].ops & OP_BOOLEAN_FALSE && scope.boolean != EXPRESSION_RESULT_BOOLEAN_FALSE) {
+                FATAL("failed to evaluate, expression was not false \"%s\"", __string_expr_pairs[i].string);
+        }
+
+        if (__string_expr_pairs[i].ops & OP_BOOLEAN_TRUE && scope.boolean != EXPRESSION_RESULT_BOOLEAN_TRUE) {
+                FATAL("failed to evaluate, expression was not true \"%s\"", __string_expr_pairs[i].string);
         }
 
         expression_assert_eq(&expr, __string_expr_pairs[i].expr);
