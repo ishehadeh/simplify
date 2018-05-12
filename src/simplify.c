@@ -5,11 +5,14 @@
 
 #if defined(_WIN32) || defined(_WIN64)
 #   include <io.h>
-#   define STDIN_FILENO (_fileno(stdin))
 #elif defined(unix) || defined(__unix__) || defined(__unix) || defined(__APPLE__) || defined(__MACH__)
 #   include <unistd.h>
 #else
 #   error "Your system doesn't appear to be Windows or unix-like!"
+#endif
+
+#ifndef STDIN_FILENO
+#   define STDIN_FILENO 0
 #endif
 
 #include "simplify/parser.h"
