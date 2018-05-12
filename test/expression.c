@@ -149,6 +149,27 @@ int main() {
                 '=',
                 expression_new_number_d(-10))
         },
+        {"x * x * 3", OP_EVALUATE | OP_COMPLEX_SIMPLIFY,
+            expression_new_operator(
+                expression_new_operator(
+                    expression_new_variable("x"),
+                    '^',
+                    expression_new_number_d(2)),
+                '*',
+                expression_new_number_d(3))
+        },
+        {"3 + x * x * x * 3", OP_EVALUATE | OP_COMPLEX_SIMPLIFY,
+            expression_new_operator(
+                expression_new_number_d(3),
+                '+',
+                expression_new_operator(
+                    expression_new_operator(
+                        expression_new_variable("x"),
+                        '^',
+                        expression_new_number_d(3)),
+                    '*',
+                    expression_new_number_d(3)))
+        },
     };
 
 
