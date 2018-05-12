@@ -89,6 +89,12 @@ int main() {
         {"5 / x : 2 * 10", OP_EVALUATE,
             expression_new_number_d(0.25)
         },
+        {"+(-5 * 2)", OP_EVALUATE,
+            expression_new_number_d(-10)
+        },
+       {"-(3 ^ 4)", OP_EVALUATE,
+            expression_new_number_d(-81)
+        },
     };
 
 
