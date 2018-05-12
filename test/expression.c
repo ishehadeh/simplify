@@ -76,7 +76,19 @@ int main() {
         },
         {"cos(pi2)", OP_EVALUATE,
             expression_new_number_si(1),
-        }
+        },
+        {"f(x, y): 10x^y", OP_EVALUATE,
+            expression_new_operator(
+                expression_new_number_d(10),
+                '*',
+                expression_new_operator(
+                    expression_new_variable("x"),
+                    '^',
+                    expression_new_variable("y")))
+        },
+        {"5 / x : 2 * 10", OP_EVALUATE,
+            expression_new_number_d(0.25)
+        },
     };
 
 
