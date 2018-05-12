@@ -92,8 +92,62 @@ int main() {
         {"+(-5 * 2)", OP_EVALUATE,
             expression_new_number_d(-10)
         },
-       {"-(3 ^ 4)", OP_EVALUATE,
+        {"-(3 ^ 4)", OP_EVALUATE,
             expression_new_number_d(-81)
+        },
+        {"-x = 4", OP_EVALUATE | OP_ISOLATE_X,
+            expression_new_operator(
+                expression_new_variable("x"),
+                '=',
+                expression_new_number_d(-4))
+        },
+        {"99 = -x * 2", OP_EVALUATE | OP_ISOLATE_X,
+            expression_new_operator(
+                expression_new_variable("x"),
+                '=',
+                expression_new_number_d(-49.5))
+        },
+        {"99 = x / 2", OP_EVALUATE | OP_ISOLATE_X,
+            expression_new_operator(
+                expression_new_variable("x"),
+                '=',
+                expression_new_number_d(198))
+        },
+        {"-8 = 2 * x ^ 2", OP_EVALUATE | OP_ISOLATE_X,
+            expression_new_operator(
+                expression_new_variable("x"),
+                '=',
+                expression_new_number_d(-2))
+        },
+        {"11 = x \\ 2", OP_EVALUATE | OP_ISOLATE_X,
+            expression_new_operator(
+                expression_new_variable("x"),
+                '=',
+                expression_new_number_d(121))
+        },
+        {"0 = x - 2", OP_EVALUATE | OP_ISOLATE_X,
+            expression_new_operator(
+                expression_new_variable("x"),
+                '=',
+                expression_new_number_d(2))
+        },
+        {"-8 = +x + 2", OP_EVALUATE | OP_ISOLATE_X,
+            expression_new_operator(
+                expression_new_variable("x"),
+                '=',
+                expression_new_number_d(-10))
+        },
+        {"-8 = x(y) + 2", OP_EVALUATE | OP_ISOLATE_X,
+            expression_new_operator(
+                expression_new_function("x", 1, expression_new_variable("y")),
+                '=',
+                expression_new_number_d(-10))
+        },
+        {"x(y, z) + 10", OP_EVALUATE | OP_ISOLATE_X,
+            expression_new_operator(
+                expression_new_function("x", 2, expression_new_variable("y"), expression_new_variable("z")),
+                '=',
+                expression_new_number_d(-10))
         },
     };
 

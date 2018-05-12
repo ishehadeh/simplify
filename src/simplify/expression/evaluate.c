@@ -216,7 +216,11 @@ error_t _expression_evaluate_recursive(expression_t* expr, scope_t* scope) {
         case EXPRESSION_TYPE_VARIABLE:
             return _expression_substitute_variable(expr, scope);
         case EXPRESSION_TYPE_FUNCTION:
-            return scope_call(scope, expr->function.name, expr->function.parameters, expr);
+        {
+            error_t err = scope_call(scope, expr->function.name, expr->function.parameters, expr);
+            if (err && err != ERROR_NONEXISTANT_KEY) return err;
+            return ERROR_NO_ERROR;
+        }
         case EXPRESSION_TYPE_PREFIX:
             return _expression_apply_prefix(expr, scope);
         case EXPRESSION_TYPE_OPERATOR:

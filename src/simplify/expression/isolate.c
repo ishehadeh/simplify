@@ -85,6 +85,8 @@ error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t*
                 new_target->prefix.right = *target;
                 switch (EXPRESSION_OPERATOR(expr)) {
                     case '+':
+                        new_target->prefix.prefix = '+';
+                        break;
                     case '-':
                         new_target->prefix.prefix = '-';
                         break;
@@ -136,7 +138,7 @@ error_t expression_isolate_variable(expression_t* expr, variable_t var) {
     if (err) return err;
 
     /* make sure the variable is always on the left */
-    if (expr->operator.right->type == EXPRESSION_TYPE_VARIABLE) {
+    if (EXPRESSION_IS_VARIABLE(expr->operator.right) || EXPRESSION_IS_FUNCTION(expr->operator.right)) {
         expression_t* right = expr->operator.right;
         expr->operator.right = expr->operator.left;
         expr->operator.left = right;
