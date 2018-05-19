@@ -1,5 +1,7 @@
 /* Copyright Ian Shehadeh 2018 */
 
+#include <stdbool.h>
+
 #include "simplify/expression/isolate.h"
 #include "simplify/expression/expression.h"
 
@@ -30,6 +32,18 @@ void _expression_invert_operand(expression_t* expr) {
     }
 }
 
+bool _expression_operator_is_reversible(expression_t* expr) {
+    switch (expr->operator.infix) {
+        case '-':
+        case '/':
+        case '^':
+        case '\\':
+            return false;
+        default:
+            return true;
+    }
+}
+
 error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t** target, variable_t var) {
     switch (expr->type) {
         case EXPRESSION_TYPE_NUMBER:
@@ -57,8 +71,14 @@ error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t*
                 new_target->operator.left  = *target;
                 _expression_invert_operand(new_target);
             } else if (expression_has_variable_or_function(expr->operator.right, var)) {
-                new_target->operator.left = expr->operator.left;
-                new_target->operator.right = *target;
+                if (_expression_operator_is_reversible(expr)) {
+                    new_target->operator.right = expr->operator.left;
+                    new_target->operator.left = *target;
+                    _expression_invert_operand(new_target);
+                } else {
+                    new_target->operator.left = expr->operator.left;
+                    new_target->operator.right = *target;
+                }
             } else {
                 free(new_target);
                 return ERROR_VARIABLE_NOT_PRESENT;

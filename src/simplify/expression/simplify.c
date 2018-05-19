@@ -1,7 +1,6 @@
 /* Copyright Ian Shehadeh 2018 */
 
 #include "simplify/expression/simplify.h"
-#include "simplify/expression/stringify.h"
 
 /* get the operator that would could be used to collapse a chain of `op` operators
  *

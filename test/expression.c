@@ -197,6 +197,12 @@ int main() {
                 '*',
                 expression_new_number_d(3))
         },
+        {"5 + x", OP_EVALUATE | OP_ISOLATE_X,
+            expression_new_operator(
+                expression_new_variable("x"),
+                '=',
+                expression_new_number_si(-5))
+        },
     };
 
 
