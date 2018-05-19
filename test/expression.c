@@ -170,6 +170,33 @@ int main() {
                     '*',
                     expression_new_number_d(3)))
         },
+        {"3 * x * x * x * 3", OP_EVALUATE | OP_COMPLEX_SIMPLIFY,
+            expression_new_operator(
+                expression_new_operator(
+                    expression_new_number_d(3),
+                    '*',
+                    expression_new_operator(
+                        expression_new_variable("x"),
+                        '^',
+                        expression_new_number_d(3))),
+                '*',
+                expression_new_number_d(3))
+        },
+        {"100 ^ x * x * x * 3", OP_EVALUATE | OP_COMPLEX_SIMPLIFY,
+            expression_new_operator(
+                expression_new_operator(
+                    expression_new_operator(
+                        expression_new_number_d(100),
+                        '^',
+                        expression_new_variable("x")),
+                    '*',
+                    expression_new_operator(
+                        expression_new_variable("x"),
+                        '^',
+                        expression_new_number_d(2))),
+                '*',
+                expression_new_number_d(3))
+        },
     };
 
 
@@ -178,7 +205,7 @@ int main() {
         expression_t expr;
         scope_t      scope;
 
-        printf("starting test #%d...\n", i + 1);
+        printf("starting test #%d...", i + 1);
         err = parse_string(__string_expr_pairs[i].string, &expr);
         if (err)
             FATAL("failed to parse string \"%s\": %s", __string_expr_pairs[i].string, error_string(err));
@@ -221,5 +248,6 @@ int main() {
         expression_assert_eq(&expr, __string_expr_pairs[i].expr);
         scope_clean(&scope);
         expression_clean(&expr);
+        printf("done\n");
     }
 }
