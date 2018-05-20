@@ -178,7 +178,7 @@ error_t _parser_parse_identifier(expression_parser_t* parser, expression_t* expr
 
     return err;
 }
-
+#include "simplify/expression/stringify.h"
 
 /* _parse_expression_precedence_recursive parses an expression recursively.
  * 

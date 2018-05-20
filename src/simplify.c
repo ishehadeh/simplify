@@ -178,7 +178,6 @@ DEFINE_MPFR_FUNCTION_NRND(floor)
 DEFINE_MPFR_FUNCTION_NRND(round)
 DEFINE_MPFR_FUNCTION_NRND(roundeven)
 DEFINE_MPFR_FUNCTION_NRND(trunc)
-DEFINE_MPFR_FUNCTION(log)
 DEFINE_MPFR_FUNCTION(frac)
 
 DEFINE_MPFR_FUNCTION2(min)
@@ -202,6 +201,38 @@ error_t builtin_func_random(scope_t* scope, expression_t** out) {
 
     return ERROR_NO_ERROR;
 }
+
+
+error_t builtin_func_natural_log(scope_t* scope, expression_t** out) {
+    expression_t input;
+    scope_get_value(scope, "__arg0", &input);
+    if (!EXPRESSION_IS_NUMBER(&input)) {
+        return ERROR_NO_ERROR;
+        expression_clean(&input);
+    }
+    mpfr_t num;
+    mpfr_init(num);
+    mpfr_log(num, input.number.value, MPFR_RNDN);
+    *out = expression_new_number(num);
+    mpfr_clear(num);
+    expression_clean(&input);
+    return ERROR_NO_ERROR;
+}
+
+error_t builtin_func_log(scope_t* scope, expression_t** out) {
+    error_t err;
+    expression_t* b = malloc(sizeof(expression_t));
+    expression_t* y = malloc(sizeof(expression_t));
+
+    scope_get_value(scope, "__arg0", b);
+    scope_get_value(scope, "__arg1", y);
+
+    err = expression_do_logarithm(b, y, out);
+    if (err) return err;
+
+    return expression_evaluate(*out, scope);
+}
+
 
 int main(int argc, char** argv) {
     int verbosity = 0;
@@ -236,9 +267,10 @@ int main(int argc, char** argv) {
     EXPORT_BUILTIN_FUNCTION(&scope, round);
     EXPORT_BUILTIN_FUNCTION(&scope, roundeven);
     EXPORT_BUILTIN_FUNCTION(&scope, trunc);
-    EXPORT_BUILTIN_FUNCTION(&scope, log);
     EXPORT_BUILTIN_FUNCTION(&scope, frac);
     EXPORT_BUILTIN_FUNCTION(&scope, random);
+    EXPORT_BUILTIN_FUNCTION(&scope, natural_log);
+    EXPORT_BUILTIN_FUNCTION2(&scope, log);
 
     EXPORT_BUILTIN_FUNCTION2(&scope, min);
     EXPORT_BUILTIN_FUNCTION2(&scope, max);

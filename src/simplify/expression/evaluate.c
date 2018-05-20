@@ -172,6 +172,7 @@ error_t _expression_apply_operator(expression_t* expr, scope_t* scope) {
     expression_free(expr->operator.right);
 
     expression_init_number(expr, result);
+    mpfr_clear(result);
 
     return ERROR_NO_ERROR;
 }

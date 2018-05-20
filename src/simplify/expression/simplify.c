@@ -1,6 +1,7 @@
 /* Copyright Ian Shehadeh 2018 */
 
 #include "simplify/expression/simplify.h"
+#include "simplify/expression/isolate.h"
 
 /* get the operator that would could be used to collapse a chain of `op` operators
  *
@@ -118,6 +119,25 @@ error_t _expression_collapse_variables_recursive(expression_t* expr) {
         }
     }
     return ERROR_NO_ERROR;
+}
+
+error_t expression_do_logarithm(expression_t* b, expression_t* y, expression_t** out) {
+    /* expression_isolate_variable can solve logarithms,
+        so this function will set that up expand to b^x = y, then call
+        expression_isolate_variable to solve it
+    */
+    error_t err;
+    *out = expression_new_operator(
+        expression_new_operator(b, '^', expression_new_variable("x") ),
+        '=',
+        y);
+
+    err = expression_isolate_variable(*out, "x");
+    if (err) return err;
+
+    expression_collapse_left(*out);
+
+    return err;
 }
 
 error_t expression_simplify(expression_t* expr) {
