@@ -203,7 +203,7 @@ error_t builtin_func_random(scope_t* scope, expression_t** out) {
 }
 
 
-error_t builtin_func_natural_log(scope_t* scope, expression_t** out) {
+error_t builtin_func_ln(scope_t* scope, expression_t** out) {
     expression_t input;
     scope_get_value(scope, "__arg0", &input);
     if (!EXPRESSION_IS_NUMBER(&input)) {
@@ -250,6 +250,9 @@ error_t builtin_const_e(scope_t* _, expression_t** out) {
         mpfr_ui_div(x, 1, n, MPFR_RNDN);
         mpfr_add_ui(x, x, 1, MPFR_RNDN);
         mpfr_pow(_g_eulers_constant, x, n, MPFR_RNDN);
+
+        mpfr_clear(n);
+        mpfr_clear(x);
     }
 
     *out = expression_new_number(_g_eulers_constant);
@@ -292,9 +295,9 @@ int main(int argc, char** argv) {
     EXPORT_BUILTIN_FUNCTION(&scope, trunc);
     EXPORT_BUILTIN_FUNCTION(&scope, frac);
     EXPORT_BUILTIN_FUNCTION(&scope, random);
-    EXPORT_BUILTIN_FUNCTION(&scope, natural_log);
-    EXPORT_BUILTIN_FUNCTION2(&scope, log);
+    EXPORT_BUILTIN_FUNCTION(&scope, ln);
 
+    EXPORT_BUILTIN_FUNCTION2(&scope, log);
     EXPORT_BUILTIN_FUNCTION2(&scope, min);
     EXPORT_BUILTIN_FUNCTION2(&scope, max);
 
