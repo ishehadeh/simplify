@@ -17,6 +17,43 @@
 DEFINE_MPFR_FUNCTION(cos)
 DEFINE_MPFR_CONST(pi)
 
+
+error_t builtin_func_log(scope_t* scope, expression_t** out) {
+    error_t err;
+    expression_t* b = malloc(sizeof(expression_t));
+    expression_t* y = malloc(sizeof(expression_t));
+
+    scope_get_value(scope, "__arg0", b);
+    scope_get_value(scope, "__arg1", y);
+
+    err = expression_do_logarithm(b, y, out);
+    if (err) return err;
+
+    return expression_evaluate(*out, scope);
+}
+
+error_t builtin_const_e(scope_t* _, expression_t** out) {
+    (void)_;
+
+    *out = expression_new_number_si(0);
+    mpfr_t n;
+    mpfr_t x;
+    mpfr_init(n);
+    mpfr_init(x);
+    mpfr_init((*out)->number.value);
+
+    mpfr_set_ui(n, 9999999999UL, MPFR_RNDN);
+    mpfr_ui_div(x, 1, n, MPFR_RNDN);
+    mpfr_add_ui(x, x, 1, MPFR_RNDN);
+    mpfr_pow((*out)->number.value, x, n, MPFR_RNDN);
+
+    mpfr_clear(n);
+    mpfr_clear(x);
+
+    return ERROR_NO_ERROR;
+}
+
+
 int main() {
     struct {
         char*         string;
@@ -197,6 +234,32 @@ int main() {
                 '*',
                 expression_new_number_d(3))
         },
+        {"5 + x", OP_EVALUATE | OP_ISOLATE_X,
+            expression_new_operator(
+                expression_new_variable("x"),
+                '=',
+                expression_new_number_si(-5))
+        },
+        {"23 ^ x = 2", OP_EVALUATE | OP_ISOLATE_X,
+            expression_new_operator(
+                expression_new_variable("x"),
+                '=',
+                expression_new_number_d(0.2210647294575037169472))
+        },
+        {"2 ^ x = 10", OP_EVALUATE | OP_ISOLATE_X,
+            expression_new_operator(
+                expression_new_variable("x"),
+                '=',
+                expression_new_number_d(3.3219280948873617376193))
+        },
+        /* TODO(IanS5) this test should be corrected once better approximating is implemented
+            For now it will be just .0000007132118753361282 off */
+        {"log(2, x + 5) = 3", OP_EVALUATE | OP_ISOLATE_X,
+            expression_new_operator(
+                expression_new_variable("x"),
+                '=',
+                expression_new_number_d(3.0000007132118753361282))
+        },
     };
 
 
@@ -211,8 +274,10 @@ int main() {
             FATAL("failed to parse string \"%s\": %s", __string_expr_pairs[i].string, error_string(err));
 
         scope_init(&scope);
+        EXPORT_BUILTIN_FUNCTION2(&scope, log);
         EXPORT_BUILTIN_FUNCTION(&scope, cos);
         EXPORT_BUILTIN_CONST(&scope, pi);
+        EXPORT_BUILTIN_CONST(&scope, e);
 
 
         if (__string_expr_pairs[i].ops & OP_EVALUATE) {
@@ -236,7 +301,7 @@ int main() {
             if (err)
                 FATAL("failed to evaluate (pass 2) \"%s\": %s", __string_expr_pairs[i].string, error_string(err));
         }
-        
+
         if (__string_expr_pairs[i].ops & OP_BOOLEAN_FALSE && scope.boolean != EXPRESSION_RESULT_BOOLEAN_FALSE) {
                 FATAL("failed to evaluate, expression was not false \"%s\"", __string_expr_pairs[i].string);
         }

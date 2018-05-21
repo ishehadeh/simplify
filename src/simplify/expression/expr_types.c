@@ -348,8 +348,10 @@ error_t scope_get_value(scope_t* scope, char* name, expression_t* expr) {
         expression_t* new_expr = NULL;
         err = info->value.internal(scope, &new_expr);
         if (err) return err;
-        if (new_expr)
+        if (new_expr) {
             *expr = *new_expr;
+            free(new_expr);
+        }
     } else {
         expression_copy(info->value.expression, expr);
     }

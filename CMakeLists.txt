@@ -77,8 +77,8 @@ target_link_libraries(simplify-bin simplify)
 
 if(BUILD_TESTING)
     if (HAVE_GCOV)
-        set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -O0 -g -fprofile-arcs -ftest-coverage")
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fprofile-arcs -ftest-coverage")
+        set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -O0 -g --coverage")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
     endif()
 
     add_executable(test_rbtree     ${CMAKE_SOURCE_DIR}/test/rbtree.c)

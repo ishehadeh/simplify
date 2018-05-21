@@ -1,8 +1,12 @@
 /* Copyright Ian Shehadeh 2018 */
 
+#include <stdbool.h>
+
 #include "simplify/expression/isolate.h"
 #include "simplify/expression/expression.h"
+#include "simplify/expression/evaluate.h"
 
+error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t** target, variable_t var);
 
 void _expression_invert_operand(expression_t* expr) {
     switch (expr->operator.infix) {
@@ -28,6 +32,59 @@ void _expression_invert_operand(expression_t* expr) {
         default:
             break;
     }
+}
+
+bool _expression_operator_is_reversible(expression_t* expr) {
+    switch (expr->operator.infix) {
+        case '-':
+        case '/':
+        case '^':
+        case '\\':
+            return false;
+        default:
+            return true;
+    }
+}
+
+#include "simplify/expression/stringify.h"
+
+/* transform expr into `e^x = y`, the call _expression_isolate_variable_recursive on `y`
+ * @y the y value of the logarithm
+ * @expr the output expression
+ * @returns returns an error code
+ */
+error_t _expression_setup_natural_log(expression_t* y, expression_t* expr) {
+    error_t err = ERROR_NO_ERROR;
+
+    if (EXPRESSION_IS_NUMBER(y)) {
+        mpfr_t loge;
+        mpfr_init(loge);
+        mpfr_log(loge, y->number.value, MPFR_RNDF);
+        expression_init_number(expr, loge);
+        expression_clean(y);
+        mpfr_clear(loge);
+        return ERROR_NO_ERROR;
+    }
+
+#   if defined(NATURAL_LOG_BUILTIN)
+        expression_list_t* args = malloc(sizeof(expression_list_t));
+        expression_list_init(args);
+        expression_list_append(args, y);
+        expression_init_function(expr, NATURAL_LOG_BUILTIN, sizeof NATURAL_LOG_BUILTIN, args);
+#   else
+        expression_t* expr_e;
+        expr_e = expression_new_variable(E_BUILTIN);
+        expression_init_operator(expr, y, '=',
+            expression_new_operator(
+                expr_e,
+                '^',
+                expression_new_variable("x")));
+
+        err = _expression_isolate_variable_recursive(expr->operator.right, &expr->operator.left, "x");
+        if (err) return err;
+        expression_collapse_right(expr);
+#   endif
+    return err;
 }
 
 error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t** target, variable_t var) {
@@ -57,8 +114,38 @@ error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t*
                 new_target->operator.left  = *target;
                 _expression_invert_operand(new_target);
             } else if (expression_has_variable_or_function(expr->operator.right, var)) {
-                new_target->operator.left = expr->operator.left;
-                new_target->operator.right = *target;
+                if (expr->operator.infix == '^') {
+                    // Looks Logarithm-ish so handle it as a special case
+                    expression_t* y = expr->operator.right;
+                    expression_t* b = expr->operator.left;
+                    expression_t* x = *target;
+
+                    if ((EXPRESSION_IS_VARIABLE(b) && !strcmp(b->variable.value, E_BUILTIN))) {
+                        *expr = *y;
+                        *target = expression_new_operator(expression_new_variable(E_BUILTIN), '^', *target);
+                        _expression_isolate_variable_recursive(expr, target, var);
+                        return ERROR_NO_ERROR;
+                    }
+                    error_t err = _expression_setup_natural_log(x, new_target);
+                    if (err) return err;
+
+                    expression_t oldy = *y;
+                    err = _expression_setup_natural_log(b, expr->operator.right);
+                    if (err) return err;
+
+                    *expr->operator.left = oldy;
+                    expr->operator.infix = '*';
+                    *target = new_target;
+                    _expression_isolate_variable_recursive(expr, target, var);
+                    break;
+                } else if (_expression_operator_is_reversible(expr)) {
+                    new_target->operator.right = expr->operator.left;
+                    new_target->operator.left = *target;
+                    _expression_invert_operand(new_target);
+                } else {
+                    new_target->operator.left = expr->operator.left;
+                    new_target->operator.right = *target;
+                }
             } else {
                 free(new_target);
                 return ERROR_VARIABLE_NOT_PRESENT;
