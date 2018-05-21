@@ -6,10 +6,9 @@
 #include "simplify/expression/expression.h"
 
 // Expressions like `e ^ X = Y` may be replaced by the NUTURAL_LOG_BUILTIN(Y)
-// #define NATURAL_LOG_BUILTIN "natural_log"
+// #define NATURAL_LOG_BUILTIN "ln"
 
-// When `e` needs to be used in an expression, if defined the EULER_BUILTIN will be used instead
-// #define EULER_BUILTIN "e"
+#define E_BUILTIN "e"
 
 /* isolate a variable on one side of an comparison operator.
  * If no comparison operator is present, append `= 0`

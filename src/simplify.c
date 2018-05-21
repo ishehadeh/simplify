@@ -36,6 +36,8 @@
 #define TRUE_STRING  "true"
 #define FALSE_STRING "false"
 
+static gmp_randstate_t _g_rand_state;
+static mpfr_ptr        _g_eulers_constant;
 
 void usage(char* arg0) {
     puts(INFO);
@@ -187,8 +189,6 @@ DEFINE_MPFR_CONST(pi)
 DEFINE_MPFR_CONST(euler)
 DEFINE_MPFR_CONST(catalan)
 
-static gmp_randstate_t _g_rand_state;
-
 error_t builtin_func_random(scope_t* scope, expression_t** out) {
     (void)scope;
 
@@ -234,6 +234,29 @@ error_t builtin_func_log(scope_t* scope, expression_t** out) {
 }
 
 
+error_t builtin_const_e(scope_t* _, expression_t** out) {
+    (void)_;
+
+    if (!_g_eulers_constant) {
+        // Approximate euler's constant and then cache it
+        _g_eulers_constant = malloc(sizeof(mpfr_t));
+        mpfr_t n;
+        mpfr_t x;
+        mpfr_init(n);
+        mpfr_init(x);
+        mpfr_init(_g_eulers_constant);
+
+        mpfr_set_ui(n, 9999999999UL, MPFR_RNDN);
+        mpfr_ui_div(x, 1, n, MPFR_RNDN);
+        mpfr_add_ui(x, x, 1, MPFR_RNDN);
+        mpfr_pow(_g_eulers_constant, x, n, MPFR_RNDN);
+    }
+
+    *out = expression_new_number(_g_eulers_constant);
+
+    return ERROR_NO_ERROR;
+}
+
 int main(int argc, char** argv) {
     int verbosity = 0;
     variable_t isolation_target = NULL;
@@ -278,8 +301,7 @@ int main(int argc, char** argv) {
     EXPORT_BUILTIN_CONST(&scope, pi);
     EXPORT_BUILTIN_CONST(&scope, euler);
     EXPORT_BUILTIN_CONST(&scope, catalan);
-
-    ALIAS(&scope, e, euler);
+    EXPORT_BUILTIN_CONST(&scope, e);
 
     error_t err = ERROR_NO_ERROR;
     PARSE_FLAGS(
@@ -331,6 +353,9 @@ cleanup:
     scope_clean(&scope);
     mpfr_free_cache();
     gmp_randclear(_g_rand_state);
-
+    if (_g_eulers_constant) {
+        mpfr_clear(_g_eulers_constant);
+        free(_g_eulers_constant);
+    }
     return 0;
 }

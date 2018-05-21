@@ -73,14 +73,7 @@ error_t _expression_setup_natural_log(expression_t* y, expression_t* expr) {
         expression_init_function(expr, NATURAL_LOG_BUILTIN, sizeof NATURAL_LOG_BUILTIN, args);
 #   else
         expression_t* expr_e;
-#       if defined(EULER_BUILTIN)
-            expr_e = expression_new_variable(EULER_BUILTIN);
-#       else
-            mpfr_t e;
-            mpfr_init(e);
-            mpfr_const_euler(e, MPFR_RNDNA);
-            expr_e = expression_new_number(e);
-#       endif
+        expr_e = expression_new_variable(E_BUILTIN);
         expression_init_operator(expr, y, '=',
             expression_new_operator(
                 expr_e,
@@ -127,28 +120,12 @@ error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t*
                     expression_t* b = expr->operator.left;
                     expression_t* x = *target;
 
-#                   if defined(EULER_BUILTIN)
-                        if (EXPRESSION_IS_VARIABLE(b) && !strcmp(b->variable.value, EULER_BUILTIN)) {
-                            *expr = *y;
-                            *target = expression_new_operator(expression_new_variable(EULER_BUILTIN), '^', *target);
-                            _expression_isolate_variable_recursive(expr, target, var);
-                            return ERROR_NO_ERROR;
-                        }
-#                   else
-                        if (EXPRESSION_IS_NUMBER(b)) {
-                            mpfr_t e;
-                            mpfr_init(e);
-                            mpfr_const_euler(e, MPFR_RNDNA);
-                            if (mpfr_eq(e, b->number.value, MPFR_RNDN)) {
-                                *expr = *y;
-                                *target = expression_new_operator(expression_new_number(e), '^', *target);
-                                _expression_isolate_variable_recursive(expr, target, var);
-                                mpfr_clear(e);
-                                return ERROR_NO_ERROR;
-                            }
-                            mpfr_clear(e);
-                        }
-#                   endif
+                    if ((EXPRESSION_IS_VARIABLE(b) && !strcmp(b->variable.value, E_BUILTIN))) {
+                        *expr = *y;
+                        *target = expression_new_operator(expression_new_variable(E_BUILTIN), '^', *target);
+                        _expression_isolate_variable_recursive(expr, target, var);
+                        return ERROR_NO_ERROR;
+                    }
                     error_t err = _expression_setup_natural_log(x, new_target);
                     if (err) return err;
 

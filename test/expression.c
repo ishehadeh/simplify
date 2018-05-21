@@ -203,6 +203,18 @@ int main() {
                 '=',
                 expression_new_number_si(-5))
         },
+        {"23 ^ x = 2", OP_EVALUATE | OP_ISOLATE_X,
+            expression_new_operator(
+                expression_new_variable("x"),
+                '=',
+                expression_new_number_d(0.2210647294575037169472))
+        },
+        {"2 ^ x = 10", OP_EVALUATE | OP_ISOLATE_X,
+            expression_new_operator(
+                expression_new_variable("x"),
+                '=',
+                expression_new_number_d(3.3219280948873617376193))
+        },
     };
 
 
