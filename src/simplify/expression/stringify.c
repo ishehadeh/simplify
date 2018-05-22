@@ -3,105 +3,140 @@
 #include "simplify/expression/stringify.h"
 
 
-error_t __round_string(char* str, int len) {
-    // round direction is `1` to round up or `-1` to round down
-    int round_direction = str[len - 1] >= '5' ? 1 : -1;
-    int new_len = len;
+void _round_string(stringifier_t* st, size_t start, size_t numstart) {
+    /* round direction is `1` to round up or `-1` to round down */
+    int round_direction = st->buffer[start - 1] >= '5' ? 1 : -1;
 
-    // round the first set of digits
-    int i;
-    for (i = len - 2; i > -1 && isdigit(str[i]); --i) {
-        if (round_direction < 0) {
-            if (str[i] + round_direction <= '0' ||  str[i] + round_direction >= '9') {
-                // if the current character can't safely be rounded than zero it and continue
-                str[i] = '0';
-            } else {
-                // apply the the round direction, the exit.
-                str[i] += round_direction;
-                return ERROR_NO_ERROR;
-            }
+    /* round the digits before the decimal point */
+    size_t i;
+    for (i = start; i > numstart && isdigit(st->buffer[i]); --i) {
+        if (st->buffer[i] + round_direction <= '0' ||  st->buffer[i] + round_direction >= '9') {
+            /* if the current character can't safely be rounded than zero it and continue */
+            st->buffer[i] = 0;
+        } else {
+            /* apply the the round direction, the exit. */
+            st->buffer[i] += round_direction;
+            ++i;
+            goto finished;
         }
     }
 
-    // if the earlier loop ran out of room, than the string can just be set to zero or one
-    if (i == 0) {
+    /* if the earlier loop ran out of room
+        than that means we need to move past the decimal point */
+    if (i == numstart && st->buffer[i] == '.') {
         if (round_direction > 0)
-            str[i] = '1';
+            st->buffer[i] = '1';
         else
-            str[i] = '0';
-        str[i + 1] = 0;
-        return ERROR_NO_ERROR;
-    } else if (str[i] == '.') {
-        // truncate the string at the decimal if possible
-        str[i] = 0;
-        new_len = len - i;
-        ++i;
+            st->buffer[i] = '0';
+        goto finished;
+    } else if (st->buffer[i] == '.') {
+        --i;
     } else {
-        return ERROR_INVALID_NUMBER;
+        goto finished;
     }
 
-    // if there's more keep trying to round the second half of the number
-    for (; i > -1 && isdigit(str[i]); --i) {
-        if (round_direction < 0) {
-            if (str[i] + round_direction <= '0' ||  str[i] + round_direction >= '9') {
-                str[i] = '0';
-            } else {
-                str[i] += round_direction;
-                return ERROR_NO_ERROR;
-            }
+    size_t d = i;
+    /* try to round everything before the decimal */
+    for (; d > numstart && isdigit(st->buffer[d]); --d) {
+        if (st->buffer[d] + round_direction <= '0' ||  st->buffer[d] + round_direction >= '9') {
+            st->buffer[d] = '0';
+        } else {
+            st->buffer[d] += round_direction;
+            ++i;
+            goto finished;
         }
     }
 
-    if (i == 0) {
-        // push back the string, there should be space, because the decimal point can be ignored
-        memmove(str + 1, str, new_len);
+    if (i == numstart) {
+        /* push back the string to make room for a new digit */
+        memmove(st->buffer + d + 1, st->buffer + d, start - d);
         if (round_direction > 0)
-            str[i] = '1';
+            st->buffer[d] = '1';
         else
-            str[i] = '0';
-        str[i + 1] = 0;
-    } else {
-        return ERROR_INVALID_NUMBER;
+            st->buffer[d] = '0';
     }
 
-    return ERROR_NO_ERROR;
+finished:
+    st->index = i;
+    return;
 }
 
 /* try to trim a floating point number that was convert to a string, to improve accuracy
- * @str the string to edit
+ * @st the stringifier that the number was written to, assume that the number was the last thing written to the stringifier
  * @tolerance how easily the string should be rounded off. (five is probably a good default for this parameter)
- * @length the string's length
- * @return an error code
+ * @length the numbers's length
  */
-error_t approximate_number(char* str, int tolerance, size_t length) {
-    int     decimal_index;
-    error_t err;
+void approximate_number(stringifier_t* st, size_t length) {
+    size_t decimal_index = st->index - 1;
 
-    // Find the decimal point
-    for (decimal_index = 0; str[decimal_index] != '.'; ++decimal_index) {
-        // if there is no decimal point then exit
-        if (!str[decimal_index]) return ERROR_NO_ERROR;
+    for (; st->buffer[decimal_index] != '.'; --decimal_index) {
+        /* if there is no decimal point then exit, there is nothing left to do */
+        if (decimal_index < st->index - length) return;
     }
 
-    int  chain = 0;
+    size_t chain = 0;
     char last = 0;
-    for (size_t i = decimal_index + 1; isdigit(str[i]) || str[i] == 0; ++i) {
-        if (str[i] == last) {
+
+    for (size_t i = decimal_index + 1; i <= st->index && isdigit(st->buffer[i]); ++i) {
+        if (st->buffer[i] == last) {
             ++chain;
         } else {
-            if (chain >= tolerance && (last == '9' || last == '0')) {
-                err = __round_string(str, i);
-                if (err) return err;
+            if (chain >= st->approximate_tolerance) {
+                if (last == '9') {
+                    _round_string(st, i - 2, st->index - length);
+                } else if (last == '0') {
+                    st->index = i - chain - 2;
+                    return;
+                }
             }
-            last = str[i];
-        }
-
-        if (i >= length) {
-            break;
+            last = st->buffer[i];
+            chain = 0;
         }
     }
 
-    return ERROR_NO_ERROR;
+    if (chain >= st->approximate_tolerance) {
+        if (last == '9') {
+            _round_string(st, st->index - 2, st->index - length);
+        } else if (last == '0') {
+            st->index = st->index - chain - 2;
+        }
+    }
+    return;
+}
+
+size_t stringifier_write_variable(stringifier_t* st, expression_t* variable) {
+    assert(EXPRESSION_IS_VARIABLE(variable));
+    return stringifier_write(st, variable->variable.value);
+}
+
+size_t stringifier_write_operator(stringifier_t* st, expression_t* op) {
+    assert(EXPRESSION_IS_OPERATOR(op));
+    operator_precedence_t oldprec = st->current_precedence;
+    st->current_precedence = operator_precedence(op->operator.infix);
+    size_t written = 0;
+    if (st->current_precedence < oldprec)
+        written += stringifier_write_byte(st, '(');
+
+    written += stringifier_write_expression(st, op->operator.left);
+
+    written +=stringifier_write_whitespace(st);
+    written += stringifier_write_byte(st, op->operator.infix);
+    written += stringifier_write_whitespace(st);
+
+    written += stringifier_write_expression(st, op->operator.right);
+
+    if (st->current_precedence < oldprec)
+        written += stringifier_write_byte(st, ')');
+
+    st->current_precedence = oldprec;
+    return written;
+}
+
+size_t stringifier_write_prefix(stringifier_t* st, expression_t* pre) {
+    assert(EXPRESSION_IS_PREFIX(pre));
+    size_t written = stringifier_write_byte(st, pre->prefix.prefix);
+    written += stringifier_write_expression(st, pre->prefix.right);
+    return written;
 }
 
 size_t stringifier_write_number(stringifier_t* st, expression_t* number) {
@@ -113,10 +148,10 @@ size_t stringifier_write_number(stringifier_t* st, expression_t* number) {
 
     if (!mpfr_regular_p(num)) {
         if (mpfr_nan_p(num)) {
-            return stringifier_write(st, NAN_STRING);
+            return stringifier_write(st, st->nan_string);
         } else if (mpfr_inf_p(num)) {
             return (neg ? stringifier_write_byte(st, '-') : 0)
-                + stringifier_write(st, INF_STRING);
+                + stringifier_write(st, st->inf_string);
         } else {
             assert(mpfr_zero_p(num));
             return (neg ? stringifier_write_byte(st, '-') : 0)
@@ -133,29 +168,32 @@ size_t stringifier_write_number(stringifier_t* st, expression_t* number) {
         mpfr_abs(num, num, MPFR_RNDN);
     }
     char* numstart = st->buffer + st->index;
-    size_t numlen = ceil(prec * log(2)/log(base)) + 1;
+    size_t numlen = ceil(prec * log(2)/log(base)) + 3;
 
     _STRINGIFIER_FIT(st, numlen);
     mpfr_get_str(numstart, &exponent, base, numlen, number->number.value, MPFR_RNDN);
     st->index += numlen;
+
     if (exponent > 0) {
         memmove(numstart + exponent + 1, numstart + exponent, numlen - exponent);
         numstart[exponent] = '.';
         ++st->index;
-    }
-    approximate_number(numstart, 5, numlen);
-    written += numlen;
-    return written;
-}
+    } else {
+        exponent = abs(exponent);
 
-char* stringify(expression_t* expr) {
-    stringifier_t st;
-    st.buffer = malloc(STRINGIFIER_DEFAULT_SIZE);
-    st.index = 0;
-    st.length = 0;
-    stringifier_write_expression(&st, expr);
-    stringifier_write_byte(&st, 0);
-    return st.buffer;
+        memmove(numstart + exponent + 2, numstart, numlen - exponent);
+        numstart[0] = '0';
+        numstart[1] = '.';
+        for (int i = 2; i < exponent + 2; ++i) {
+            numstart[i] = '0';
+        }
+        ++st->index;
+    }
+
+    if (st->approximate_numbers)
+        approximate_number(st, numlen);
+
+    return written + st->index - (size_t)numstart;
 }
 
 size_t stringifier_write_function(stringifier_t* st, expression_t* func) {
@@ -170,6 +208,29 @@ size_t stringifier_write_function(stringifier_t* st, expression_t* func) {
     }
     written += stringifier_write_byte(st, ')');
     return written;
+}
+
+size_t stringifier_write_expression(stringifier_t* st, expression_t* expr) {
+    switch (expr->type) {
+        case EXPRESSION_TYPE_FUNCTION:
+            return stringifier_write_function(st, expr);
+        case EXPRESSION_TYPE_PREFIX:
+            return stringifier_write_prefix(st, expr);
+        case EXPRESSION_TYPE_OPERATOR:
+            return stringifier_write_operator(st, expr);
+        case EXPRESSION_TYPE_VARIABLE:
+            return stringifier_write_variable(st, expr);
+        case EXPRESSION_TYPE_NUMBER:
+            return stringifier_write_number(st, expr);
+    }
+    return 0;
+}
+
+char* stringify(expression_t* expr) {
+    stringifier_t st = STRINGIFIER_DEFAULT();
+    stringifier_write_expression(&st, expr);
+    stringifier_write_byte(&st, 0);
+    return st.buffer;
 }
 
 error_t expression_fprint(expression_t* expr, FILE* f) {

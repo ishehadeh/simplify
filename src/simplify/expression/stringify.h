@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "simplify/expression/expression.h"
 
@@ -14,13 +15,20 @@
 #   define STRINGIFIER_DEFAULT_SIZE 256
 #endif
 
-#ifndef NAN_STRING
-#   define NAN_STRING "[Not a Number]"
-#endif
 
-#ifndef INF_STRING
-#   define INF_STRING "[Infinity]"
-#endif
+/* get a stringifier with the default, settings. Optimized for pretty-ness */
+#define STRINGIFIER_DEFAULT()                          \
+{                                                      \
+    .buffer = malloc(256),                             \
+    .length = 256,                                     \
+    .index = 0,                                        \
+    .approximate_tolerance = 5,                        \
+    .approximate_numbers = true,                       \
+    .nan_string = "NaN",                               \
+    .inf_string = "Inf",                               \
+    .whitespace = " ",                                 \
+    .current_precedence = OPERATOR_PRECEDENCE_MINIMUM  \
+}
 
 #define _STRINGIFIER_FIT(ST, X) \
     while (st->index + (X) >= st->length - 1) { \
@@ -38,13 +46,34 @@ struct stringifier {
     char* buffer;
     size_t length;
     size_t index;
+
+    size_t approximate_tolerance;
+    bool approximate_numbers;
+
+    char* nan_string;
+    char* inf_string;
+    char* whitespace;
+
+    operator_precedence_t current_precedence;
 };
 
 
+/* Write the expression `expr` as a c string
+ *
+ * The `stringify` function stringifies an expression usinging the
+ * default stringifier settings.
+ * 
+ * @expr the expression to stringify
+ * @return returns a null-terminated string. This string must be freed using `free` by the user.
+ */
 char* stringify(expression_t* expr);
-static inline size_t stringifier_write_expression(stringifier_t* st, expression_t* expr);
+
+size_t stringifier_write_expression(stringifier_t* st, expression_t* expr);
 size_t stringifier_write_function(stringifier_t* st, expression_t* func);
 size_t stringifier_write_number(stringifier_t* st, expression_t* number);
+size_t stringifier_write_variable(stringifier_t* st, expression_t* variable);
+size_t stringifier_write_operator(stringifier_t* st, expression_t* op);
+size_t stringifier_write_prefix(stringifier_t* st, expression_t* pre);
 
 /* grow the stringifier's internal buffer.
  *
@@ -98,43 +127,11 @@ static inline size_t stringifier_write(stringifier_t* st, char* str) {
     return len;
 }
 
-static inline size_t stringifier_write_variable(stringifier_t* st, expression_t* variable) {
-    assert(EXPRESSION_IS_VARIABLE(variable));
-    return stringifier_write(st, variable->variable.value);
-}
-
-static inline size_t stringifier_write_operator(stringifier_t* st, expression_t* op) {
-    assert(EXPRESSION_IS_OPERATOR(op));
-    size_t written = stringifier_write_expression(st, op->operator.left);
-    written += stringifier_write_byte(st, op->operator.infix);
-    written += stringifier_write_expression(st, op->operator.right);
-    return written;
-}
-
-static inline size_t stringifier_write_prefix(stringifier_t* st, expression_t* pre) {
-    assert(EXPRESSION_IS_PREFIX(pre));
-    size_t written = stringifier_write_byte(st, pre->prefix.prefix);
-    written += stringifier_write_expression(st, pre->prefix.right);
-    return written;
-}
-
-static inline size_t stringifier_write_expression(stringifier_t* st, expression_t* expr) {
-    switch (expr->type) {
-        case EXPRESSION_TYPE_FUNCTION:
-            return stringifier_write_function(st, expr);
-        case EXPRESSION_TYPE_PREFIX:
-            return stringifier_write_prefix(st, expr);
-        case EXPRESSION_TYPE_OPERATOR:
-            return stringifier_write_operator(st, expr);
-        case EXPRESSION_TYPE_VARIABLE:
-            return stringifier_write_variable(st, expr);
-        case EXPRESSION_TYPE_NUMBER:
-            return stringifier_write_number(st, expr);
-    }
+static inline size_t stringifier_write_whitespace(stringifier_t* st) {
+    if (st->whitespace[0])
+        return stringifier_write(st, st->whitespace);
     return 0;
 }
-
-
 
 /* print an expression to `file`
  * @file the file to write to
