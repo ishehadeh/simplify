@@ -10,37 +10,131 @@
 
 #include "simplify/expression/expression.h"
 
-/* convert a number to a string
- * @number the number to convert
- * @buf the buffer that the number should be stored in
- * @len the max length of the number, 0 for no maximum
- * @return an error code
- */
-error_t number_to_buffer(mpfr_t number,    char* buf, size_t len);
+#ifndef STRINGIFIER_DEFAULT_SIZE
+#   define STRINGIFIER_DEFAULT_SIZE 256
+#endif
 
-/* convert an operator to a string
- * @op the operator to convert
- * @buf the buffer that the operator should be stored in
- * @len the max length of the operator, 0 for no maximum
- * @return an error code
+#ifndef NAN_STRING
+#   define NAN_STRING "[Not a Number]"
+#endif
+
+#ifndef INF_STRING
+#   define INF_STRING "[Infinity]"
+#endif
+
+#define _STRINGIFIER_FIT(ST, X) \
+    while (st->index + (X) >= st->length - 1) { \
+        stringifier_grow(st); \
+    }
+
+/* A stringifier writes an expression to a variable length buffer
+ *
+ * The stringifier type keeps information about the buffer, and stores the buffer itself.
  */
-error_t operator_to_buffer(operator_t op,  char* buf, size_t len);
+typedef struct stringifier stringifier_t;
 
 
-/* convert a variable to a string
- * @var the variable to convert
- * @buf the buffer that the variable should be stored in
- * @len the max length of the variable, 0 for no maximum
- * @return an error code
- */
-error_t variable_to_buffer(variable_t var, char* buf, size_t len);
+struct stringifier {
+    char* buffer;
+    size_t length;
+    size_t index;
+};
 
-/* try to trim a floating point number that was convert to a string, to improve accuracy
- * @str the string to edit
- * @tolerance how easily the string should be rounded off. (five is probably a good default for this parameter)
- * @return an error code
+
+char* stringify(expression_t* expr);
+static inline size_t stringifier_write_expression(stringifier_t* st, expression_t* expr);
+size_t stringifier_write_function(stringifier_t* st, expression_t* func);
+size_t stringifier_write_number(stringifier_t* st, expression_t* number);
+
+/* grow the stringifier's internal buffer.
+ *
+ * This method should be called automatically when writing, there is no need to call it by hand
+ * 
+ * @st the stringifier to grow
  */
-error_t approximate_number(char* str, int tolerance);
+static inline void stringifier_grow(stringifier_t* st) {
+    st->length = st->length ? st->length * 2 : STRINGIFIER_DEFAULT_SIZE;
+    st->buffer = realloc(st->buffer, st->length);
+}
+
+/* write a single byte to the stringifier's buffer
+ *
+ * @st the stringifier to write to
+ * @b the byte to write
+ * @return returns the number of bytes written
+ */
+static inline size_t stringifier_write_byte(stringifier_t* st, char b) {
+    _STRINGIFIER_FIT(st, 1)
+
+    st->buffer[st->index++] = b;
+    return 1;
+}
+
+/* write a string to the stringifier's buffer
+ *
+ * @st the stringifier to write to
+ * @str the base of the string to begin writing
+ * @len the number of bytes to write
+ * @return returns the number of bytes written
+ */
+static inline size_t stringifier_write_len(stringifier_t* st, char* str, size_t len) {
+    _STRINGIFIER_FIT(st, len)
+
+    strncpy(st->buffer + st->index, str, len);
+    st->index += len;
+    return len;
+}
+
+/* write a null terminated string to the stringifier's buffer
+ *
+ * @st the stringifier to write to
+ * @str the string to write
+ * @return returns the number of bytes written
+ */
+static inline size_t stringifier_write(stringifier_t* st, char* str) {
+    size_t len = strlen(str);
+    if (len > 0)
+        len = stringifier_write_len(st, str, len);
+    return len;
+}
+
+static inline size_t stringifier_write_variable(stringifier_t* st, expression_t* variable) {
+    assert(EXPRESSION_IS_VARIABLE(variable));
+    return stringifier_write(st, variable->variable.value);
+}
+
+static inline size_t stringifier_write_operator(stringifier_t* st, expression_t* op) {
+    assert(EXPRESSION_IS_OPERATOR(op));
+    size_t written = stringifier_write_expression(st, op->operator.left);
+    written += stringifier_write_byte(st, op->operator.infix);
+    written += stringifier_write_expression(st, op->operator.right);
+    return written;
+}
+
+static inline size_t stringifier_write_prefix(stringifier_t* st, expression_t* pre) {
+    assert(EXPRESSION_IS_PREFIX(pre));
+    size_t written = stringifier_write_byte(st, pre->prefix.prefix);
+    written += stringifier_write_expression(st, pre->prefix.right);
+    return written;
+}
+
+static inline size_t stringifier_write_expression(stringifier_t* st, expression_t* expr) {
+    switch (expr->type) {
+        case EXPRESSION_TYPE_FUNCTION:
+            return stringifier_write_function(st, expr);
+        case EXPRESSION_TYPE_PREFIX:
+            return stringifier_write_prefix(st, expr);
+        case EXPRESSION_TYPE_OPERATOR:
+            return stringifier_write_operator(st, expr);
+        case EXPRESSION_TYPE_VARIABLE:
+            return stringifier_write_variable(st, expr);
+        case EXPRESSION_TYPE_NUMBER:
+            return stringifier_write_number(st, expr);
+    }
+    return 0;
+}
+
+
 
 /* print an expression to `file`
  * @file the file to write to

@@ -67,7 +67,13 @@ error_t __round_string(char* str, int len) {
     return ERROR_NO_ERROR;
 }
 
-error_t approximate_number(char* str, int tolerance) {
+/* try to trim a floating point number that was convert to a string, to improve accuracy
+ * @str the string to edit
+ * @tolerance how easily the string should be rounded off. (five is probably a good default for this parameter)
+ * @length the string's length
+ * @return an error code
+ */
+error_t approximate_number(char* str, int tolerance, size_t length) {
     int     decimal_index;
     error_t err;
 
@@ -79,7 +85,7 @@ error_t approximate_number(char* str, int tolerance) {
 
     int  chain = 0;
     char last = 0;
-    for (int i = decimal_index + 1; isdigit(str[i]) || str[i] == 0; ++i) {
+    for (size_t i = decimal_index + 1; isdigit(str[i]) || str[i] == 0; ++i) {
         if (str[i] == last) {
             ++chain;
         } else {
@@ -90,7 +96,7 @@ error_t approximate_number(char* str, int tolerance) {
             last = str[i];
         }
 
-        if (str[i] == 0) {
+        if (i >= length) {
             break;
         }
     }
@@ -98,76 +104,77 @@ error_t approximate_number(char* str, int tolerance) {
     return ERROR_NO_ERROR;
 }
 
-error_t number_to_buffer(mpfr_t val, char* buffer, size_t len) {
-    if (len) {
-        char x = buffer[len + 1];
-        mpfr_snprintf(buffer, len + 1, "%.*RUg", mpfr_get_prec(val), val);
-        buffer[len + 1] = x;
-    } else {
-        mpfr_sprintf(buffer, "%.*RUg", mpfr_get_prec(val), val);
-    }
+size_t stringifier_write_number(stringifier_t* st, expression_t* number) {
+    assert(EXPRESSION_IS_NUMBER(number));
 
-    return ERROR_NO_ERROR;
-}
+    mpfr_ptr num = number->number.value;
+    static const int base = 10;
+    const bool neg = mpfr_sgn(num) < 0;
 
-error_t operator_to_buffer(operator_t op, char* buffer, size_t len) {
-    (void)len;
-
-    buffer[0] = op;
-    return ERROR_NO_ERROR;
-}
-
-error_t variable_to_buffer(variable_t var, char* buffer, size_t len) {
-    for (size_t i = 0; (i < len || len == 0) && var[i]; ++i)
-        buffer[i] = var[i];
-
-    return ERROR_NO_ERROR;
-}
-
-
-error_t _expression_fprint_precedence_recursive(expression_t* expr, FILE* f, operator_precedence_t precedence) {
-    switch (expr->type) {
-        case EXPRESSION_TYPE_NUMBER:
-            mpfr_fprintf(f, "%.*RUg", mpfr_get_prec(expr->number.value), expr->number.value);
-            break;
-        case EXPRESSION_TYPE_OPERATOR:
-        {
-            operator_precedence_t my_prec = operator_precedence(expr->operator.infix);
-
-            if (my_prec < precedence)
-                fputc('(', f);
-            _expression_fprint_precedence_recursive(expr->operator.left, f, my_prec);
-            fputc(' ', f);
-            fputc(expr->operator.infix, f);
-            fputc(' ', f);
-            _expression_fprint_precedence_recursive(expr->operator.right, f, my_prec);
-            if (my_prec < precedence)
-                fputc(')', f);
-            break;
-        }
-        case EXPRESSION_TYPE_VARIABLE:
-            fprintf(f, "%s", expr->variable.value);
-            break;
-        case EXPRESSION_TYPE_PREFIX:
-            fputc(expr->prefix.prefix, f);
-            expression_fprint(expr->prefix.right, f);
-            break;
-        case EXPRESSION_TYPE_FUNCTION:
-        {
-            fprintf(f, "%s(", expr->function.name);
-            expression_t* arg;
-            EXPRESSION_LIST_FOREACH(arg, expr->function.parameters) {
-                expression_fprint(arg, f);
-                if (__item->next)
-                    fprintf(f, ", ");
-            }
-            fputc(')', f);
-            break;
+    if (!mpfr_regular_p(num)) {
+        if (mpfr_nan_p(num)) {
+            return stringifier_write(st, NAN_STRING);
+        } else if (mpfr_inf_p(num)) {
+            return (neg ? stringifier_write_byte(st, '-') : 0)
+                + stringifier_write(st, INF_STRING);
+        } else {
+            assert(mpfr_zero_p(num));
+            return (neg ? stringifier_write_byte(st, '-') : 0)
+                + stringifier_write_byte(st, '0');
         }
     }
-    return ERROR_NO_ERROR;
+
+    size_t written = 0;
+    mpfr_prec_t prec = mpfr_get_prec(num);
+    mpfr_exp_t exponent;
+
+    if (neg) {
+        written += stringifier_write_byte(st, '-');
+        mpfr_abs(num, num, MPFR_RNDN);
+    }
+    char* numstart = st->buffer + st->index;
+    size_t numlen = ceil(prec * log(2)/log(base)) + 1;
+
+    _STRINGIFIER_FIT(st, numlen);
+    mpfr_get_str(numstart, &exponent, base, numlen, number->number.value, MPFR_RNDN);
+    st->index += numlen;
+    if (exponent > 0) {
+        memmove(numstart + exponent + 1, numstart + exponent, numlen - exponent);
+        numstart[exponent] = '.';
+        ++st->index;
+    }
+    approximate_number(numstart, 5, numlen);
+    written += numlen;
+    return written;
+}
+
+char* stringify(expression_t* expr) {
+    stringifier_t st;
+    st.buffer = malloc(STRINGIFIER_DEFAULT_SIZE);
+    st.index = 0;
+    st.length = 0;
+    stringifier_write_expression(&st, expr);
+    stringifier_write_byte(&st, 0);
+    return st.buffer;
+}
+
+size_t stringifier_write_function(stringifier_t* st, expression_t* func) {
+    assert(EXPRESSION_IS_FUNCTION(func));
+    size_t written = stringifier_write(st, func->function.name);
+    written += stringifier_write_byte(st, '(');
+    expression_t* arg;
+    EXPRESSION_LIST_FOREACH(arg, func->function.parameters) {
+        if (__item->next)
+            written += stringifier_write_byte(st, ',');
+        written += stringifier_write_expression(st, arg);
+    }
+    written += stringifier_write_byte(st, ')');
+    return written;
 }
 
 error_t expression_fprint(expression_t* expr, FILE* f) {
-    return _expression_fprint_precedence_recursive(expr, f, OPERATOR_PRECEDENCE_MINIMUM);
+    char* str = stringify(expr);
+    fputs(str, f);
+    free(str);
+    return ERROR_NO_ERROR;
 }

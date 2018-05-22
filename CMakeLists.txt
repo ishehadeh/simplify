@@ -72,6 +72,7 @@ set_target_properties(simplify-bin PROPERTIES OUTPUT_NAME simplify)
 
 target_link_libraries(simplify ${MPFR_LIBRARIES})
 target_link_libraries(simplify ${GMP_LIBRARIES})
+target_link_libraries(simplify m)
 
 target_link_libraries(simplify-bin simplify)
 

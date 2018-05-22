@@ -58,13 +58,11 @@ void expression_assert_eq(expression_t* expr1, expression_t* expr2) {
     switch (expr1->type) {
         case EXPRESSION_TYPE_NUMBER:
             if (mpfr_cmp(expr1->number.value, expr2->number.value) != 0) {
-                char x1[25];
-                char x2[25];
-                x1[24] = 0;
-                x2[24] = 0;
-                number_to_buffer(expr1->number.value, x1, 24);
-                number_to_buffer(expr2->number.value, x2, 24);
-                FATAL("ASSERT FAILED ('%s' != '%s'): numeric expressions don't match", x1, x2);
+                char* expr1num = stringify(expr1);
+                char* expr2num = stringify(expr2);
+                FATAL("ASSERT FAILED ('%s' != '%s'): numeric expressions don't match", expr1num, expr2num);
+                free(expr1num);
+                free(expr2num);
             }
             break;
         case EXPRESSION_TYPE_PREFIX:
