@@ -260,6 +260,20 @@ error_t builtin_const_e(scope_t* _, expression_t** out) {
     return ERROR_NO_ERROR;
 }
 
+error_t builtin_const_nan(scope_t* _, expression_t** out) {
+    (void)_;
+    *out = expression_new_number_si(0);
+    mpfr_rootn_ui(out[0]->number.value, out[0]->number.value, 0, MPFR_RNDN);
+    return ERROR_NO_ERROR;
+}
+
+error_t builtin_const_inf(scope_t* _, expression_t** out) {
+    (void)_;
+    *out = expression_new_number_si(0);
+    mpfr_rec_sqrt(out[0]->number.value, out[0]->number.value, MPFR_RNDN);
+    return ERROR_NO_ERROR;
+}
+
 int main(int argc, char** argv) {
     int verbosity = 0;
     variable_t isolation_target = NULL;
@@ -305,7 +319,13 @@ int main(int argc, char** argv) {
     EXPORT_BUILTIN_CONST(&scope, euler);
     EXPORT_BUILTIN_CONST(&scope, catalan);
     EXPORT_BUILTIN_CONST(&scope, e);
+    EXPORT_BUILTIN_CONST(&scope, nan);
+    EXPORT_BUILTIN_CONST(&scope, inf);
 
+    ALIAS(&scope, NaN,      nan);
+    ALIAS(&scope, NAN,      nan);
+    ALIAS(&scope, Infinity, inf);
+    ALIAS(&scope, Inf,      inf);
     error_t err = ERROR_NO_ERROR;
     PARSE_FLAGS(
         FLAG('h', "help",    usage(argv[0]); goto cleanup)

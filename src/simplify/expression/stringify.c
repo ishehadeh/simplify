@@ -84,7 +84,7 @@ void _stringifier_approximate_number(stringifier_t* st, size_t length) {
                 if (last == '9') {
                     _stringifier_round_number(st, i - 2, st->index - length - 1);
                 } else if (last == '0') {
-                    st->index = i - chain - 1;
+                    st->index = i - chain - 2;
                     return;
                 }
             }
@@ -99,6 +99,9 @@ void _stringifier_approximate_number(stringifier_t* st, size_t length) {
         } else if (last == '0') {
             st->index = st->index - chain - 1;
         }
+    }
+    if (st->buffer[st->index - 1] == '.') {
+        --st->index;
     }
     return;
 }
