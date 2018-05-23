@@ -3,6 +3,29 @@
 #include "simplify/expression/expression.h"
 #include "simplify/expression/stringify.h"
 
+int strnumcmp(char* x, char* y, int lenx, int leny) {
+    int xp = pow(10, lenx);
+    int yp = pow(10, leny);
+    for (int i = 0; i < lenx && i < leny; ++i) {
+        if (x[i] == '.' && y[i] != '.') {
+            return -1;
+        } else if (x[i] != '.' && y[i] == '.') {
+            return 1;
+        } else if (x[i] == '.' && y[i] == '.') {
+            xp *= -1;
+            yp *= -1;
+        } else {
+            int cmp = (x[i] * xp) - (y[i] * yp);
+            if (cmp != 0) {
+                return cmp;
+            }
+            xp /= 10;
+            yp /= 10;
+        }
+    }
+    return 0;
+}
+
 compare_result_t _expression_compare_numbers(expression_t* expr1, expression_t* expr2) {
     stringifier_t st;
     st.buffer = malloc(4096);
@@ -18,15 +41,17 @@ compare_result_t _expression_compare_numbers(expression_t* expr1, expression_t* 
 
     stringifier_write_expression(&st, expr1);
     char* expr1str = st.buffer;
+    size_t expr1len = st.index;
     expr1str[st.index] = 0;
     st.buffer = malloc(4096);
     st.length = 4096;
     st.index = 0;
     stringifier_write_expression(&st, expr2);
     char* expr2str = st.buffer;
+    size_t expr2len = st.index;
     expr2str[st.index] = 0;
 
-    int result = strcmp(expr1str, expr2str);
+    int result = strnumcmp(expr1str, expr2str, expr1len, expr2len);
 
     free(expr1str);
     free(expr2str);

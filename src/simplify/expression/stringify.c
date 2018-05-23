@@ -2,7 +2,6 @@
 
 #include "simplify/expression/stringify.h"
 
-
 void _stringifier_round_number(stringifier_t* st, size_t start, size_t numstart) {
     /* round direction is `1` to round up or `-1` to round down */
     int round_direction = st->buffer[start - 1] >= '5' ? 1 : -1;
