@@ -3,7 +3,7 @@
 #include "simplify/expression/stringify.h"
 
 
-void _round_string(stringifier_t* st, size_t start, size_t numstart) {
+void _stringifier_round_number(stringifier_t* st, size_t start, size_t numstart) {
     /* round direction is `1` to round up or `-1` to round down */
     int round_direction = st->buffer[start - 1] >= '5' ? 1 : -1;
 
@@ -66,7 +66,7 @@ finished:
  * @tolerance how easily the string should be rounded off. (five is probably a good default for this parameter)
  * @length the numbers's length
  */
-void approximate_number(stringifier_t* st, size_t length) {
+void _stringifier_approximate_number(stringifier_t* st, size_t length) {
     size_t decimal_index = st->index - 1;
 
     for (; st->buffer[decimal_index] != '.'; --decimal_index) {
@@ -77,13 +77,13 @@ void approximate_number(stringifier_t* st, size_t length) {
     size_t chain = 0;
     char last = 0;
 
-    for (size_t i = decimal_index + 1; i <= st->index && isdigit(st->buffer[i]); ++i) {
+    for (size_t i = decimal_index + 1; i < st->index && isdigit(st->buffer[i]); ++i) {
         if (st->buffer[i] == last) {
             ++chain;
         } else {
             if (chain >= st->approximate_tolerance) {
                 if (last == '9') {
-                    _round_string(st, i - 2, st->index - length);
+                    _stringifier_round_number(st, i - 2, st->index - length);
                 } else if (last == '0') {
                     st->index = i - chain - 2;
                     return;
@@ -96,7 +96,7 @@ void approximate_number(stringifier_t* st, size_t length) {
 
     if (chain >= st->approximate_tolerance) {
         if (last == '9') {
-            _round_string(st, st->index - 2, st->index - length);
+            _stringifier_round_number(st, st->index - 2, st->index - length);
         } else if (last == '0') {
             st->index = st->index - chain - 2;
         }
@@ -191,7 +191,7 @@ size_t stringifier_write_number(stringifier_t* st, expression_t* number) {
     }
 
     if (st->approximate_numbers)
-        approximate_number(st, numlen);
+        _stringifier_approximate_number(st, numlen);
 
     return written + st->index - (size_t)numstart;
 }

@@ -21,12 +21,14 @@ error_t _expression_apply_comparison(expression_t* expr, scope_t* scope) {
     assert(EXPRESSION_IS_OPERATOR(expr));
 
     if (scope->boolean != EXPRESSION_RESULT_BOOLEAN_FALSE) {
-        int x = mpfr_cmp(expr->operator.left->number.value, expr->operator.right->number.value);
-        if (expr->operator.infix == '<' && x < 0)
+        compare_result_t x = expression_compare(EXPRESSION_LEFT(expr), EXPRESSION_RIGHT(expr));
+        if (x == COMPARE_RESULT_INCOMPARABLE)
+            return ERROR_NO_ERROR;
+        else if (expr->operator.infix == '<' && x == COMPARE_RESULT_LESS)
             scope->boolean = EXPRESSION_RESULT_BOOLEAN_TRUE;
-        else if (expr->operator.infix == '>' && x > 0)
+        else if (expr->operator.infix == '>' && x == COMPARE_RESULT_GREATER)
             scope->boolean = EXPRESSION_RESULT_BOOLEAN_TRUE;
-        else if (expr->operator.infix == '=' && x == 0)
+        else if (expr->operator.infix == '=' && x == COMPARE_RESULT_EQUAL)
             scope->boolean = EXPRESSION_RESULT_BOOLEAN_TRUE;
         else
             scope->boolean = EXPRESSION_RESULT_BOOLEAN_FALSE;
