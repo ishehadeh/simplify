@@ -235,12 +235,11 @@ error_t _expression_evaluate_recursive(expression_t* expr, scope_t* scope) {
                 if (err) return err;
 
                 err = _expression_evaluate_recursive(expr->operator.left, scope);
-                if (expr->operator.right->type == expr->operator.left->type &&
+                if (expression_is_comparison(expr)) {
+                    return _expression_apply_comparison(expr, scope);
+                } else if (expr->operator.right->type == expr->operator.left->type &&
                         expr->operator.left->type == EXPRESSION_TYPE_NUMBER) {
                     return _expression_apply_operator(expr, scope);
-                } else if (expression_is_comparison(expr)) {
-                    /* if we failed to evaluate a conditional we can't be sure about the expression's boolean result. */
-                    scope->boolean = -1;
                 }
                 return err;
             }

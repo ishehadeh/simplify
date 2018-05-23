@@ -167,10 +167,10 @@ size_t stringifier_write_number(stringifier_t* st, expression_t* number) {
         written += stringifier_write_byte(st, '-');
         mpfr_abs(num, num, MPFR_RNDN);
     }
-    char* numstart = st->buffer + st->index;
     size_t numlen = ceil(prec * log(2)/log(base)) + 3;
 
     _STRINGIFIER_FIT(st, numlen);
+    char* numstart = st->buffer + st->index;
     mpfr_get_str(numstart, &exponent, base, numlen, number->number.value, MPFR_RNDN);
     st->index += numlen;
 

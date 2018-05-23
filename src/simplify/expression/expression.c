@@ -3,12 +3,11 @@
 #include "simplify/expression/expression.h"
 #include "simplify/expression/stringify.h"
 
-
-compare_result_t expression_compare(expression_t* expr1, expression_t* expr2) {
+compare_result_t _expression_compare_numbers(expression_t* expr1, expression_t* expr2) {
     compare_result_t retval = COMPARE_RESULT_INCOMPARABLE;
 
     stringifier_t st;
-    st.buffer = malloc(sizeof(4096));
+    st.buffer = malloc(4096);
     st.length = 4096;
     st.index = 0;
     /* incase theses expressions aren't numbers, use invalid variable names for NAN and INF */
@@ -21,11 +20,13 @@ compare_result_t expression_compare(expression_t* expr1, expression_t* expr2) {
 
     stringifier_write_expression(&st, expr1);
     char* expr1str = st.buffer;
-    st.buffer = malloc(sizeof(4096));
+    expr1str[st.index + 1] = 0;
+    st.buffer = malloc(4096);
     st.length = 4096;
     st.index = 0;
     stringifier_write_expression(&st, expr2);
     char* expr2str = st.buffer;
+    expr2str[st.index + 1] = 0;
 
     if (!strcmp(expr1str, expr2str)) {
         retval = COMPARE_RESULT_EQUAL;
@@ -50,6 +51,77 @@ cleanup:
     free(expr2str);
     return retval;
 }
+
+compare_result_t _expression_compare_recursive(expression_t* expr1, expression_t* expr2) {
+    if (expr1->type != expr2->type)
+        return COMPARE_RESULT_INCOMPARABLE;
+
+    switch (expr1->type) {
+        case EXPRESSION_TYPE_NUMBER:
+            return _expression_compare_numbers(expr1, expr2);
+        case EXPRESSION_TYPE_VARIABLE:
+            if (!strcmp(expr1->variable.value, expr2->variable.value))
+                return COMPARE_RESULT_EQUAL;
+            else
+                return COMPARE_RESULT_INCOMPARABLE;
+        case EXPRESSION_TYPE_FUNCTION:
+            if (!strcmp(expr1->function.name, expr2->function.name)) {
+                expression_t* arg1;
+                expression_t* arg2;
+                compare_result_t current = COMPARE_RESULT_EQUAL;
+                EXPRESSION_LIST_FOREACH2(arg1, arg2, expr1->function.parameters, expr2->function.parameters) {
+                    compare_result_t next = _expression_compare_recursive(arg1, arg2);
+                    if (current == COMPARE_RESULT_EQUAL &&
+                        (next == COMPARE_RESULT_LESS
+                        || next == COMPARE_RESULT_GREATER
+                        || next == COMPARE_RESULT_EQUAL)) {
+                            current = next;
+                    } else if (next == COMPARE_RESULT_INCOMPARABLE) {
+                        return COMPARE_RESULT_INCOMPARABLE;
+                    } else if ((next == COMPARE_RESULT_GREATER || next == COMPARE_RESULT_LESS) && next != current) {
+                        return COMPARE_RESULT_INCOMPARABLE;
+                    }
+                }
+                return current;
+            } else {
+                return COMPARE_RESULT_INCOMPARABLE;
+            }
+        case EXPRESSION_TYPE_PREFIX:
+            if (expr1->prefix.prefix != expr2->prefix.prefix)
+                return COMPARE_RESULT_INCOMPARABLE;
+            else
+                return _expression_compare_recursive(expr1->prefix.right, expr2->prefix.right);
+        case EXPRESSION_TYPE_OPERATOR:
+        {
+            if (expr1->operator.infix != expr2->operator.infix)
+                return COMPARE_RESULT_INCOMPARABLE;
+            compare_result_t result_left = _expression_compare_recursive(expr1->operator.left, expr2->operator.left);
+            compare_result_t result_right = _expression_compare_recursive(expr1->operator.right, expr2->operator.right);
+            if (result_left == result_right && result_left != COMPARE_RESULT_INCOMPARABLE) {
+                return result_left;
+            } else if (expr1->operator.infix == '*' || expr1->operator.infix == '+') {
+                if (result_left == COMPARE_RESULT_INCOMPARABLE
+                    || result_right == COMPARE_RESULT_INCOMPARABLE
+                    || ((result_left == COMPARE_RESULT_LESS
+                        || result_left == COMPARE_RESULT_GREATER)
+                        && result_left != result_right)) {
+                    result_left = _expression_compare_recursive(expr1->operator.left, expr2->operator.right);
+                    result_right = _expression_compare_recursive(expr1->operator.right, expr2->operator.left);
+                    if (result_left == result_right && result_left != COMPARE_RESULT_INCOMPARABLE) {
+                        return result_left;
+                    }
+                }
+            }
+            return COMPARE_RESULT_INCOMPARABLE;
+        }
+    }
+    return COMPARE_RESULT_INCOMPARABLE;
+}
+
+compare_result_t expression_compare(expression_t* expr1, expression_t* expr2) {
+    return _expression_compare_recursive(expr1, expr2);
+}
+
 
 variable_t _expression_find_variable_recursive(expression_t* expr) {
     switch (expr->type) {
