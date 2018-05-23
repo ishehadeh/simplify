@@ -4,8 +4,6 @@
 #include "simplify/expression/stringify.h"
 
 compare_result_t _expression_compare_numbers(expression_t* expr1, expression_t* expr2) {
-    compare_result_t retval = COMPARE_RESULT_INCOMPARABLE;
-
     stringifier_t st;
     st.buffer = malloc(4096);
     st.length = 4096;
@@ -20,36 +18,28 @@ compare_result_t _expression_compare_numbers(expression_t* expr1, expression_t* 
 
     stringifier_write_expression(&st, expr1);
     char* expr1str = st.buffer;
-    expr1str[st.index + 1] = 0;
+    expr1str[st.index] = 0;
     st.buffer = malloc(4096);
     st.length = 4096;
     st.index = 0;
     stringifier_write_expression(&st, expr2);
     char* expr2str = st.buffer;
-    expr2str[st.index + 1] = 0;
+    expr2str[st.index] = 0;
 
-    if (!strcmp(expr1str, expr2str)) {
-        retval = COMPARE_RESULT_EQUAL;
-        goto cleanup;
-    }
+    int result = strcmp(expr1str, expr2str);
 
-    if (EXPRESSION_IS_NUMBER(expr1) && EXPRESSION_IS_NUMBER(expr2)) {
-        /* if either number is NAN than they can not be compared */
-        if (mpfr_unordered_p(expr1->number.value, expr2->number.value)) goto cleanup;
-
-        int x = mpfr_cmp(expr1->number.value, expr2->number.value);
-        if (!x)
-            retval = COMPARE_RESULT_EQUAL;
-        else if (x < 0)
-            retval = COMPARE_RESULT_LESS;
-        else if (x > 0)
-            retval = COMPARE_RESULT_GREATER;
-    }
-
-cleanup:
     free(expr1str);
     free(expr2str);
-    return retval;
+
+    if (result < 0) {
+        return COMPARE_RESULT_LESS;
+    } else if (result > 0) {
+        return COMPARE_RESULT_GREATER;
+    } else if (result == 0) {
+        return COMPARE_RESULT_EQUAL;
+    }
+
+    return COMPARE_RESULT_INCOMPARABLE;
 }
 
 compare_result_t _expression_compare_recursive(expression_t* expr1, expression_t* expr2) {

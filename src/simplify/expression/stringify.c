@@ -12,7 +12,7 @@ void _stringifier_round_number(stringifier_t* st, size_t start, size_t numstart)
     for (i = start; i > numstart && isdigit(st->buffer[i]); --i) {
         if (st->buffer[i] + round_direction <= '0' ||  st->buffer[i] + round_direction >= '9') {
             /* if the current character can't safely be rounded than zero it and continue */
-            st->buffer[i] = 0;
+            st->buffer[i] = '0';
         } else {
             /* apply the the round direction, the exit. */
             st->buffer[i] += round_direction;
@@ -23,7 +23,7 @@ void _stringifier_round_number(stringifier_t* st, size_t start, size_t numstart)
 
     /* if the earlier loop ran out of room
         than that means we need to move past the decimal point */
-    if (i == numstart && st->buffer[i] == '.') {
+    if (i == numstart) {
         if (round_direction > 0)
             st->buffer[i] = '1';
         else
@@ -37,7 +37,7 @@ void _stringifier_round_number(stringifier_t* st, size_t start, size_t numstart)
 
     size_t d = i;
     /* try to round everything before the decimal */
-    for (; d > numstart && isdigit(st->buffer[d]); --d) {
+    for (; d >= numstart && isdigit(st->buffer[d]); --d) {
         if (st->buffer[d] + round_direction <= '0' ||  st->buffer[d] + round_direction >= '9') {
             st->buffer[d] = '0';
         } else {
@@ -83,7 +83,7 @@ void _stringifier_approximate_number(stringifier_t* st, size_t length) {
         } else {
             if (chain >= st->approximate_tolerance) {
                 if (last == '9') {
-                    _stringifier_round_number(st, i - 2, st->index - length);
+                    _stringifier_round_number(st, i - 2, st->index - length - 1);
                 } else if (last == '0') {
                     st->index = i - chain - 2;
                     return;
@@ -96,7 +96,7 @@ void _stringifier_approximate_number(stringifier_t* st, size_t length) {
 
     if (chain >= st->approximate_tolerance) {
         if (last == '9') {
-            _stringifier_round_number(st, st->index - 2, st->index - length);
+            _stringifier_round_number(st, st->index - 2, st->index - length - 1);
         } else if (last == '0') {
             st->index = st->index - chain - 2;
         }
