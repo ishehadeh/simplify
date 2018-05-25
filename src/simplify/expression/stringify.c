@@ -204,9 +204,11 @@ size_t stringifier_write_function(stringifier_t* st, expression_t* func) {
     written += stringifier_write_byte(st, '(');
     expression_t* arg;
     EXPRESSION_LIST_FOREACH(arg, func->function.parameters) {
-        if (__item->next)
-            written += stringifier_write_byte(st, ',');
         written += stringifier_write_expression(st, arg);
+        if (__item->next) {
+            written += stringifier_write_byte(st, ',');
+            written += stringifier_write_whitespace(st);
+        }
     }
     written += stringifier_write_byte(st, ')');
     return written;
