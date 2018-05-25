@@ -17,6 +17,7 @@ static struct {
     {"-0.0002", "-1", COMPARE_RESULT_GREATER},
     {"-5", "-6", COMPARE_RESULT_GREATER},
     {"10", "1", COMPARE_RESULT_GREATER},
+    {"-2", "-2", COMPARE_RESULT_EQUAL},
     {"x + 5", "1", COMPARE_RESULT_INCOMPARABLE},
     {"2 * x", "2x", COMPARE_RESULT_EQUAL},
     {"2.25", "2.2", COMPARE_RESULT_GREATER},

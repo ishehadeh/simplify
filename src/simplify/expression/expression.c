@@ -29,8 +29,8 @@ int strintcmp(char* x, char* y, int lenx, int leny, bool dec) {
     int yp;
 
     if (!dec) {
-        xp = pow(10, lenx);
-        yp = pow(10, leny);
+        xp = pow(10, lenx - 1);
+        yp = pow(10, leny - 1);
     } else {
         xp = 1;
         yp = 1;
@@ -39,19 +39,19 @@ int strintcmp(char* x, char* y, int lenx, int leny, bool dec) {
     if (y[0] == '-' || x[0] == '-') {
         if (y[0] != '-') {
             return -1;
-        } else if (y[1] != '-') {
+        } else if (x[0] != '-') {
             return 1;
         } else {
-            cmp_mul *= -1;
+            cmp_mul = -1;
             ++yi;
             ++xi;
         }
     }
 
     while (xi < lenx || yi < leny) {
-        int cmp = (x[xi] * xp) - (y[yi] * yp);
+        int cmp = cmp_mul * ((x[xi] * xp) - (y[yi] * yp));
         if (cmp != 0) {
-            return cmp * cmp_mul;
+            return cmp;
         }
 
         if (!dec) {
@@ -76,8 +76,8 @@ int strintcmp(char* x, char* y, int lenx, int leny, bool dec) {
 }
 
 int strnumcmp(char* x, char* y, int lenx, int leny) {
-    int decx = index_of(x, ".");
-    int decy = index_of(y, ".");
+    int decx = index_of(x, ".") - 1;
+    int decy = index_of(y, ".") - 1;
     if (decx < 0) decx = lenx;
     if (decy < 0) decy = leny;
 
