@@ -242,7 +242,7 @@ expression_result_t _expression_evaluate_comparisons_recursive(expression_t* exp
             if (expression_is_comparison(expr)) {
                 compare_result_t x = expression_compare(EXPRESSION_LEFT(expr), EXPRESSION_RIGHT(expr));
                 if (x == COMPARE_RESULT_INCOMPARABLE)
-                    result = EXPRESSION_RESULT_NONBINARY;
+                    return  EXPRESSION_RESULT_NONBINARY;
                 else if (expr->operator.infix == '<' && x == COMPARE_RESULT_LESS)
                     result = EXPRESSION_RESULT_TRUE;
                 else if (expr->operator.infix == '>' && x == COMPARE_RESULT_GREATER)
@@ -254,8 +254,11 @@ expression_result_t _expression_evaluate_comparisons_recursive(expression_t* exp
                 break;
             }
 
-            if (right == EXPRESSION_RESULT_TRUE || left == EXPRESSION_RESULT_TRUE)
+            if (right == EXPRESSION_RESULT_TRUE || left == EXPRESSION_RESULT_TRUE) {
                 result = EXPRESSION_RESULT_TRUE;
+            } else {
+                return EXPRESSION_RESULT_NONBINARY;
+            }
         }
     }
 

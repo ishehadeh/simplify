@@ -148,14 +148,9 @@ compare_result_t _expression_compare_recursive(expression_t* expr1, expression_t
                 compare_result_t current = COMPARE_RESULT_EQUAL;
                 EXPRESSION_LIST_FOREACH2(arg1, arg2, expr1->function.parameters, expr2->function.parameters) {
                     compare_result_t next = _expression_compare_recursive(arg1, arg2);
-                    if (current == COMPARE_RESULT_EQUAL &&
-                        (next == COMPARE_RESULT_LESS
-                        || next == COMPARE_RESULT_GREATER
-                        || next == COMPARE_RESULT_EQUAL)) {
+                    if (current == COMPARE_RESULT_EQUAL && next == COMPARE_RESULT_EQUAL) {
                             current = next;
-                    } else if (next == COMPARE_RESULT_INCOMPARABLE) {
-                        return COMPARE_RESULT_INCOMPARABLE;
-                    } else if ((next == COMPARE_RESULT_GREATER || next == COMPARE_RESULT_LESS) && next != current) {
+                    } else {
                         return COMPARE_RESULT_INCOMPARABLE;
                     }
                 }
@@ -177,11 +172,7 @@ compare_result_t _expression_compare_recursive(expression_t* expr1, expression_t
             if (result_left == result_right && result_left != COMPARE_RESULT_INCOMPARABLE) {
                 return result_left;
             } else if (expr1->operator.infix == '*' || expr1->operator.infix == '+') {
-                if (result_left == COMPARE_RESULT_INCOMPARABLE
-                    || result_right == COMPARE_RESULT_INCOMPARABLE
-                    || ((result_left == COMPARE_RESULT_LESS
-                        || result_left == COMPARE_RESULT_GREATER)
-                        && result_left != result_right)) {
+                if (result_left == COMPARE_RESULT_INCOMPARABLE || result_right == COMPARE_RESULT_INCOMPARABLE) {
                     result_left = _expression_compare_recursive(expr1->operator.left, expr2->operator.right);
                     result_right = _expression_compare_recursive(expr1->operator.right, expr2->operator.left);
                     if (result_left == result_right && result_left != COMPARE_RESULT_INCOMPARABLE) {
