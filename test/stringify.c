@@ -7,6 +7,20 @@
 
 
 int main() {
+    mpfr_t bad_number;
+    mpfr_t infinity;
+    mpfr_t neg_infinity;
+
+    mpfr_init(bad_number);
+    mpfr_init(infinity);
+    mpfr_init(neg_infinity);
+    mpfr_set_si(bad_number, 0, MPFR_RNDN);
+    mpfr_set_si(infinity, 0, MPFR_RNDN);
+
+    mpfr_rootn_ui(bad_number, bad_number, 0, MPFR_RNDN);
+    mpfr_rec_sqrt(infinity, infinity, MPFR_RNDN);
+    mpfr_neg(neg_infinity, infinity, MPFR_RNDN);
+
     struct {
         expression_t* expr;
         char*         string;
@@ -25,6 +39,10 @@ int main() {
             expression_new_number_si(3)),
         "+OwO - 3"
         },
+        { expression_new_number_d(3.9), "3.9" },
+        { expression_new_number(infinity), "Inf" },
+        { expression_new_number(bad_number), "NaN" },
+        { expression_new_number(neg_infinity), "-Inf" },
     };
 
     for (int i = 0; i < (int) (sizeof(__expr_string_pairs) / sizeof(__expr_string_pairs[0])); ++i) {

@@ -9,7 +9,7 @@ void _stringifier_round_number(stringifier_t* st, size_t start, size_t numstart)
     /* round the digits before the decimal point */
     size_t i;
     for (i = start; i > numstart && isdigit(st->buffer[i]); --i) {
-        if (st->buffer[i] + round_direction <= '0' ||  st->buffer[i] + round_direction >= '9') {
+        if (st->buffer[i] + round_direction < '0' ||  st->buffer[i] + round_direction > '9') {
             /* if the current character can't safely be rounded than zero it and continue */
             st->buffer[i] = '0';
         } else {
@@ -37,7 +37,7 @@ void _stringifier_round_number(stringifier_t* st, size_t start, size_t numstart)
     size_t d = i;
     /* try to round everything before the decimal */
     for (; d >= numstart && isdigit(st->buffer[d]); --d) {
-        if (st->buffer[d] + round_direction <= '0' ||  st->buffer[d] + round_direction >= '9') {
+        if (st->buffer[d] + round_direction < '0' ||  st->buffer[d] + round_direction > '9') {
             st->buffer[d] = '0';
         } else {
             st->buffer[d] += round_direction;
@@ -82,7 +82,7 @@ void _stringifier_approximate_number(stringifier_t* st, size_t length) {
         } else {
             if (chain >= st->approximate_tolerance) {
                 if (last == '9') {
-                    _stringifier_round_number(st, i - 2, st->index - length - 1);
+                    _stringifier_round_number(st, i - 1, st->index - length - 1);
                 } else if (last == '0') {
                     st->index = i - chain - 2;
                     return;
