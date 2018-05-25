@@ -302,13 +302,16 @@ int main() {
                 FATAL("failed to evaluate (pass 2) \"%s\": %s", __string_expr_pairs[i].string, error_string(err));
         }
 
-        if (__string_expr_pairs[i].ops & OP_BOOLEAN_FALSE && scope.boolean != EXPRESSION_RESULT_BOOLEAN_FALSE) {
+        if (__string_expr_pairs[i].ops & OP_BOOLEAN_FALSE
+            && expression_evaluate_comparisons(&expr) != EXPRESSION_RESULT_FALSE) {
                 FATAL("failed to evaluate, expression was not false \"%s\"", __string_expr_pairs[i].string);
         }
 
-        if (__string_expr_pairs[i].ops & OP_BOOLEAN_TRUE && scope.boolean != EXPRESSION_RESULT_BOOLEAN_TRUE) {
-                FATAL("failed to evaluate, expression was not true \"%s\"", __string_expr_pairs[i].string);
+        if (__string_expr_pairs[i].ops & OP_BOOLEAN_TRUE
+            && expression_evaluate_comparisons(&expr) != EXPRESSION_RESULT_TRUE) {
+             FATAL("failed to evaluate, expression was not true \"%s\"", __string_expr_pairs[i].string);
         }
+
 
         expression_assert_eq(&expr, __string_expr_pairs[i].expr);
         scope_clean(&scope);

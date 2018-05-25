@@ -9,12 +9,31 @@
 #include "simplify/rbtree/rbtree.h"
 #include "simplify/expression/expr_types.h"
 
+/* the result of comparing two expressions */
+typedef enum compare_result compare_result_t;
+
+enum compare_result {
+    COMPARE_RESULT_INCOMPARABLE = 0x0,
+    COMPARE_RESULT_EQUAL        = 0x1,
+    COMPARE_RESULT_LESS         = 0x2,
+    COMPARE_RESULT_GREATER      = 0x4,
+};
+
+
 /* check for a variable or function in the expression
  *
  * @expr the expression to search
  * @var the variable to search for
  */
 int expression_has_variable_or_function(expression_t* expr, variable_t var);
+
+/* Compare two expressions
+ *
+ * @expr1
+ * @expr2
+ * @return returns a comparison result
+ */
+compare_result_t expression_compare(expression_t* expr1, expression_t* expr2);
 
 /* get the name of the first variable that appears in an expression
  *

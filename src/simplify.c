@@ -126,7 +126,7 @@ error_t builtin_pi(scope_t* scope, expression_t** out) {
 }
 
 error_t simplify_and_print(scope_t* scope, expression_t* expr, char* isolate_target, int print) {
-    error_t      err;
+    error_t err;
 
     err = expression_evaluate(expr, scope);
     if (err) return err;
@@ -142,9 +142,10 @@ error_t simplify_and_print(scope_t* scope, expression_t* expr, char* isolate_tar
         }
     }
     if (print) {
-        if (scope->boolean == EXPRESSION_RESULT_BOOLEAN_TRUE) {
+        expression_result_t result = expression_evaluate_comparisons(expr);
+        if (result == EXPRESSION_RESULT_TRUE) {
             puts(TRUE_STRING);
-        } else if (scope->boolean == EXPRESSION_RESULT_BOOLEAN_FALSE) {
+        } else if (result == EXPRESSION_RESULT_FALSE) {
             puts(FALSE_STRING);
         } else {
             expression_print(expr);
@@ -152,7 +153,6 @@ error_t simplify_and_print(scope_t* scope, expression_t* expr, char* isolate_tar
         }
     }
 
-    scope->boolean = -1;
     return ERROR_NO_ERROR;
 }
 
@@ -260,6 +260,20 @@ error_t builtin_const_e(scope_t* _, expression_t** out) {
     return ERROR_NO_ERROR;
 }
 
+error_t builtin_const_nan(scope_t* _, expression_t** out) {
+    (void)_;
+    *out = expression_new_number_si(0);
+    mpfr_set_nan(out[0]->number.value);
+    return ERROR_NO_ERROR;
+}
+
+error_t builtin_const_inf(scope_t* _, expression_t** out) {
+    (void)_;
+    *out = expression_new_number_si(0);
+    mpfr_set_inf(out[0]->number.value, 1);
+    return ERROR_NO_ERROR;
+}
+
 int main(int argc, char** argv) {
     int verbosity = 0;
     variable_t isolation_target = NULL;
@@ -305,7 +319,13 @@ int main(int argc, char** argv) {
     EXPORT_BUILTIN_CONST(&scope, euler);
     EXPORT_BUILTIN_CONST(&scope, catalan);
     EXPORT_BUILTIN_CONST(&scope, e);
+    EXPORT_BUILTIN_CONST(&scope, nan);
+    EXPORT_BUILTIN_CONST(&scope, inf);
 
+    ALIAS(&scope, NaN,      nan);
+    ALIAS(&scope, NAN,      nan);
+    ALIAS(&scope, Infinity, inf);
+    ALIAS(&scope, Inf,      inf);
     error_t err = ERROR_NO_ERROR;
     PARSE_FLAGS(
         FLAG('h', "help",    usage(argv[0]); goto cleanup)

@@ -72,6 +72,7 @@ set_target_properties(simplify-bin PROPERTIES OUTPUT_NAME simplify)
 
 target_link_libraries(simplify ${MPFR_LIBRARIES})
 target_link_libraries(simplify ${GMP_LIBRARIES})
+target_link_libraries(simplify m)
 
 target_link_libraries(simplify-bin simplify)
 
@@ -85,14 +86,20 @@ if(BUILD_TESTING)
     add_executable(test_lexer      ${CMAKE_SOURCE_DIR}/test/lexer.c)
     add_executable(test_parser     ${CMAKE_SOURCE_DIR}/test/parser.c)
     add_executable(test_expression ${CMAKE_SOURCE_DIR}/test/expression.c)
+    add_executable(test_compare    ${CMAKE_SOURCE_DIR}/test/compare.c)
+    add_executable(test_stringify  ${CMAKE_SOURCE_DIR}/test/stringify.c)
 
     target_link_libraries(test_rbtree     simplify)
     target_link_libraries(test_lexer      simplify)
     target_link_libraries(test_parser     simplify)
     target_link_libraries(test_expression simplify)
+    target_link_libraries(test_compare    simplify)
+    target_link_libraries(test_stringify  simplify)
 
     add_test(NAME rbtree     COMMAND test_rbtree)
     add_test(NAME lexer      COMMAND test_lexer)
     add_test(NAME parser     COMMAND test_parser)
     add_test(NAME expression COMMAND test_expression)
+    add_test(NAME compare    COMMAND test_compare)
+    add_test(NAME stringify  COMMAND test_stringify)
 endif()
