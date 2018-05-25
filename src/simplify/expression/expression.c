@@ -23,6 +23,7 @@ int index_of(char* x, char* y) {
 int strintcmp(char* x, char* y, int lenx, int leny, bool dec) {
     int xi = 0;
     int yi = 0;
+    int cmp_mul = 1;
 
     int xp;
     int yp;
@@ -35,10 +36,22 @@ int strintcmp(char* x, char* y, int lenx, int leny, bool dec) {
         yp = 1;
     }
 
+    if (y[0] == '-' || x[0] == '-') {
+        if (y[0] != '-') {
+            return -1;
+        } else if (y[1] != '-') {
+            return 1;
+        } else {
+            cmp_mul *= -1;
+            ++yi;
+            ++xi;
+        }
+    }
+
     while (xi < lenx || yi < leny) {
         int cmp = (x[xi] * xp) - (y[yi] * yp);
         if (cmp != 0) {
-            return cmp;
+            return cmp * cmp_mul;
         }
 
         if (!dec) {

@@ -11,33 +11,6 @@
  */
 error_t _expression_evaluate_recursive(expression_t* expr, scope_t* scope);
 
-/* apply a comparison operator expression, `expr`, modify scope if the result is noteworthy.
- *
- * @expr the expression to apply
- * @scope the expression's scope
- * @return returns an error code
- */
-error_t _expression_apply_comparison(expression_t* expr, scope_t* scope) {
-    assert(EXPRESSION_IS_OPERATOR(expr));
-
-    if (scope->boolean != EXPRESSION_RESULT_BOOLEAN_FALSE) {
-        compare_result_t x = expression_compare(EXPRESSION_LEFT(expr), EXPRESSION_RIGHT(expr));
-        if (x == COMPARE_RESULT_INCOMPARABLE)
-            return ERROR_NO_ERROR;
-        else if (expr->operator.infix == '<' && x == COMPARE_RESULT_LESS)
-            scope->boolean = EXPRESSION_RESULT_BOOLEAN_TRUE;
-        else if (expr->operator.infix == '>' && x == COMPARE_RESULT_GREATER)
-            scope->boolean = EXPRESSION_RESULT_BOOLEAN_TRUE;
-        else if (expr->operator.infix == '=' && x == COMPARE_RESULT_EQUAL)
-            scope->boolean = EXPRESSION_RESULT_BOOLEAN_TRUE;
-        else
-            scope->boolean = EXPRESSION_RESULT_BOOLEAN_FALSE;
-    }
-
-    expression_collapse_left(expr);
-    return ERROR_NO_ERROR;
-}
-
 /* apply a assignment operator expression, assume the left side of the expression contains a variable or function.
  *
  * @expr the expression to apply
@@ -124,7 +97,7 @@ error_t _expression_apply_prefix(expression_t* expr, scope_t* scope) {
  * @scope the expression's scope
  * @return returns an  error code
  */
-error_t _expression_apply_operator(expression_t* expr, scope_t* scope) {
+error_t _expression_apply_operator(expression_t* expr) {
     assert(EXPRESSION_IS_OPERATOR(expr));
 
     static const int round_mode = MPFR_RNDF;
@@ -163,9 +136,7 @@ error_t _expression_apply_operator(expression_t* expr, scope_t* scope) {
         case '=':
         case '>':
         case '<':
-            /* defer to _expression_apply_comparison if a comparison is found
-                this function cleans up itself, so we can return immediately */
-            return _expression_apply_comparison(expr, scope);
+            break;
         default:
             return ERROR_INVALID_OPERATOR;
     }
@@ -235,11 +206,9 @@ error_t _expression_evaluate_recursive(expression_t* expr, scope_t* scope) {
                 if (err) return err;
 
                 err = _expression_evaluate_recursive(expr->operator.left, scope);
-                if (expression_is_comparison(expr)) {
-                    return _expression_apply_comparison(expr, scope);
-                } else if (expr->operator.right->type == expr->operator.left->type &&
+                if (!expression_is_comparison(expr) && expr->operator.right->type == expr->operator.left->type &&
                         expr->operator.left->type == EXPRESSION_TYPE_NUMBER) {
-                    return _expression_apply_operator(expr, scope);
+                    return _expression_apply_operator(expr);
                 }
                 return err;
             }
@@ -248,6 +217,56 @@ error_t _expression_evaluate_recursive(expression_t* expr, scope_t* scope) {
     return ERROR_NO_ERROR;
 }
 
+expression_result_t _expression_evaluate_comparisons_recursive(expression_t* expr) {
+    expression_result_t result;
+
+    switch (expr->type) {
+        case EXPRESSION_TYPE_NUMBER:
+            return EXPRESSION_RESULT_NONBINARY;
+        case EXPRESSION_TYPE_VARIABLE:
+            return EXPRESSION_RESULT_NONBINARY;
+        case EXPRESSION_TYPE_FUNCTION:
+            return EXPRESSION_RESULT_NONBINARY;
+        case EXPRESSION_TYPE_PREFIX:
+            return EXPRESSION_RESULT_NONBINARY;
+        case EXPRESSION_TYPE_OPERATOR:
+        {
+            expression_result_t right = _expression_evaluate_comparisons_recursive(expr->operator.right);
+            expression_result_t left = _expression_evaluate_comparisons_recursive(expr->operator.left);
+
+            if (right == EXPRESSION_RESULT_FALSE || left == EXPRESSION_RESULT_FALSE) {
+                result = EXPRESSION_RESULT_FALSE;
+                break;
+            }
+
+            if (expression_is_comparison(expr)) {
+                compare_result_t x = expression_compare(EXPRESSION_LEFT(expr), EXPRESSION_RIGHT(expr));
+                if (x == COMPARE_RESULT_INCOMPARABLE)
+                    result = EXPRESSION_RESULT_NONBINARY;
+                else if (expr->operator.infix == '<' && x == COMPARE_RESULT_LESS)
+                    result = EXPRESSION_RESULT_TRUE;
+                else if (expr->operator.infix == '>' && x == COMPARE_RESULT_GREATER)
+                    result = EXPRESSION_RESULT_TRUE;
+                else if (expr->operator.infix == '=' && x == COMPARE_RESULT_EQUAL)
+                    result = EXPRESSION_RESULT_TRUE;
+                else
+                    result = EXPRESSION_RESULT_FALSE;
+                break;
+            }
+
+            if (right == EXPRESSION_RESULT_TRUE || left == EXPRESSION_RESULT_TRUE)
+                result = EXPRESSION_RESULT_TRUE;
+        }
+    }
+
+    expression_collapse_left(expr);
+    return result;
+}
+
 error_t expression_evaluate(expression_t* expr, scope_t* scope) {
     return  _expression_evaluate_recursive(expr, scope);
+}
+
+expression_result_t expression_evaluate_comparisons(expression_t* expr) {
+    return _expression_evaluate_comparisons_recursive(expr);
 }

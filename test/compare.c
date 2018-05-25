@@ -12,6 +12,10 @@ static struct {
 } __expr_result_pairs[] = {
     {"2", "4", COMPARE_RESULT_LESS},
     {"10", "10", COMPARE_RESULT_EQUAL},
+    {"10", "-10", COMPARE_RESULT_GREATER},
+    {"-0.2", "0.2", COMPARE_RESULT_LESS},
+    {"-0.0002", "-1", COMPARE_RESULT_GREATER},
+    {"-5", "-6", COMPARE_RESULT_GREATER},
     {"10", "1", COMPARE_RESULT_GREATER},
     {"x + 5", "1", COMPARE_RESULT_INCOMPARABLE},
     {"2 * x", "2x", COMPARE_RESULT_EQUAL},
@@ -22,6 +26,7 @@ static struct {
     {"5e2", "5e3", COMPARE_RESULT_LESS},
     {"y * (x2) + x^4", "x^4 + y * (2 * x)", COMPARE_RESULT_EQUAL},
     {"(y)f(x + 5)", "f(x + 5) * y", COMPARE_RESULT_EQUAL},
+    {"x * x * x", "x ^ 2 * x", COMPARE_RESULT_EQUAL},
 };
 
 int main() {

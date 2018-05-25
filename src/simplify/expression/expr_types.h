@@ -113,9 +113,6 @@ typedef union variable_value variable_value_t;
  */
 typedef error_t(*simplify_func_t)(scope_t*, expression_t**);
 
-/* The boolean result of an expression, No Result (if there was no condition operator), true or false */
-typedef enum expression_result expression_result_t;
-
 enum operator_precedence {
     /* this value is used to say, "anything can follow this operator".
      * it should __never__ be assigned to an actual operator.
@@ -139,12 +136,6 @@ enum expression_type {
     EXPRESSION_TYPE_FUNCTION,
 };
 
-enum expression_result {
-    EXPRESSION_RESULT_EXPRESSION,
-    EXPRESSION_RESULT_BOOLEAN_TRUE,
-    EXPRESSION_RESULT_BOOLEAN_FALSE,
-};
-
 union variable_value {
     simplify_func_t internal;
     expression_t*   expression;
@@ -160,9 +151,6 @@ struct variable_info {
 struct scope {
     scope_t* parent;
     rbtree_t variables;
-
-    /* The result of all boolean operations so far */
-    expression_result_t boolean;
 };
 
 
@@ -370,9 +358,6 @@ void expression_list_copy(expression_list_t* list1, expression_list_t* list2);
 static inline void scope_init(scope_t* scope) {
     rbtree_init(&scope->variables);
     scope->parent = NULL;
-
-    /* by default an expressions result is a simplified expression */
-    scope->boolean = EXPRESSION_RESULT_EXPRESSION;
 }
 
 /* define a variable in the scope

@@ -126,7 +126,7 @@ error_t builtin_pi(scope_t* scope, expression_t** out) {
 }
 
 error_t simplify_and_print(scope_t* scope, expression_t* expr, char* isolate_target, int print) {
-    error_t      err;
+    error_t err;
 
     err = expression_evaluate(expr, scope);
     if (err) return err;
@@ -142,9 +142,10 @@ error_t simplify_and_print(scope_t* scope, expression_t* expr, char* isolate_tar
         }
     }
     if (print) {
-        if (scope->boolean == EXPRESSION_RESULT_BOOLEAN_TRUE) {
+        expression_result_t result = expression_evaluate_comparisons(expr);
+        if (result == EXPRESSION_RESULT_TRUE) {
             puts(TRUE_STRING);
-        } else if (scope->boolean == EXPRESSION_RESULT_BOOLEAN_FALSE) {
+        } else if (result == EXPRESSION_RESULT_FALSE) {
             puts(FALSE_STRING);
         } else {
             expression_print(expr);
@@ -152,7 +153,6 @@ error_t simplify_and_print(scope_t* scope, expression_t* expr, char* isolate_tar
         }
     }
 
-    scope->boolean = -1;
     return ERROR_NO_ERROR;
 }
 
