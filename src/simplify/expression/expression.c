@@ -3,27 +3,65 @@
 #include "simplify/expression/expression.h"
 #include "simplify/expression/stringify.h"
 
-int strnumcmp(char* x, char* y, int lenx, int leny) {
+
+int index_of(char* x, char* y) {
+    int i = 0;
+    int yi = 0;
+    while (x[i]) {
+        if (!y[yi])
+            return i;
+        if (y[yi] == x[i])
+            ++yi;
+        else
+            yi = 0;
+        ++i;
+    }
+
+    return -1;
+}
+
+int strintcmp(char* x, char* y, int lenx, int leny) {
+    int xi = 0;
+    int yi = 0;
+
     int xp = pow(10, lenx);
     int yp = pow(10, leny);
-    for (int i = 0; i < lenx && i < leny; ++i) {
-        if (x[i] == '.' && y[i] != '.') {
-            return -1;
-        } else if (x[i] != '.' && y[i] == '.') {
-            return 1;
-        } else if (x[i] == '.' && y[i] == '.') {
-            xp *= -1;
-            yp *= -1;
-        } else {
-            int cmp = (x[i] * xp) - (y[i] * yp);
-            if (cmp != 0) {
-                return cmp;
-            }
-            xp /= 10;
-            yp /= 10;
+
+    while (xi < lenx || yi < leny) {
+        int cmp = (x[xi] * xp) - (y[yi] * yp);
+        if (cmp != 0) {
+            return cmp;
         }
+
+        xp /= 10;
+        yp /= 10;
+
+        if (xi < lenx)
+            ++xi;
+        else
+            xp = 0;
+
+        if (yi < leny)
+            ++yi;
+        else
+            yp = 0;
     }
     return 0;
+}
+
+int strnumcmp(char* x, char* y, int lenx, int leny) {
+    int decx = index_of(x, ".");
+    int decy = index_of(y, ".");
+    if (decx < 0) decx = lenx;
+    if (decy < 0) decy = leny;
+
+    int cmp = strintcmp(x, y, decx, decy);
+    if (cmp != 0) return cmp;
+
+    if ((decx != lenx || decy != leny) && cmp != 0)
+        cmp = strintcmp(x + decx, y + decy, lenx - decx, leny - decy);
+
+    return cmp;
 }
 
 compare_result_t _expression_compare_numbers(expression_t* expr1, expression_t* expr2) {
