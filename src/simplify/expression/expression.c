@@ -20,12 +20,20 @@ int index_of(char* x, char* y) {
     return -1;
 }
 
-int strintcmp(char* x, char* y, int lenx, int leny) {
+int strintcmp(char* x, char* y, int lenx, int leny, bool dec) {
     int xi = 0;
     int yi = 0;
 
-    int xp = pow(10, lenx);
-    int yp = pow(10, leny);
+    int xp;
+    int yp;
+
+    if (!dec) {
+        xp = pow(10, lenx);
+        yp = pow(10, leny);
+    } else {
+        xp = 1;
+        yp = 1;
+    }
 
     while (xi < lenx || yi < leny) {
         int cmp = (x[xi] * xp) - (y[yi] * yp);
@@ -33,8 +41,13 @@ int strintcmp(char* x, char* y, int lenx, int leny) {
             return cmp;
         }
 
-        xp /= 10;
-        yp /= 10;
+        if (!dec) {
+            xp /= 10;
+            yp /= 10;
+        } else {
+            xp *= 10;
+            yp *= 10;
+        }
 
         if (xi < lenx)
             ++xi;
@@ -55,13 +68,11 @@ int strnumcmp(char* x, char* y, int lenx, int leny) {
     if (decx < 0) decx = lenx;
     if (decy < 0) decy = leny;
 
-    int cmp = strintcmp(x, y, decx, decy);
-    if (cmp != 0) return cmp;
+    int cmp = strintcmp(x, y, decx, decy, false);
+    if (cmp != 0 || (decx == lenx && decy == leny))
+        return cmp;
 
-    if ((decx != lenx || decy != leny) && cmp != 0)
-        cmp = strintcmp(x + decx, y + decy, lenx - decx, leny - decy);
-
-    return cmp;
+    return strintcmp(x + decx, y + decy, lenx - decx, leny - decy, true);
 }
 
 compare_result_t _expression_compare_numbers(expression_t* expr1, expression_t* expr2) {

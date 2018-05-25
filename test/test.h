@@ -44,6 +44,21 @@ static inline const char* print_type(expression_type_t t) {
     return "UNKOWN";
 }
 
+
+static inline const char* print_compare_result(compare_result_t t) {
+    switch (t) {
+        case COMPARE_RESULT_LESS:
+            return "COMPARE_RESULT_LESS";
+        case COMPARE_RESULT_GREATER:
+            return "COMPARE_RESULT_GREATER";
+        case COMPARE_RESULT_EQUAL:
+            return "COMPARE_RESULT_EQUAL";
+        case COMPARE_RESULT_INCOMPARABLE:
+            return "COMPARE_RESULT_INCOMPARABLE";
+    }
+    return "UNKOWN";
+}
+
 void expression_assert_eq(expression_t* expr1, expression_t* expr2) {
     if (expr1->type != expr2->type) {
         printf("EXPECTED:\n");
