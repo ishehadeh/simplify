@@ -1,10 +1,4 @@
 #include "test.h"
-#include "simplify/expression/expression.h"
-#include "simplify/expression/stringify.h"
-#include "simplify/expression/isolate.h"
-#include "simplify/expression/simplify.h"
-#include "simplify/expression/evaluate.h"
-
 
 int main() {
     mpfr_t bad_number;
@@ -14,12 +8,9 @@ int main() {
     mpfr_init(bad_number);
     mpfr_init(infinity);
     mpfr_init(neg_infinity);
-    mpfr_set_si(bad_number, 0, MPFR_RNDN);
-    mpfr_set_si(infinity, 0, MPFR_RNDN);
-
-    mpfr_rootn_ui(bad_number, bad_number, 0, MPFR_RNDN);
-    mpfr_rec_sqrt(infinity, infinity, MPFR_RNDN);
-    mpfr_neg(neg_infinity, infinity, MPFR_RNDN);
+    mpfr_set_nan(bad_number);
+    mpfr_set_inf(infinity, 1);
+    mpfr_set_inf(neg_infinity, -1);
 
     struct {
         expression_t* expr;

@@ -3,9 +3,6 @@
 #ifndef SIMPLIFY_BUILTINS_H_
 #define SIMPLIFY_BUILTINS_H_
 
-#include "simplify/errors.h"
-#include "simplify/expression/expression.h"
-
 /* this file includes utilities for creating builtin functions and constants */
 
 #define DEFINE_MPFR_FUNCTION(NAME) \

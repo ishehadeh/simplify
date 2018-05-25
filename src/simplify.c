@@ -263,14 +263,14 @@ error_t builtin_const_e(scope_t* _, expression_t** out) {
 error_t builtin_const_nan(scope_t* _, expression_t** out) {
     (void)_;
     *out = expression_new_number_si(0);
-    mpfr_rootn_ui(out[0]->number.value, out[0]->number.value, 0, MPFR_RNDN);
+    mpfr_set_nan(out[0]->number.value);
     return ERROR_NO_ERROR;
 }
 
 error_t builtin_const_inf(scope_t* _, expression_t** out) {
     (void)_;
     *out = expression_new_number_si(0);
-    mpfr_rec_sqrt(out[0]->number.value, out[0]->number.value, MPFR_RNDN);
+    mpfr_set_inf(out[0]->number.value, 1);
     return ERROR_NO_ERROR;
 }
 
