@@ -5,6 +5,13 @@
 
 #include "simplify/errors.h"
 
+/* default to 2KB for RBTREE_CHUNK_SIZE 
+    This gaurentees the all the builtins can fit in one chunk
+*/
+#if !defined(RBTREE_CHUNK_SIZE) && defined(RBTREE_USE_CHUNKS)
+#   define RBTREE_CHUNK_SIZE 2048
+#endif
+
 /* A node in the Red-Black Tree
  */
 typedef struct rbtree_node  rbtree_node_t;
@@ -36,9 +43,23 @@ struct rbtree_node {
     char* key;
 };
 
-struct rbtree {
-    struct rbtree_node* root;
-};
+#if defined(RBTREE_USE_CHUNKS)
+    struct rbtree_chunk {
+        void*        data;
+        size_t       used;
+        struct rbtree_chunk* last;
+    };
+
+    struct rbtree {
+        /* to avoid allocations allocate rbtree memory to the slab */
+        struct rbtree_chunk* slab;
+        struct rbtree_node* root;
+    };
+#else
+    struct rbtree {
+        struct rbtree_node* root;
+    };
+#endif
 
 /* insert a new item into the tree
  *
@@ -71,6 +92,10 @@ void    rbtree_clean(rbtree_t* tree, void(*data_cleaner)(void*));
  */
 static inline void rbtree_init(rbtree_t* tree) {
     tree->root = NULL;
+
+#if defined(RBTREE_USE_CHUNKS)
+    tree->slab = NULL;
+#endif
 }
 
 #endif  // SIMPLIFY_RBTREE_RBTREE_H_

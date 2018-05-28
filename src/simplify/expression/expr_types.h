@@ -165,7 +165,7 @@ struct expression_list {
 struct expression_number {
     expression_type_t type;
 
-    mpfr_t value;
+    mpfr_ptr value;
 };
 
 struct expression_function {
@@ -255,7 +255,7 @@ void expression_init_function(expression_t* expression, char* name, size_t lengt
  * @expression the expression to initialize
  * @number the number to use as the expression's initial value
  */
-void expression_init_number(expression_t* expression, mpfr_t number);
+void expression_init_number(expression_t* expression, mpfr_ptr number);
 
 /* initialize a new number expression with a double
  *

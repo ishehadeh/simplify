@@ -69,7 +69,10 @@ static inline void rbtree_rotate_right(rbtree_t* tree, rbtree_node_t* node) {
 }
 
 void rbtree_free_node_recursive(rbtree_node_t* node, void(*free_func)(void*)) {
+#if !defined(RBTREE_USE_CHUNKS)
     free(node->key);
+#endif
+
     if (free_func)
         free_func(node->data);
     if (node->left)
@@ -77,7 +80,10 @@ void rbtree_free_node_recursive(rbtree_node_t* node, void(*free_func)(void*)) {
 
     if (node->right)
         rbtree_free_node_recursive(node->right, free_func);
+
+#if !defined(RBTREE_USE_CHUNKS)
     free(node);
+#endif
 }
 
 error_t rbtree_basic_insert(rbtree_t* tree, rbtree_node_t* node) {
@@ -137,6 +143,16 @@ error_t rbtree_search(rbtree_t* tree, char* key, void** dataout) {
 void rbtree_clean(rbtree_t* tree, void(*free_func)(void*)) {
     if (tree->root)
         rbtree_free_node_recursive(tree->root, free_func);
+
+#if defined(RBTREE_USE_CHUNKS)
+    struct rbtree_chunk* slab = tree->slab;
+    while (slab) {
+        struct rbtree_chunk* last = slab->last;
+        free(slab->data);
+        free(slab);
+        slab = last;
+    }
+#endif
 }
 
 error_t rbtree_balance(rbtree_t* tree, rbtree_node_t* node) {
@@ -179,20 +195,41 @@ error_t rbtree_balance(rbtree_t* tree, rbtree_node_t* node) {
 }
 
 error_t rbtree_insert(rbtree_t* tree, char* key, void* value) {
-    rbtree_node_t* node = malloc(sizeof(rbtree_node_t));
-    if (!node) return ERROR_FAILED_TO_ALLOCATE;
-
     size_t key_len = strlen(key);
+
+#if defined(RBTREE_USE_CHUNKS)
+    if (tree->slab == NULL) {
+        tree->slab = malloc(sizeof(struct rbtree_chunk));
+        tree->slab->used = 0;
+        tree->slab->data = malloc(RBTREE_CHUNK_SIZE);
+        tree->slab->last = NULL;
+    }
+    
+    if (RBTREE_CHUNK_SIZE < sizeof(rbtree_node_t) + key_len + 1 + tree->slab->used) {
+        struct rbtree_chunk* old = tree->slab;
+        tree->slab = malloc(sizeof(struct rbtree_chunk));
+        tree->slab->used = 0;
+        tree->slab->data = malloc(RBTREE_CHUNK_SIZE);
+        tree->slab->last = old;
+    }
+
+    rbtree_node_t* node = (rbtree_node_t*)(tree->slab->data + tree->slab->used);
+    node->key = (char*)(sizeof(rbtree_node_t) + tree->slab->data + tree->slab->used);
+    tree->slab->used += sizeof(rbtree_node_t) + key_len + 1;
+#else
+    rbtree_node_t* node = malloc(sizeof(rbtree_node_t));
+    node->key = malloc(key_len + 1);
+#endif
+
     node->left = NULL;
     node->right = NULL;
     node->parent = NULL;
-    node->key = malloc(key_len + 1);
     node->color = RBTREE_COLOR_RED;
     node->data = value;
-
+    
     node->key[key_len] = 0;
     strncpy(node->key, key, key_len);
-
+    
     error_t err = rbtree_basic_insert(tree, node);
     if (err) return err;
 

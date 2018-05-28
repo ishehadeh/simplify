@@ -90,10 +90,10 @@ int strnumcmp(char* x, char* y, int lenx, int leny) {
 
 compare_result_t _expression_compare_numbers(expression_t* expr1, expression_t* expr2) {
     stringifier_t st;
-    st.buffer = malloc(4096);
-    st.length = 4096;
+    st.buffer = malloc(128);
+    st.length = 128;
     st.index = 0;
-    /* incase theses expressions aren't numbers, use invalid variable names for NAN and INF */
+    /* incase these expressions aren't numbers, use invalid variable names for NAN and INF */
     st.nan_string = "@";
     st.inf_string = "#";
     st.whitespace = "";
@@ -105,8 +105,8 @@ compare_result_t _expression_compare_numbers(expression_t* expr1, expression_t* 
     char* expr1str = st.buffer;
     size_t expr1len = st.index;
     expr1str[st.index] = 0;
-    st.buffer = malloc(4096);
-    st.length = 4096;
+    st.buffer = malloc(128);
+    st.length = 128;
     st.index = 0;
     stringifier_write_expression(&st, expr2);
     char* expr2str = st.buffer;

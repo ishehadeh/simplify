@@ -57,12 +57,11 @@ error_t _expression_setup_natural_log(expression_t* y, expression_t* expr) {
     error_t err = ERROR_NO_ERROR;
 
     if (EXPRESSION_IS_NUMBER(y)) {
-        mpfr_t loge;
+        mpfr_ptr loge = malloc(sizeof(mpfr_t));
         mpfr_init(loge);
         mpfr_log(loge, y->number.value, MPFR_RNDF);
         expression_init_number(expr, loge);
         expression_clean(y);
-        mpfr_clear(loge);
         return ERROR_NO_ERROR;
     }
 

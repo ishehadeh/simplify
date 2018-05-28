@@ -22,6 +22,10 @@ if (SIMPLIFY_LINK_STATIC)
     set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 endif()
 
+if (SIMPLIFY_MINIMIZE_ALLOCATIONS)
+    add_definitions(-DRBTREE_USE_CHUNKS=1)
+endif()
+
 find_package(GMP REQUIRED)
 find_package(MPFR REQUIRED)
 

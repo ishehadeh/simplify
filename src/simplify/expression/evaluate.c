@@ -102,41 +102,47 @@ error_t _expression_apply_operator(expression_t* expr) {
 
     static const int round_mode = MPFR_RNDF;
 
-    mpfr_t result;
+    mpfr_ptr result;
 
     mpfr_ptr left  = expr->operator.left->number.value;
     mpfr_ptr right = expr->operator.right->number.value;
 
     switch (expr->operator.infix) {
         case '+':
+            result = malloc(sizeof(mpfr_t));
             mpfr_init(result);
             mpfr_add(result, left, right, round_mode);
             break;
         case '-':
+            result = malloc(sizeof(mpfr_t));
             mpfr_init(result);
             mpfr_sub(result, left, right, round_mode);
             break;
         case '/':
+            result = malloc(sizeof(mpfr_t));
             mpfr_init(result);
             mpfr_div(result, left, right, round_mode);
             break;
         case '*':
         case '(':
+            result = malloc(sizeof(mpfr_t));
             mpfr_init(result);
             mpfr_mul(result, left, right, round_mode);
             break;
         case '^':
+            result = malloc(sizeof(mpfr_t));
             mpfr_init(result);
             mpfr_pow(result, left, right, round_mode);
             break;
         case '\\':
+            result = malloc(sizeof(mpfr_t));
             mpfr_init(result);
             mpfr_rootn_ui(result, left, mpfr_get_ui(right, MPFR_RNDN), round_mode);
             break;
         case '=':
         case '>':
         case '<':
-            break;
+            return ERROR_NO_ERROR;
         default:
             return ERROR_INVALID_OPERATOR;
     }
@@ -145,7 +151,6 @@ error_t _expression_apply_operator(expression_t* expr) {
     expression_free(expr->operator.right);
 
     expression_init_number(expr, result);
-    mpfr_clear(result);
 
     return ERROR_NO_ERROR;
 }
@@ -191,8 +196,10 @@ error_t _expression_evaluate_recursive(expression_t* expr, scope_t* scope) {
             return _expression_substitute_variable(expr, scope);
         case EXPRESSION_TYPE_FUNCTION:
         {
+            expression_t old = *expr;
             error_t err = scope_call(scope, expr->function.name, expr->function.parameters, expr);
             if (err && err != ERROR_NONEXISTANT_KEY) return err;
+            if (!err) expression_clean(&old);
             return ERROR_NO_ERROR;
         }
         case EXPRESSION_TYPE_PREFIX:
@@ -267,7 +274,7 @@ expression_result_t _expression_evaluate_comparisons_recursive(expression_t* exp
 }
 
 error_t expression_evaluate(expression_t* expr, scope_t* scope) {
-    return  _expression_evaluate_recursive(expr, scope);
+    return _expression_evaluate_recursive(expr, scope);
 }
 
 expression_result_t expression_evaluate_comparisons(expression_t* expr) {

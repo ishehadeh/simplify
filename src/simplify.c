@@ -37,6 +37,7 @@
 #define FALSE_STRING "false"
 
 static gmp_randstate_t _g_rand_state;
+static bool            _g_rand_state_initialized;
 static mpfr_ptr        _g_eulers_constant;
 
 void usage(char* arg0) {
@@ -111,20 +112,6 @@ error_t execute_file(char* fname, scope_t* scope) {
     return ERROR_NO_ERROR;
 }
 
-error_t builtin_pi(scope_t* scope, expression_t** out) {
-    (void)scope;
-
-    *out = malloc(sizeof(expression_t));
-    mpfr_t num;
-    mpfr_init(num);
-    mpfr_const_pi(num, MPFR_RNDF);
-    *out = expression_new_number(num);
-    mpfr_clear(num);
-
-
-    return ERROR_NO_ERROR;
-}
-
 error_t simplify_and_print(scope_t* scope, expression_t* expr, char* isolate_target, int print) {
     error_t err;
 
@@ -192,12 +179,17 @@ DEFINE_MPFR_CONST(catalan)
 error_t builtin_func_random(scope_t* scope, expression_t** out) {
     (void)scope;
 
-    mpfr_t num;
+    if (!_g_rand_state_initialized) {
+        _g_rand_state_initialized = true;
+        gmp_randinit_default(_g_rand_state);
+        gmp_randseed_ui(_g_rand_state, (unsigned long)time(NULL));
+    }
+
+    mpfr_ptr num = malloc(sizeof(mpfr_t));
     mpfr_init(num);
 
     mpfr_urandom(num, _g_rand_state, MPFR_RNDN);
     *out = expression_new_number(num);
-    mpfr_clear(num);
 
     return ERROR_NO_ERROR;
 }
@@ -210,7 +202,7 @@ error_t builtin_func_ln(scope_t* scope, expression_t** out) {
         return ERROR_NO_ERROR;
         expression_clean(&input);
     }
-    mpfr_t num;
+    mpfr_ptr num = malloc(sizeof(mpfr_t));
     mpfr_init(num);
     mpfr_log(num, input.number.value, MPFR_RNDN);
     *out = expression_new_number(num);
@@ -255,7 +247,9 @@ error_t builtin_const_e(scope_t* _, expression_t** out) {
         mpfr_clear(x);
     }
 
-    *out = expression_new_number(_g_eulers_constant);
+    mpfr_ptr copy = malloc(sizeof(mpfr_t));
+    mpfr_init_set(copy, _g_eulers_constant, MPFR_RNDN);
+    *out = expression_new_number(copy);
 
     return ERROR_NO_ERROR;
 }
@@ -280,8 +274,6 @@ int main(int argc, char** argv) {
     scope_t scope;
 
     scope_init(&scope);
-    gmp_randinit_default(_g_rand_state);
-    gmp_randseed_ui(_g_rand_state, (unsigned long)time(NULL));
 
     EXPORT_BUILTIN_FUNCTION(&scope, cos);
     EXPORT_BUILTIN_FUNCTION(&scope, sin);
@@ -375,7 +367,9 @@ error:
 cleanup:
     scope_clean(&scope);
     mpfr_free_cache();
-    gmp_randclear(_g_rand_state);
+    if (_g_rand_state_initialized)
+        gmp_randclear(_g_rand_state);
+
     if (_g_eulers_constant) {
         mpfr_clear(_g_eulers_constant);
         free(_g_eulers_constant);

@@ -268,7 +268,7 @@ int main() {
         expression_t expr;
         scope_t      scope;
 
-        printf("starting test #%d...", i + 1);
+        printf("starting test #%d (%s)...", i + 1, __string_expr_pairs[i].string);
         err = parse_string(__string_expr_pairs[i].string, &expr);
         if (err)
             FATAL("failed to parse string \"%s\": %s", __string_expr_pairs[i].string, error_string(err));

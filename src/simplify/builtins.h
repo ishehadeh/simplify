@@ -13,11 +13,10 @@ error_t builtin_func_ ## NAME(scope_t* scope, expression_t** out) { \
         return ERROR_NO_ERROR; \
         expression_clean(&input); \
     } \
-    mpfr_t num; \
+    mpfr_ptr num = malloc(sizeof(mpfr_t)); \
     mpfr_init(num); \
     mpfr_## NAME(num, input.number.value, MPFR_RNDN); \
     *out = expression_new_number(num); \
-    mpfr_clear(num); \
     expression_clean(&input); \
     return ERROR_NO_ERROR; \
 }
@@ -30,11 +29,10 @@ error_t builtin_func_ ## NAME(scope_t* scope, expression_t** out) { \
         return ERROR_NO_ERROR; \
         expression_clean(&input); \
     } \
-    mpfr_t num; \
+    mpfr_ptr num = malloc(sizeof(mpfr_t)); \
     mpfr_init(num); \
     mpfr_## NAME(num, input.number.value); \
     *out = expression_new_number(num); \
-    mpfr_clear(num); \
     expression_clean(&input); \
     return ERROR_NO_ERROR; \
 }
@@ -50,11 +48,10 @@ error_t builtin_func_ ## NAME(scope_t* scope, expression_t** out) { \
         expression_clean(&input2); \
         return ERROR_NO_ERROR; \
     } \
-    mpfr_t num; \
+    mpfr_ptr num = malloc(sizeof(mpfr_t)); \
     mpfr_init(num); \
     mpfr_## NAME(num, input.number.value, input2.number.value, MPFR_RNDN); \
     *out = expression_new_number(num); \
-    mpfr_clear(num); \
     expression_clean(&input); \
     expression_clean(&input2); \
     return ERROR_NO_ERROR; \
@@ -69,11 +66,10 @@ error_t builtin_func_ ## NAME(scope_t* scope, expression_t** out) { \
 #define DEFINE_MPFR_CONST(NAME) \
 error_t builtin_const_ ## NAME(scope_t* scope, expression_t** out) { \
     (void)scope; \
-    mpfr_t num; \
+    mpfr_ptr num = malloc(sizeof(mpfr_t)); \
     mpfr_init(num); \
     mpfr_const_ ## NAME(num, MPFR_RNDF); \
     *out = expression_new_number(num); \
-    mpfr_clear(num); \
     return ERROR_NO_ERROR; \
 }
 

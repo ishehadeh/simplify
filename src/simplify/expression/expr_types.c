@@ -27,16 +27,18 @@ void expression_init_variable(expression_t* expr, char* name, size_t len) {
 
 void expression_init_number(expression_t* expr, mpfr_ptr value) {
     expr->type = EXPRESSION_TYPE_NUMBER;
-    mpfr_init_set(expr->number.value, value, MPFR_RNDF);
+    expr->number.value = value;
 }
 
 void expression_init_number_d(expression_t* expr, double value) {
     expr->type = EXPRESSION_TYPE_NUMBER;
+    expr->number.value = malloc(sizeof(mpfr_t));
     mpfr_init_set_d(expr->number.value, value, MPFR_RNDF);
 }
 
 void expression_init_number_si(expression_t* expr, long value) {
     expr->type = EXPRESSION_TYPE_NUMBER;
+    expr->number.value = malloc(sizeof(mpfr_t));
     mpfr_init_set_si(expr->number.value, value, MPFR_RNDF);
 }
 
@@ -62,6 +64,7 @@ void expression_clean(expression_t* expr) {
             break;
         case EXPRESSION_TYPE_NUMBER:
             mpfr_clear(expr->number.value);
+            free(expr->number.value);
             break;
         case EXPRESSION_TYPE_VARIABLE:
             free(expr->variable.value);
@@ -69,6 +72,7 @@ void expression_clean(expression_t* expr) {
         case EXPRESSION_TYPE_FUNCTION:
             free(expr->function.name);
             expression_list_free(expr->function.parameters);
+            break;
         default:
             break;
     }
@@ -98,8 +102,12 @@ void expression_copy(expression_t* expr, expression_t* out) {
             break;
         }
         case EXPRESSION_TYPE_NUMBER:
-            expression_init_number(out, expr->number.value);
+        {
+            mpfr_ptr copy = malloc(sizeof(mpfr_t));
+            mpfr_init_set(copy, expr->number.value, MPFR_RNDN);
+            expression_init_number(out, copy);
             break;
+        }
         case EXPRESSION_TYPE_VARIABLE:
             expression_init_variable(out, expr->variable.value, strlen(expr->variable.value));
             out->variable.binding = expr->variable.binding;
@@ -160,6 +168,7 @@ void expression_list_free(expression_list_t* list) {
         list = list->next;
         free(last);
     }
+    free(list);
 }
 
 void expression_list_append(expression_list_t* list, expression_t* expr) {
@@ -277,7 +286,7 @@ error_t scope_define_internal_function(scope_t* scope, char* name, simplify_func
 error_t _scope_run_function(scope_t* scope, variable_t name, expression_list_t* arg_values, expression_t* out) {
     scope_t fn_scope;
     variable_info_t* func_info;
-    expression_list_t* arg_defs = malloc(sizeof(expression_list_t));
+    expression_list_t arg_defs;
     error_t err;
 
     scope_init(&fn_scope);
@@ -288,12 +297,12 @@ error_t _scope_run_function(scope_t* scope, variable_t name, expression_list_t* 
 
     if (err) goto cleanup;
 
-    expression_list_init(arg_defs);
-    expression_list_copy(func_info->named_inputs, arg_defs);
+    expression_list_init(&arg_defs);
+    expression_list_copy(func_info->named_inputs, &arg_defs);
     expression_t* arg_def;
     expression_t* arg_value;
 
-    EXPRESSION_LIST_FOREACH2(arg_def, arg_value, arg_defs, arg_values) {
+    EXPRESSION_LIST_FOREACH2(arg_def, arg_value, &arg_defs, arg_values) {
         expression_t* op_expr = malloc(sizeof(expression_t));
 
         expression_evaluate(arg_value, scope);
@@ -315,8 +324,10 @@ error_t _scope_run_function(scope_t* scope, variable_t name, expression_list_t* 
         err = func_info->value.internal(&fn_scope, &body);
     }
 
-    if (body && !err)
+    if (body && !err) {
         *out = *body;
+        free(body);
+    }
 cleanup:
     scope_clean(&fn_scope);
     return err;
@@ -329,11 +340,11 @@ error_t scope_call(scope_t* scope, char* name, expression_list_t* args, expressi
     if (!info->named_inputs)
         return ERROR_IS_A_VARIABLE;
 
-    expression_list_t* args_copy = malloc(sizeof(expression_list_t));
-    expression_list_init(args_copy);
-    expression_list_copy(args, args_copy);
+    expression_list_t args_copy;
+    expression_list_init(&args_copy);
+    expression_list_copy(args, &args_copy);
 
-    err = _scope_run_function(scope, name, args_copy, out);
+    err = _scope_run_function(scope, name, &args_copy, out);
     return err;
 }
 
