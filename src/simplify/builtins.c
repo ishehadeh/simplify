@@ -44,7 +44,7 @@ _DEFINE_MPFR_BUILTIN(csch)
 _DEFINE_MPFR_BUILTIN(coth)
 
 
-error_t builtin_func_random(scope_t* scope, expression_t** out) {
+error_t builtin_func_random_imaginary(scope_t* scope, expression_t** out) {
     (void)scope;
 
     if (!_g_rand_state_initialized) {
@@ -57,6 +57,25 @@ error_t builtin_func_random(scope_t* scope, expression_t** out) {
     mpc_init2(num, 256);
 
     mpc_urandom(num, _g_rand_state);
+    *out = expression_new_number(num);
+
+    return ERROR_NO_ERROR;
+}
+
+
+error_t builtin_func_random(scope_t* scope, expression_t** out) {
+    (void)scope;
+
+    if (!_g_rand_state_initialized) {
+        _g_rand_state_initialized = true;
+        gmp_randinit_default(_g_rand_state);
+        gmp_randseed_ui(_g_rand_state, (unsigned long)time(NULL));
+    }
+
+    mpc_ptr num = malloc(sizeof(mpc_t));
+    mpc_init2(num, 256);
+    mpfr_set_si(mpc_imagref(num), 0, MPFR_RNDN);
+    mpfr_urandom(mpc_realref(num), _g_rand_state, MPFR_RNDN);
     *out = expression_new_number(num);
 
     return ERROR_NO_ERROR;
@@ -114,5 +133,6 @@ void simplify_export_builtins(scope_t* scope) {
     _EXPORT_BUILTIN_FUNC(scope, coth);
 
     _EXPORT_BUILTIN_FUNC(scope, random);
+    _EXPORT_BUILTIN_FUNC(scope, random_imaginary);
     _EXPORT_BUILTIN_FUNC(scope, log);
 }
