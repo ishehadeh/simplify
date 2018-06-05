@@ -112,11 +112,11 @@ int main() {
                 '=',
                 expression_new_number_d(198))
         },
-        {"-8 = 2 * x ^ 2", OP_EVALUATE | OP_ISOLATE_X,
+        {"8 = 2 * x ^ 2", OP_EVALUATE | OP_ISOLATE_X,
             expression_new_operator(
                 expression_new_variable("x"),
                 '=',
-                expression_new_number_d(-2))
+                expression_new_number_d(2))
         },
         {"11 = x \\ 2", OP_EVALUATE | OP_ISOLATE_X,
             expression_new_operator(

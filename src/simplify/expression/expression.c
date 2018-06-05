@@ -21,7 +21,7 @@ int index_of(char* x, char* y) {
 }
 
 static inline int _pow(int x, int y) {
-    while (y--) x *= x;
+    while (y-- > 0) x *= x;
     return x;
 }
 
