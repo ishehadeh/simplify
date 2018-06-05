@@ -94,6 +94,14 @@ int strnumcmp(char* x, char* y, int lenx, int leny) {
 }
 
 compare_result_t _expression_compare_numbers(expression_t* expr1, expression_t* expr2) {
+    if (!mpfr_zero_p(mpc_imagref(expr1->number.value)) || !mpfr_zero_p(mpc_imagref(expr2->number.value))) {
+        if (mpc_cmp(expr1->number.value, expr2->number.value) == 0) {
+            return COMPARE_RESULT_EQUAL;
+        } else {
+            return COMPARE_RESULT_INCOMPARABLE;
+        }
+    }
+
     string_format_t sf = STRING_FORMAT_DEFAULT();
     string_t s;
     string_init(&s);
