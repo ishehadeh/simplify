@@ -5,12 +5,12 @@ int main() {
     mpc_t infinity;
     mpc_t neg_infinity;
 
-    mpc_init(bad_number);
-    mpc_init(infinity);
-    mpc_init(neg_infinity);
+    mpc_init2(bad_number, 8);
+    mpc_init2(infinity, 8);
+    mpc_init2(neg_infinity, 8);
     mpc_set_nan(bad_number);
-    mpc_set_inf(infinity, 1);
-    mpc_set_inf(neg_infinity, -1);
+    mpfr_set_inf(mpc_realref(infinity), 1);
+    mpfr_set_inf(mpc_realref(neg_infinity), -1);
 
     struct {
         expression_t* expr;

@@ -21,8 +21,8 @@ int index_of(char* x, char* y) {
 }
 
 static inline int _pow(int x, int y) {
-    while (x--) y *= y;
-    return y;
+    while (y--) x *= x;
+    return x;
 }
 
 int strintcmp(char* x, char* y, int lenx, int leny, bool dec) {

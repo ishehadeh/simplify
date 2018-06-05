@@ -14,44 +14,6 @@
 #define OP_BOOLEAN_TRUE     8
 #define OP_BOOLEAN_FALSE    16
 
-DEFINE_mpc_FUNCTION(cos)
-DEFINE_mpc_CONST(pi)
-
-
-error_t builtin_func_log(scope_t* scope, expression_t** out) {
-    error_t err;
-    expression_t* b = malloc(sizeof(expression_t));
-    expression_t* y = malloc(sizeof(expression_t));
-
-    scope_get_value(scope, "__arg0", b);
-    scope_get_value(scope, "__arg1", y);
-
-    err = expression_do_logarithm(b, y, out);
-    if (err) return err;
-
-    return expression_evaluate(*out, scope);
-}
-
-error_t builtin_const_e(scope_t* _, expression_t** out) {
-    (void)_;
-
-    *out = expression_new_number_si(0);
-    mpc_t n;
-    mpc_t x;
-    mpc_init2(n, 256);
-    mpc_init2(x, 256);
-    mpc_init2((*out)->number.value, 256);
-
-    mpc_set_ui(n, 9999999999UL, MPC_RNDNN);
-    mpc_ui_div(x, 1, n, MPC_RNDNN);
-    mpc_add_ui(x, x, 1, MPC_RNDNN);
-    mpc_pow((*out)->number.value, x, n, MPC_RNDNN);
-
-    mpc_clear(n);
-    mpc_clear(x);
-
-    return ERROR_NO_ERROR;
-}
 
 
 int main() {
@@ -274,10 +236,7 @@ int main() {
             FATAL("failed to parse string \"%s\": %s", __string_expr_pairs[i].string, error_string(err));
 
         scope_init(&scope);
-        EXPORT_BUILTIN_FUNCTION2(&scope, log);
-        EXPORT_BUILTIN_FUNCTION(&scope, cos);
-        EXPORT_BUILTIN_CONST(&scope, pi);
-        EXPORT_BUILTIN_CONST(&scope, e);
+        simplify_export_builtins(&scope);
 
 
         if (__string_expr_pairs[i].ops & OP_EVALUATE) {
