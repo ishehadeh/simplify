@@ -20,9 +20,20 @@ error_t builtin_func_ ## NAME(scope_t* scope, expression_t** out) { \
     return ERROR_NO_ERROR; \
 }
 
+#define _DEFINE_CONST(NAME) \
+error_t builtin_const_ ## NAME(scope_t* scope, expression_t** out) { \
+    (void)scope; \
+    mpc_ptr num = malloc(sizeof(mpc_t)); \
+    mpc_init2(num, 256); \
+    simplify_const_## NAME(num); \
+    *out = expression_new_number(num); \
+    return ERROR_NO_ERROR; \
+}
+
 #define _EXPORT_BUILTIN_FUNC(SCOPE, NAME) \
     scope_define_internal_function(SCOPE, #NAME, builtin_func_ ## NAME, 1, "__arg0")
 
+#define _EXPORT_BUILTIN_CONST(SCOPE, NAME) scope_define_internal_const(SCOPE, #NAME, builtin_const_ ## NAME)
 
 _DEFINE_MPFR_BUILTIN(cos)
 _DEFINE_MPFR_BUILTIN(sin)
@@ -43,6 +54,11 @@ _DEFINE_MPFR_BUILTIN(sech)
 _DEFINE_MPFR_BUILTIN(csch)
 _DEFINE_MPFR_BUILTIN(coth)
 
+_DEFINE_CONST(e)
+_DEFINE_CONST(i)
+_DEFINE_CONST(euler)
+_DEFINE_CONST(catalan)
+_DEFINE_CONST(pi)
 
 error_t builtin_func_random_imaginary(scope_t* scope, expression_t** out) {
     (void)scope;
@@ -135,4 +151,10 @@ void simplify_export_builtins(scope_t* scope) {
     _EXPORT_BUILTIN_FUNC(scope, random);
     _EXPORT_BUILTIN_FUNC(scope, random_imaginary);
     _EXPORT_BUILTIN_FUNC(scope, log);
+
+    _EXPORT_BUILTIN_CONST(scope, pi);
+    _EXPORT_BUILTIN_CONST(scope, i);
+    _EXPORT_BUILTIN_CONST(scope, e);
+    _EXPORT_BUILTIN_CONST(scope, euler);
+    _EXPORT_BUILTIN_CONST(scope, catalan);
 }

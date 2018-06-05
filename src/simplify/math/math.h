@@ -47,5 +47,6 @@ void simplify_const_e(mpc_ptr);
 void simplify_const_pi(mpc_ptr);
 void simplify_const_catalan(mpc_ptr);
 void simplify_const_euler(mpc_ptr);
+void simplify_const_i(mpc_ptr);
 
 #endif  // SIMPLIFY_MATH_MATH_H_

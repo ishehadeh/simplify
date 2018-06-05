@@ -22,3 +22,7 @@ void simplify_const_euler(mpc_ptr x) {
     mpc_set_si_si(x, 0, 0, MPC_RNDNN);
     mpfr_const_euler(mpc_realref(x), MPFR_RNDN);
 }
+
+void simplify_const_i(mpc_ptr x) {
+    mpc_set_si_si(x, 0, 1, MPC_RNDNN);
+}
