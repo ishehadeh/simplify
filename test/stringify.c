@@ -1,16 +1,16 @@
 #include "test.h"
 
 int main() {
-    mpfr_t bad_number;
-    mpfr_t infinity;
-    mpfr_t neg_infinity;
+    mpc_t bad_number;
+    mpc_t infinity;
+    mpc_t neg_infinity;
 
-    mpfr_init(bad_number);
-    mpfr_init(infinity);
-    mpfr_init(neg_infinity);
-    mpfr_set_nan(bad_number);
-    mpfr_set_inf(infinity, 1);
-    mpfr_set_inf(neg_infinity, -1);
+    mpc_init(bad_number);
+    mpc_init(infinity);
+    mpc_init(neg_infinity);
+    mpc_set_nan(bad_number);
+    mpc_set_inf(infinity, 1);
+    mpc_set_inf(neg_infinity, -1);
 
     struct {
         expression_t* expr;

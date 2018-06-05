@@ -80,7 +80,7 @@ error_t _expression_apply_prefix(expression_t* expr, scope_t* scope) {
             case '+':
                 break;
             case '-':
-                mpfr_neg(expr->prefix.right->number.value, expr->prefix.right->number.value, MPFR_RNDF);
+                mpc_neg(expr->prefix.right->number.value, expr->prefix.right->number.value, MPC_RNDNN);
                 break;
             default:
                 return ERROR_INVALID_PREFIX;
@@ -100,44 +100,45 @@ error_t _expression_apply_prefix(expression_t* expr, scope_t* scope) {
 error_t _expression_apply_operator(expression_t* expr) {
     assert(EXPRESSION_IS_OPERATOR(expr));
 
-    static const int round_mode = MPFR_RNDF;
+    static const int round_mode = MPC_RNDNN;
 
-    mpfr_ptr result;
+    mpc_ptr result;
 
-    mpfr_ptr left  = expr->operator.left->number.value;
-    mpfr_ptr right = expr->operator.right->number.value;
+    mpc_ptr left  = expr->operator.left->number.value;
+    mpc_ptr right = expr->operator.right->number.value;
 
     switch (expr->operator.infix) {
         case '+':
-            result = malloc(sizeof(mpfr_t));
-            mpfr_init(result);
-            mpfr_add(result, left, right, round_mode);
+            result = malloc(sizeof(mpc_t));
+            mpc_init2(result, 256);
+            mpc_add(result, left, right, round_mode);
             break;
         case '-':
-            result = malloc(sizeof(mpfr_t));
-            mpfr_init(result);
-            mpfr_sub(result, left, right, round_mode);
+            result = malloc(sizeof(mpc_t));
+            mpc_init2(result, 256);
+            mpc_sub(result, left, right, round_mode);
             break;
         case '/':
-            result = malloc(sizeof(mpfr_t));
-            mpfr_init(result);
-            mpfr_div(result, left, right, round_mode);
+            result = malloc(sizeof(mpc_t));
+            mpc_init2(result, 256);
+            mpc_div(result, left, right, round_mode);
             break;
         case '*':
         case '(':
-            result = malloc(sizeof(mpfr_t));
-            mpfr_init(result);
-            mpfr_mul(result, left, right, round_mode);
+            result = malloc(sizeof(mpc_t));
+            mpc_init2(result, 256);
+            mpc_mul(result, left, right, round_mode);
             break;
         case '^':
-            result = malloc(sizeof(mpfr_t));
-            mpfr_init(result);
-            mpfr_pow(result, left, right, round_mode);
+            result = malloc(sizeof(mpc_t));
+            mpc_init2(result, 256);
+            mpc_pow(result, left, right, round_mode);
             break;
         case '\\':
-            result = malloc(sizeof(mpfr_t));
-            mpfr_init(result);
-            mpfr_rootn_ui(result, left, mpfr_get_ui(right, MPFR_RNDN), round_mode);
+            result = malloc(sizeof(mpc_t));
+            mpc_init2(result, 256);
+            mpc_ui_div(right, 1, right, MPC_RNDNN);
+            mpc_pow(result, left, right, round_mode);
             break;
         case '=':
         case '>':

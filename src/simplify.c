@@ -38,7 +38,7 @@
 
 static gmp_randstate_t _g_rand_state;
 static bool            _g_rand_state_initialized;
-static mpfr_ptr        _g_eulers_constant;
+static mpc_ptr        _g_eulers_constant;
 
 void usage(char* arg0) {
     puts(INFO);
@@ -143,38 +143,38 @@ error_t simplify_and_print(scope_t* scope, expression_t* expr, char* isolate_tar
     return ERROR_NO_ERROR;
 }
 
-DEFINE_MPFR_FUNCTION(cos)
-DEFINE_MPFR_FUNCTION(sin)
-DEFINE_MPFR_FUNCTION(tan)
-DEFINE_MPFR_FUNCTION(acos)
-DEFINE_MPFR_FUNCTION(asin)
-DEFINE_MPFR_FUNCTION(atan)
-DEFINE_MPFR_FUNCTION(sec)
-DEFINE_MPFR_FUNCTION(csc)
-DEFINE_MPFR_FUNCTION(cot)
-DEFINE_MPFR_FUNCTION(cosh)
-DEFINE_MPFR_FUNCTION(sinh)
-DEFINE_MPFR_FUNCTION(tanh)
-DEFINE_MPFR_FUNCTION(acosh)
-DEFINE_MPFR_FUNCTION(asinh)
-DEFINE_MPFR_FUNCTION(atanh)
-DEFINE_MPFR_FUNCTION(sech)
-DEFINE_MPFR_FUNCTION(csch)
-DEFINE_MPFR_FUNCTION(coth)
+// DEFINE_mpc_FUNCTION(cos)
+// DEFINE_mpc_FUNCTION(sin)
+// DEFINE_mpc_FUNCTION(tan)
+// DEFINE_mpc_FUNCTION(acos)
+// DEFINE_mpc_FUNCTION(asin)
+// DEFINE_mpc_FUNCTION(atan)
+// DEFINE_mpc_FUNCTION(sec)
+// DEFINE_mpc_FUNCTION(csc)
+// DEFINE_mpc_FUNCTION(cot)
+// DEFINE_mpc_FUNCTION(cosh)
+// DEFINE_mpc_FUNCTION(sinh)
+// DEFINE_mpc_FUNCTION(tanh)
+// DEFINE_mpc_FUNCTION(acosh)
+// DEFINE_mpc_FUNCTION(asinh)
+// DEFINE_mpc_FUNCTION(atanh)
+// DEFINE_mpc_FUNCTION(sech)
+// DEFINE_mpc_FUNCTION(csch)
+// DEFINE_mpc_FUNCTION(coth)
 
-DEFINE_MPFR_FUNCTION_NRND(ceil)
-DEFINE_MPFR_FUNCTION_NRND(floor)
-DEFINE_MPFR_FUNCTION_NRND(round)
-DEFINE_MPFR_FUNCTION_NRND(roundeven)
-DEFINE_MPFR_FUNCTION_NRND(trunc)
-DEFINE_MPFR_FUNCTION(frac)
+// DEFINE_mpc_FUNCTION_NRND(ceil)
+// DEFINE_mpc_FUNCTION_NRND(floor)
+// DEFINE_mpc_FUNCTION_NRND(round)
+// DEFINE_mpc_FUNCTION_NRND(roundeven)
+// DEFINE_mpc_FUNCTION_NRND(trunc)
+// DEFINE_mpc_FUNCTION(frac)
 
-DEFINE_MPFR_FUNCTION2(min)
-DEFINE_MPFR_FUNCTION2(max)
+// DEFINE_mpc_FUNCTION2(min)
+// DEFINE_mpc_FUNCTION2(max)
 
-DEFINE_MPFR_CONST(pi)
-DEFINE_MPFR_CONST(euler)
-DEFINE_MPFR_CONST(catalan)
+DEFINE_mpc_CONST(pi)
+DEFINE_mpc_CONST(euler)
+DEFINE_mpc_CONST(catalan)
 
 error_t builtin_func_random(scope_t* scope, expression_t** out) {
     (void)scope;
@@ -185,10 +185,10 @@ error_t builtin_func_random(scope_t* scope, expression_t** out) {
         gmp_randseed_ui(_g_rand_state, (unsigned long)time(NULL));
     }
 
-    mpfr_ptr num = malloc(sizeof(mpfr_t));
-    mpfr_init(num);
+    mpc_ptr num = malloc(sizeof(mpc_t));
+    mpc_init2(num, 256);
 
-    mpfr_urandom(num, _g_rand_state, MPFR_RNDN);
+    mpc_urandom(num, _g_rand_state);
     *out = expression_new_number(num);
 
     return ERROR_NO_ERROR;
@@ -202,11 +202,11 @@ error_t builtin_func_ln(scope_t* scope, expression_t** out) {
         return ERROR_NO_ERROR;
         expression_clean(&input);
     }
-    mpfr_ptr num = malloc(sizeof(mpfr_t));
-    mpfr_init(num);
-    mpfr_log(num, input.number.value, MPFR_RNDN);
+    mpc_ptr num = malloc(sizeof(mpc_t));
+    mpc_init2(num, 256);
+    mpc_log(num, input.number.value, MPC_RNDNN);
     *out = expression_new_number(num);
-    mpfr_clear(num);
+    mpc_clear(num);
     expression_clean(&input);
     return ERROR_NO_ERROR;
 }
@@ -231,24 +231,25 @@ error_t builtin_const_e(scope_t* _, expression_t** out) {
 
     if (!_g_eulers_constant) {
         // Approximate euler's constant and then cache it
-        _g_eulers_constant = malloc(sizeof(mpfr_t));
-        mpfr_t n;
-        mpfr_t x;
-        mpfr_init(n);
-        mpfr_init(x);
-        mpfr_init(_g_eulers_constant);
+        _g_eulers_constant = malloc(sizeof(mpc_t));
+        mpc_t n;
+        mpc_t x;
+        mpc_init2(n, 256);
+        mpc_init2(x, 256);
+        mpc_init2(_g_eulers_constant, 256);
 
-        mpfr_set_ui(n, 9999999999UL, MPFR_RNDN);
-        mpfr_ui_div(x, 1, n, MPFR_RNDN);
-        mpfr_add_ui(x, x, 1, MPFR_RNDN);
-        mpfr_pow(_g_eulers_constant, x, n, MPFR_RNDN);
+        mpc_set_ui(n, 9999999999UL, MPC_RNDNN);
+        mpc_ui_div(x, 1, n, MPC_RNDNN);
+        mpc_add_ui(x, x, 1, MPC_RNDNN);
+        mpc_pow(_g_eulers_constant, x, n, MPC_RNDNN);
 
-        mpfr_clear(n);
-        mpfr_clear(x);
+        mpc_clear(n);
+        mpc_clear(x);
     }
 
-    mpfr_ptr copy = malloc(sizeof(mpfr_t));
-    mpfr_init_set(copy, _g_eulers_constant, MPFR_RNDN);
+    mpc_ptr copy = malloc(sizeof(mpc_t));
+    mpc_init2(copy, 256);
+    mpc_set(copy, _g_eulers_constant, MPC_RNDNN);
     *out = expression_new_number(copy);
 
     return ERROR_NO_ERROR;
@@ -257,14 +258,14 @@ error_t builtin_const_e(scope_t* _, expression_t** out) {
 error_t builtin_const_nan(scope_t* _, expression_t** out) {
     (void)_;
     *out = expression_new_number_si(0);
-    mpfr_set_nan(out[0]->number.value);
+    mpc_set_nan(out[0]->number.value);
     return ERROR_NO_ERROR;
 }
 
 error_t builtin_const_inf(scope_t* _, expression_t** out) {
     (void)_;
     *out = expression_new_number_si(0);
-    mpfr_set_inf(out[0]->number.value, 1);
+    mpfr_set_inf(mpc_realref(out[0]->number.value), 1);
     return ERROR_NO_ERROR;
 }
 
@@ -275,37 +276,37 @@ int main(int argc, char** argv) {
 
     scope_init(&scope);
 
-    EXPORT_BUILTIN_FUNCTION(&scope, cos);
-    EXPORT_BUILTIN_FUNCTION(&scope, sin);
-    EXPORT_BUILTIN_FUNCTION(&scope, tan);
-    EXPORT_BUILTIN_FUNCTION(&scope, acos);
-    EXPORT_BUILTIN_FUNCTION(&scope, asin);
-    EXPORT_BUILTIN_FUNCTION(&scope, atan);
-    EXPORT_BUILTIN_FUNCTION(&scope, sec);
-    EXPORT_BUILTIN_FUNCTION(&scope, csc);
-    EXPORT_BUILTIN_FUNCTION(&scope, cot);
-    EXPORT_BUILTIN_FUNCTION(&scope, cosh);
-    EXPORT_BUILTIN_FUNCTION(&scope, sinh);
-    EXPORT_BUILTIN_FUNCTION(&scope, tanh);
-    EXPORT_BUILTIN_FUNCTION(&scope, acosh);
-    EXPORT_BUILTIN_FUNCTION(&scope, asinh);
-    EXPORT_BUILTIN_FUNCTION(&scope, atanh);
-    EXPORT_BUILTIN_FUNCTION(&scope, sech);
-    EXPORT_BUILTIN_FUNCTION(&scope, csch);
-    EXPORT_BUILTIN_FUNCTION(&scope, coth);
+    // EXPORT_BUILTIN_FUNCTION(&scope, cos);
+    // EXPORT_BUILTIN_FUNCTION(&scope, sin);
+    // EXPORT_BUILTIN_FUNCTION(&scope, tan);
+    // EXPORT_BUILTIN_FUNCTION(&scope, acos);
+    // EXPORT_BUILTIN_FUNCTION(&scope, asin);
+    // EXPORT_BUILTIN_FUNCTION(&scope, atan);
+    // EXPORT_BUILTIN_FUNCTION(&scope, sec);
+    // EXPORT_BUILTIN_FUNCTION(&scope, csc);
+    // EXPORT_BUILTIN_FUNCTION(&scope, cot);
+    // EXPORT_BUILTIN_FUNCTION(&scope, cosh);
+    // EXPORT_BUILTIN_FUNCTION(&scope, sinh);
+    // EXPORT_BUILTIN_FUNCTION(&scope, tanh);
+    // EXPORT_BUILTIN_FUNCTION(&scope, acosh);
+    // EXPORT_BUILTIN_FUNCTION(&scope, asinh);
+    // EXPORT_BUILTIN_FUNCTION(&scope, atanh);
+    // EXPORT_BUILTIN_FUNCTION(&scope, sech);
+    // EXPORT_BUILTIN_FUNCTION(&scope, csch);
+    // EXPORT_BUILTIN_FUNCTION(&scope, coth);
 
-    EXPORT_BUILTIN_FUNCTION(&scope, ceil);
-    EXPORT_BUILTIN_FUNCTION(&scope, floor);
-    EXPORT_BUILTIN_FUNCTION(&scope, round);
-    EXPORT_BUILTIN_FUNCTION(&scope, roundeven);
-    EXPORT_BUILTIN_FUNCTION(&scope, trunc);
-    EXPORT_BUILTIN_FUNCTION(&scope, frac);
-    EXPORT_BUILTIN_FUNCTION(&scope, random);
-    EXPORT_BUILTIN_FUNCTION(&scope, ln);
+    // EXPORT_BUILTIN_FUNCTION(&scope, ceil);
+    // EXPORT_BUILTIN_FUNCTION(&scope, floor);
+    // EXPORT_BUILTIN_FUNCTION(&scope, round);
+    // EXPORT_BUILTIN_FUNCTION(&scope, roundeven);
+    // EXPORT_BUILTIN_FUNCTION(&scope, trunc);
+    // EXPORT_BUILTIN_FUNCTION(&scope, frac);
+    // EXPORT_BUILTIN_FUNCTION(&scope, random);
+    // EXPORT_BUILTIN_FUNCTION(&scope, ln);
 
-    EXPORT_BUILTIN_FUNCTION2(&scope, log);
-    EXPORT_BUILTIN_FUNCTION2(&scope, min);
-    EXPORT_BUILTIN_FUNCTION2(&scope, max);
+    // EXPORT_BUILTIN_FUNCTION2(&scope, log);
+    // EXPORT_BUILTIN_FUNCTION2(&scope, min);
+    // EXPORT_BUILTIN_FUNCTION2(&scope, max);
 
     EXPORT_BUILTIN_CONST(&scope, pi);
     EXPORT_BUILTIN_CONST(&scope, euler);
@@ -371,7 +372,7 @@ cleanup:
         gmp_randclear(_g_rand_state);
 
     if (_g_eulers_constant) {
-        mpfr_clear(_g_eulers_constant);
+        mpc_clear(_g_eulers_constant);
         free(_g_eulers_constant);
     }
     return 0;

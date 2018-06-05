@@ -11,8 +11,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
 
-#include <gmp.h>
-#include <mpfr.h>
+#include <mpc.h>
 
 #include "simplify/errors.h"
 #include "simplify/rbtree/rbtree.h"
@@ -165,7 +164,7 @@ struct expression_list {
 struct expression_number {
     expression_type_t type;
 
-    mpfr_ptr value;
+    mpc_ptr value;
 };
 
 struct expression_function {
@@ -255,7 +254,7 @@ void expression_init_function(expression_t* expression, char* name, size_t lengt
  * @expression the expression to initialize
  * @number the number to use as the expression's initial value
  */
-void expression_init_number(expression_t* expression, mpfr_ptr number);
+void expression_init_number(expression_t* expression, mpc_ptr number);
 
 /* initialize a new number expression with a double
  *

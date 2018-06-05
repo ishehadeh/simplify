@@ -14,8 +14,8 @@
 #define OP_BOOLEAN_TRUE     8
 #define OP_BOOLEAN_FALSE    16
 
-DEFINE_MPFR_FUNCTION(cos)
-DEFINE_MPFR_CONST(pi)
+DEFINE_mpc_FUNCTION(cos)
+DEFINE_mpc_CONST(pi)
 
 
 error_t builtin_func_log(scope_t* scope, expression_t** out) {
@@ -36,19 +36,19 @@ error_t builtin_const_e(scope_t* _, expression_t** out) {
     (void)_;
 
     *out = expression_new_number_si(0);
-    mpfr_t n;
-    mpfr_t x;
-    mpfr_init(n);
-    mpfr_init(x);
-    mpfr_init((*out)->number.value);
+    mpc_t n;
+    mpc_t x;
+    mpc_init2(n, 256);
+    mpc_init2(x, 256);
+    mpc_init2((*out)->number.value, 256);
 
-    mpfr_set_ui(n, 9999999999UL, MPFR_RNDN);
-    mpfr_ui_div(x, 1, n, MPFR_RNDN);
-    mpfr_add_ui(x, x, 1, MPFR_RNDN);
-    mpfr_pow((*out)->number.value, x, n, MPFR_RNDN);
+    mpc_set_ui(n, 9999999999UL, MPC_RNDNN);
+    mpc_ui_div(x, 1, n, MPC_RNDNN);
+    mpc_add_ui(x, x, 1, MPC_RNDNN);
+    mpc_pow((*out)->number.value, x, n, MPC_RNDNN);
 
-    mpfr_clear(n);
-    mpfr_clear(x);
+    mpc_clear(n);
+    mpc_clear(x);
 
     return ERROR_NO_ERROR;
 }

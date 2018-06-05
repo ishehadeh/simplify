@@ -20,6 +20,11 @@ int index_of(char* x, char* y) {
     return -1;
 }
 
+static inline int _pow(int x, int y) {
+    while (x--) y *= y;
+    return y;
+}
+
 int strintcmp(char* x, char* y, int lenx, int leny, bool dec) {
     int xi = 0;
     int yi = 0;
@@ -29,8 +34,8 @@ int strintcmp(char* x, char* y, int lenx, int leny, bool dec) {
     int yp;
 
     if (!dec) {
-        xp = pow(10, lenx - 1);
-        yp = pow(10, leny - 1);
+        xp = _pow(10, lenx - 1);
+        yp = _pow(10, leny - 1);
     } else {
         xp = 1;
         yp = 1;
@@ -89,29 +94,21 @@ int strnumcmp(char* x, char* y, int lenx, int leny) {
 }
 
 compare_result_t _expression_compare_numbers(expression_t* expr1, expression_t* expr2) {
-    stringifier_t st;
-    st.buffer = malloc(128);
-    st.length = 128;
-    st.index = 0;
-    /* incase these expressions aren't numbers, use invalid variable names for NAN and INF */
-    st.nan_string = "@";
-    st.inf_string = "#";
-    st.whitespace = "";
-    st.current_precedence = OPERATOR_PRECEDENCE_MINIMUM;
-    st.approximate_numbers = true;
-    st.approximate_tolerance = 5;
+    string_format_t sf = STRING_FORMAT_DEFAULT();
+    string_t s;
+    string_init(&s);
+    write_expression(&s, &sf, expr1);
 
-    stringifier_write_expression(&st, expr1);
-    char* expr1str = st.buffer;
-    size_t expr1len = st.index;
-    expr1str[st.index] = 0;
-    st.buffer = malloc(128);
-    st.length = 128;
-    st.index = 0;
-    stringifier_write_expression(&st, expr2);
-    char* expr2str = st.buffer;
-    size_t expr2len = st.index;
-    expr2str[st.index] = 0;
+    char* expr1str = s.buffer;
+    size_t expr1len = s.len;
+    expr1str[expr1len] = 0;
+
+    string_init(&s);
+    write_expression(&s, &sf, expr2);
+
+    char* expr2str = s.buffer;
+    size_t expr2len = s.len;
+    expr2str[expr2len] = 0;
 
     int result = strnumcmp(expr1str, expr2str, expr1len, expr2len);
 

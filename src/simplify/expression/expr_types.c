@@ -25,21 +25,23 @@ void expression_init_variable(expression_t* expr, char* name, size_t len) {
     strncpy(expr->variable.value, name, len);
 }
 
-void expression_init_number(expression_t* expr, mpfr_ptr value) {
+void expression_init_number(expression_t* expr, mpc_ptr value) {
     expr->type = EXPRESSION_TYPE_NUMBER;
     expr->number.value = value;
 }
 
 void expression_init_number_d(expression_t* expr, double value) {
     expr->type = EXPRESSION_TYPE_NUMBER;
-    expr->number.value = malloc(sizeof(mpfr_t));
-    mpfr_init_set_d(expr->number.value, value, MPFR_RNDF);
+    expr->number.value = malloc(sizeof(mpc_t));
+    mpc_init2(expr->number.value, 52);
+    mpc_set_d(expr->number.value, value, MPC_RNDNN);
 }
 
 void expression_init_number_si(expression_t* expr, long value) {
     expr->type = EXPRESSION_TYPE_NUMBER;
-    expr->number.value = malloc(sizeof(mpfr_t));
-    mpfr_init_set_si(expr->number.value, value, MPFR_RNDF);
+    expr->number.value = malloc(sizeof(mpc_t));
+    mpc_init2(expr->number.value, 52);
+    mpc_set_si(expr->number.value, value, MPC_RNDNN);
 }
 
 void expression_init_function(expression_t* expr, char* name, size_t len, expression_list_t* params) {
@@ -63,7 +65,7 @@ void expression_clean(expression_t* expr) {
             free(expr->operator.right);
             break;
         case EXPRESSION_TYPE_NUMBER:
-            mpfr_clear(expr->number.value);
+            mpc_clear(expr->number.value);
             free(expr->number.value);
             break;
         case EXPRESSION_TYPE_VARIABLE:
@@ -103,8 +105,12 @@ void expression_copy(expression_t* expr, expression_t* out) {
         }
         case EXPRESSION_TYPE_NUMBER:
         {
-            mpfr_ptr copy = malloc(sizeof(mpfr_t));
-            mpfr_init_set(copy, expr->number.value, MPFR_RNDN);
+            mpc_ptr copy = malloc(sizeof(mpc_t));
+            mp_prec_t real;
+            mp_prec_t imag;
+            mpc_get_prec2(&real, &imag, expr->number.value);
+            mpc_init3(copy, real, imag);
+            mpc_set(copy, expr->number.value, MPC_RNDNN);
             expression_init_number(out, copy);
             break;
         }

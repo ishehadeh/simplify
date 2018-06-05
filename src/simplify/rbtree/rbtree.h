@@ -3,6 +3,8 @@
 #ifndef SIMPLIFY_RBTREE_RBTREE_H_
 #define SIMPLIFY_RBTREE_RBTREE_H_
 
+
+#include <stddef.h>
 #include "simplify/errors.h"
 
 /* default to 2KB for RBTREE_CHUNK_SIZE 

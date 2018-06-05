@@ -57,9 +57,9 @@ error_t _expression_setup_natural_log(expression_t* y, expression_t* expr) {
     error_t err = ERROR_NO_ERROR;
 
     if (EXPRESSION_IS_NUMBER(y)) {
-        mpfr_ptr loge = malloc(sizeof(mpfr_t));
-        mpfr_init(loge);
-        mpfr_log(loge, y->number.value, MPFR_RNDF);
+        mpc_ptr loge = malloc(sizeof(mpc_t));
+        mpc_init3(loge, 256, 256);
+        mpc_log(loge, y->number.value, MPC_RNDNN);
         expression_init_number(expr, loge);
         expression_clean(y);
         return ERROR_NO_ERROR;

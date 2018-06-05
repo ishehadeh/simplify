@@ -73,10 +73,9 @@ error_t _parser_parse_number(expression_parser_t* parser, expression_t* expr) {
     number_buffer[token.length] = 0;
 
     strncpy(&number_buffer[0], token.start, token.length);
-    expr->number.value = malloc(sizeof(mpfr_t));
-    mpfr_init2(expr->number.value, ((mpfr_prec_t)token.length * 2) > mpfr_get_default_prec() ?
-                        (mpfr_prec_t)token.length * 2 : mpfr_get_default_prec());
-    mpfr_set_str(expr->number.value, &number_buffer[0], 10, MPFR_RNDF);
+    expr->number.value = malloc(sizeof(mpc_t));
+    mpc_init2(expr->number.value, 256);
+    mpc_set_str(expr->number.value, &number_buffer[0], 10, MPC_RNDNN);
 
     return ERROR_NO_ERROR;
 }

@@ -66,7 +66,7 @@ static inline expression_t* expression_new_prefix(operator_t op, expression_t* r
 }
 
 
-static inline expression_t* expression_new_number(mpfr_ptr num) {
+static inline expression_t* expression_new_number(mpc_ptr num) {
     expression_t* x = malloc(sizeof(expression_t));
     expression_init_number(x, num);
     return x;

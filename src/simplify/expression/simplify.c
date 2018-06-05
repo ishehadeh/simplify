@@ -2,6 +2,7 @@
 
 #include "simplify/expression/simplify.h"
 #include "simplify/expression/isolate.h"
+#include "simplify/math/algebra.h"
 
 /* get the operator that would could be used to collapse a chain of `op` operators
  *
@@ -40,6 +41,83 @@ int _expression_init_chain(expression_t* root, expression_t* var) {
     return 1;
 }
 
+error_t _expression_do_quadratic(char* var, expression_t* expr) {
+    assert(EXPRESSION_IS_OPERATOR(expr));
+
+    expression_t* x = EXPRESSION_LEFT(expr->operator.left);
+    expression_t* y = EXPRESSION_RIGHT(expr->operator.left);
+    expression_t* z = expr->operator.right;
+
+    assert(EXPRESSION_IS_OPERATOR(x));
+    assert(EXPRESSION_IS_OPERATOR(y));
+    assert(EXPRESSION_IS_NUMBER(z));
+
+    mpc_ptr a = NULL;
+    mpc_ptr b = NULL;
+    mpc_ptr c = z->number.value;
+
+    if (EXPRESSION_IS_NUMBER(EXPRESSION_LEFT(x))) {
+        a = EXPRESSION_LEFT(x)->number.value;
+    } else if (EXPRESSION_IS_NUMBER(EXPRESSION_RIGHT(x))) {
+        a = EXPRESSION_RIGHT(x)->number.value;
+    }
+
+    if (EXPRESSION_IS_NUMBER(EXPRESSION_LEFT(y))) {
+        b = EXPRESSION_LEFT(y)->number.value;
+    } else if (EXPRESSION_IS_NUMBER(EXPRESSION_RIGHT(y))) {
+        b = EXPRESSION_RIGHT(y)->number.value;
+    } else {
+        return ERROR_NO_ERROR;
+    }
+
+    if (EXPRESSION_LEFT(expr)->operator.infix == '-') {
+        mpc_neg(b, b, MPC_RNDNN);
+    }
+
+    if (expr->operator.infix == '-') {
+        mpc_neg(c, c, MPC_RNDNN);
+    }
+
+    /* use `b` and `c` as output variables */
+    // perform_quadratic_equation(c, b, a, b, c, MPC_RNDNN);
+
+    expression_init_operator(expr,
+        expression_new_operator(expression_new_variable(var), '-', expression_new_number(b)),
+        '*',
+        expression_new_operator(expression_new_variable(var), '-', expression_new_number(c)));
+
+    if (a) mpc_clear(a);
+    free(z);
+    free(x);
+    free(y);
+
+    return ERROR_NO_ERROR;
+}
+
+bool _expression_check_for_polynomial(expression_t* expr) {
+    if ((expr->operator.infix == '+' || expr->operator.infix == '-')
+        && EXPRESSION_IS_OPERATOR(expr->operator.left)
+        && (expr->operator.left->operator.infix == '+' || expr->operator.left->operator.infix == '-')) {
+            char* varl = expression_find_variable(EXPRESSION_LEFT(expr->operator.left));
+            char* varr = expression_find_variable(EXPRESSION_RIGHT(expr->operator.left));
+            if (varl && varr && !strcmp(varl, varr)) {
+                expression_t* x = EXPRESSION_LEFT(expr->operator.left);
+                expression_t* y = EXPRESSION_RIGHT(expr->operator.left);
+                expression_t* z = expr->operator.right;
+                if (EXPRESSION_IS_OPERATOR(x)
+                    && EXPRESSION_IS_OPERATOR(y)
+                    && y->operator.infix == '*'
+                    && (EXPRESSION_IS_VARIABLE(EXPRESSION_LEFT(y))
+                        || EXPRESSION_IS_VARIABLE(EXPRESSION_RIGHT(y)))
+                    && EXPRESSION_IS_NUMBER(z)) {
+                        _expression_do_quadratic(varr, expr);
+                        return true;
+                    }
+            }
+    }
+    return false;
+}
+
 error_t _expression_collapse_variables_recursive(expression_t* expr) {
     switch (expr->type) {
         case EXPRESSION_TYPE_NUMBER:
@@ -54,6 +132,9 @@ error_t _expression_collapse_variables_recursive(expression_t* expr) {
 
             err = _expression_collapse_variables_recursive(EXPRESSION_RIGHT(expr));
             if (err) return err;
+
+            if (_expression_check_for_polynomial(expr))
+                return ERROR_NO_ERROR;
 
             operator_t equiv_op = _operator_collapsed_equivelent(expr->operator.infix);
 
@@ -107,8 +188,8 @@ error_t _expression_collapse_variables_recursive(expression_t* expr) {
                 if (strcmp(variable->variable.value, EXPRESSION_RIGHT(expr)->variable.value) != 0) break;
 
                 if (right->operator.infix == equiv_op) {
-                    mpfr_ptr x = count->number.value;
-                    mpfr_add_si(x, x, 1, MPFR_RNDN);
+                    mpc_ptr x = count->number.value;
+                    mpc_add_si(x, x, 1, MPC_RNDNN);
                     *expr = *EXPRESSION_LEFT(expr);
                 } else {
                     expr->operator.infix = equiv_op;
@@ -120,6 +201,7 @@ error_t _expression_collapse_variables_recursive(expression_t* expr) {
     }
     return ERROR_NO_ERROR;
 }
+
 
 error_t expression_do_logarithm(expression_t* b, expression_t* y, expression_t** out) {
     /* expression_isolate_variable can solve logarithms,

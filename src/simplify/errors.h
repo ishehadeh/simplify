@@ -3,8 +3,6 @@
 #ifndef SIMPLIFY_ERRORS_H_
 #define SIMPLIFY_ERRORS_H_
 
-#include <string.h>
-#include <inttypes.h>
 
 /* Enumerates all errors that may occur.
  * Error also has the value `ERROR_NO_ERROR`, meaning no error occurred. This value

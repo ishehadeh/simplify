@@ -5,7 +5,7 @@
 
 /* this file includes utilities for creating builtin functions and constants */
 
-#define DEFINE_MPFR_FUNCTION(NAME) \
+#define DEFINE_mpc_FUNCTION(NAME) \
 error_t builtin_func_ ## NAME(scope_t* scope, expression_t** out) { \
     expression_t input; \
     scope_get_value(scope, "__arg0", &input); \
@@ -13,15 +13,15 @@ error_t builtin_func_ ## NAME(scope_t* scope, expression_t** out) { \
         return ERROR_NO_ERROR; \
         expression_clean(&input); \
     } \
-    mpfr_ptr num = malloc(sizeof(mpfr_t)); \
-    mpfr_init(num); \
-    mpfr_## NAME(num, input.number.value, MPFR_RNDN); \
+    mpc_ptr num = malloc(sizeof(mpc_t)); \
+    mpc_init2(num, 256); \
+    mpc_## NAME(num, input.number.value, MPC_RNDNN); \
     *out = expression_new_number(num); \
     expression_clean(&input); \
     return ERROR_NO_ERROR; \
 }
 
-#define DEFINE_MPFR_FUNCTION_NRND(NAME) \
+#define DEFINE_mpc_FUNCTION_NRND(NAME) \
 error_t builtin_func_ ## NAME(scope_t* scope, expression_t** out) { \
     expression_t input; \
     scope_get_value(scope, "__arg0", &input); \
@@ -29,15 +29,15 @@ error_t builtin_func_ ## NAME(scope_t* scope, expression_t** out) { \
         return ERROR_NO_ERROR; \
         expression_clean(&input); \
     } \
-    mpfr_ptr num = malloc(sizeof(mpfr_t)); \
-    mpfr_init(num); \
-    mpfr_## NAME(num, input.number.value); \
+    mpc_ptr num = malloc(sizeof(mpc_t)); \
+    mpc_init2(num, 256); \
+    mpc_## NAME(num, input.number.value); \
     *out = expression_new_number(num); \
     expression_clean(&input); \
     return ERROR_NO_ERROR; \
 }
 
-#define DEFINE_MPFR_FUNCTION2(NAME) \
+#define DEFINE_mpc_FUNCTION2(NAME) \
 error_t builtin_func_ ## NAME(scope_t* scope, expression_t** out) { \
     expression_t input; \
     expression_t input2; \
@@ -48,9 +48,9 @@ error_t builtin_func_ ## NAME(scope_t* scope, expression_t** out) { \
         expression_clean(&input2); \
         return ERROR_NO_ERROR; \
     } \
-    mpfr_ptr num = malloc(sizeof(mpfr_t)); \
-    mpfr_init(num); \
-    mpfr_## NAME(num, input.number.value, input2.number.value, MPFR_RNDN); \
+    mpc_ptr num = malloc(sizeof(mpc_t)); \
+    mpc_init2(num, 256); \
+    mpc_## NAME(num, input.number.value, input2.number.value, MPC_RNDNN); \
     *out = expression_new_number(num); \
     expression_clean(&input); \
     expression_clean(&input2); \
@@ -63,12 +63,12 @@ error_t builtin_func_ ## NAME(scope_t* scope, expression_t** out) { \
 #define EXPORT_BUILTIN_FUNCTION2(SCOPE, NAME) \
     scope_define_internal_function((SCOPE), #NAME, builtin_func_ ## NAME, 2, "__arg0", "__arg1");
 
-#define DEFINE_MPFR_CONST(NAME) \
+#define DEFINE_mpc_CONST(NAME) \
 error_t builtin_const_ ## NAME(scope_t* scope, expression_t** out) { \
     (void)scope; \
-    mpfr_ptr num = malloc(sizeof(mpfr_t)); \
-    mpfr_init(num); \
-    mpfr_const_ ## NAME(num, MPFR_RNDF); \
+    mpc_ptr num = malloc(sizeof(mpc_t)); \
+    mpc_init2(num, 256); \
+    mpfr_const_ ## NAME(mpc_realref(num), MPFR_RNDN); \
     *out = expression_new_number(num); \
     return ERROR_NO_ERROR; \
 }
