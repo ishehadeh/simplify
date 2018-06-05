@@ -197,10 +197,8 @@ error_t _expression_evaluate_recursive(expression_t* expr, scope_t* scope) {
             return _expression_substitute_variable(expr, scope);
         case EXPRESSION_TYPE_FUNCTION:
         {
-            expression_t old = *expr;
             error_t err = scope_call(scope, expr->function.name, expr->function.parameters, expr);
             if (err && err != ERROR_NONEXISTANT_KEY) return err;
-            if (!err) expression_clean(&old);
             return ERROR_NO_ERROR;
         }
         case EXPRESSION_TYPE_PREFIX:

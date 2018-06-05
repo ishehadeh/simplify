@@ -4,7 +4,6 @@
 #define SIMPLIFY_EXPRESSION_EXPR_TYPES_H_
 
 #include <stdlib.h>
-#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>

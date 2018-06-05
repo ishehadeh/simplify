@@ -43,4 +43,9 @@ _multi_init(PREC, (mpc_ptr[]){__VA_ARGS__, NULL}); \
 
 #define MAX_PRECISION(...) _max_prec((mpc_ptr[]){__VA_ARGS__, NULL})
 
+void simplify_const_e(mpc_ptr);
+void simplify_const_pi(mpc_ptr);
+void simplify_const_catalan(mpc_ptr);
+void simplify_const_euler(mpc_ptr);
+
 #endif  // SIMPLIFY_MATH_MATH_H_
