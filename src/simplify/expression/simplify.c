@@ -79,7 +79,7 @@ error_t _expression_do_quadratic(char* var, expression_t* expr) {
     }
 
     /* use `b` and `c` as output variables */
-    // perform_quadratic_equation(c, b, a, b, c, MPC_RNDNN);
+    perform_quadratic_equation(c, b, a, b, c, MPC_RNDNN);
 
     expression_init_operator(expr,
         expression_new_operator(expression_new_variable(var), '-', expression_new_number(b)),

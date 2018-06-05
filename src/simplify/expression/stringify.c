@@ -115,7 +115,7 @@ void _write_number(string_t* string, string_format_t* fmt, expression_t* number)
         }
     }
 
-    if (mpfr_zero_p(imag)) {
+        if (mpfr_zero_p(imag)) {
         return;
     }
 
