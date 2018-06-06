@@ -20,7 +20,7 @@ int index_of(char* x, char* y) {
     return -1;
 }
 
-static inline int _pow(int x, int y) {
+static inline unsigned long long _pow(unsigned long long x, unsigned long long y) {
     while (y-- > 0) x *= x;
     return x;
 }
@@ -30,8 +30,8 @@ int strintcmp(char* x, char* y, int lenx, int leny, bool dec) {
     int yi = 0;
     int cmp_mul = 1;
 
-    int xp;
-    int yp;
+    unsigned long long xp;
+    unsigned long long yp;
 
     if (!dec) {
         xp = _pow(10, lenx - 1);
