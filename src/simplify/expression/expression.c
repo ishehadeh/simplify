@@ -32,10 +32,9 @@ int strintcmp(char* x, char* y, int lenx, int leny, bool dec) {
 
     unsigned long long xp;
     unsigned long long yp;
-
     if (!dec) {
-        xp = _pow(10, lenx - 1);
-        yp = _pow(10, leny - 1);
+        xp = _pow(10, (unsigned long long)lenx - 1);
+        yp = _pow(10, (unsigned long long)leny - 1);
     } else {
         xp = 1;
         yp = 1;
@@ -81,8 +80,8 @@ int strintcmp(char* x, char* y, int lenx, int leny, bool dec) {
 }
 
 int strnumcmp(char* x, char* y, int lenx, int leny) {
-    int decx = index_of(x, ".") - 1;
-    int decy = index_of(y, ".") - 1;
+    int decx = index_of(x, ".");
+    int decy = index_of(y, ".");
     if (decx < 0) decx = lenx;
     if (decy < 0) decy = leny;
 
@@ -108,14 +107,14 @@ compare_result_t _expression_compare_numbers(expression_t* expr1, expression_t* 
     write_expression(&s, &sf, expr1);
 
     char* expr1str = s.buffer;
-    size_t expr1len = s.len;
+    size_t expr1len = string_len(&s);
     expr1str[expr1len] = 0;
 
     string_init(&s);
     write_expression(&s, &sf, expr2);
 
     char* expr2str = s.buffer;
-    size_t expr2len = s.len;
+    size_t expr2len = string_len(&s);
     expr2str[expr2len] = 0;
 
     int result = strnumcmp(expr1str, expr2str, expr1len, expr2len);

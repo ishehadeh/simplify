@@ -8,7 +8,11 @@ int main() {
     mpc_init2(bad_number, 8);
     mpc_init2(infinity, 8);
     mpc_init2(neg_infinity, 8);
-    mpc_set_nan(bad_number);
+    mpc_set_si_si(bad_number,   0, 0, MPC_RNDNN);
+    mpc_set_si_si(infinity,     0, 0, MPC_RNDNN);
+    mpc_set_si_si(neg_infinity, 0, 0, MPC_RNDNN);
+
+    mpfr_set_nan(mpc_realref(bad_number));
     mpfr_set_inf(mpc_realref(infinity), 1);
     mpfr_set_inf(mpc_realref(neg_infinity), -1);
 

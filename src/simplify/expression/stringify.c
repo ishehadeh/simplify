@@ -14,6 +14,108 @@ static inline void _reverse(char* x, size_t i, size_t n) {
     }
 }
 
+
+size_t _stringifier_round_number(char* str, size_t start) {
+    /* round direction is `1` to round up or `-1` to round down */
+    int round_direction = str[start] >= '5' ? 1 : -1;
+
+    /* round the digits before the decimal point */
+    size_t i;
+    for (i = start; i > 0 && isdigit(str[i]); --i) {
+        if (str[i] + round_direction < '0' ||  str[i] + round_direction > '9') {
+            /* if the current character can't safely be rounded than zero it and continue */
+            str[i] = '0';
+        } else {
+            /* apply the the round direction, the exit. */
+            str[i] += round_direction;
+            ++i;
+            goto finished;
+        }
+    }
+
+    /* if the earlier loop ran out of room
+        than that means we need to move past the decimal point */
+    if (i == 0) {
+        if (round_direction > 0)
+            str[i] = '1';
+        else
+            str[i] = '0';
+        goto finished;
+    } else if (str[i] == '.') {
+        --i;
+    } else {
+        goto finished;
+    }
+
+    size_t d = i;
+    /* try to round everything before the decimal */
+    for (; d > 0 && isdigit(str[d]); --d) {
+        if (str[d] + round_direction < '0' ||  str[d] + round_direction > '9') {
+            str[d] = '0';
+        } else {
+            str[d] += round_direction;
+            i = d;
+            goto finished;
+        }
+    }
+
+    if (i == 0) {
+        /* push back the string to make room for a new digit */
+        memmove(str + d + 1, str + d, start - d);
+        if (round_direction > 0)
+            str[d] = '1';
+        else
+            str[d] = '0';
+    }
+
+finished:
+    return i;
+}
+
+
+size_t _approximate_number(char* str, size_t tolerance, size_t length) {
+    size_t decimal_index = 0;
+
+    for (; str[decimal_index] != '.'; ++decimal_index) {
+        /* if there is no decimal point then exit, there is nothing left to do */
+        if (decimal_index >= length) return length;
+    }
+
+    size_t chain = 0;
+    size_t idx = length;
+    char last = 0;
+
+    for (size_t i = decimal_index + 1; i < length && isdigit(str[i]); ++i) {
+        if (str[i] == last) {
+            ++chain;
+        } else {
+            if (chain >= tolerance) {
+                if (last == '9') {
+                    idx = _stringifier_round_number(str, i - 1);
+                } else if (last == '0') {
+                    idx = i - chain - 1;
+                    goto finished;
+                }
+            }
+            last = str[i];
+            chain = 0;
+        }
+    }
+
+    if (chain >= tolerance) {
+        if (last == '9') {
+           idx =  _stringifier_round_number(str, length - 1);
+        } else if (last == '0') {
+            idx = length - chain - 1;
+        }
+    }
+
+finished:
+    if (str[idx - 1] == '.') --idx;
+    return idx;
+}
+
+
 void _write_mpfr(string_t* string, string_format_t* format, mpfr_ptr num) {
     mpfr_t int_part;
     mpfr_t int_part_frac;
@@ -56,15 +158,14 @@ void _write_mpfr(string_t* string, string_format_t* format, mpfr_ptr num) {
             mpfr_modf(int_part_frac, num, num, MPFR_RNDF);
             string_append_char(string, mpfr_get_si(int_part_frac, MPFR_RNDN) + '0');
         }
+        if (format->approximate_tolerance > 0)
+            string->len = start + _approximate_number(string->buffer + start,
+                                                    format->approximate_tolerance,
+                                                    string->len - start);
     }
 
     mpfr_clear(int_part);
     mpfr_clear(int_part_frac);
-
-    // if (format->approximate_tolerance > 0)
-    //     string->len = start + _approximate_number(string->buffer + start,
-    //                                               format->approximate_tolerance,
-    //                                               string->len - start);
 }
 
 void _write_variable(string_t* string, expression_t* variable) {

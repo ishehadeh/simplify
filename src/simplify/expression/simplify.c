@@ -121,7 +121,10 @@ bool _expression_check_for_polynomial(expression_t* expr) {
             } else {
                 return false;
             }
+        } else {
+            return false;
         }
+
         if ((z && expr->operator.infix == '-') || (!z && EXPRESSION_LEFT(expr)->operator.infix == '-')) {
             if (EXPRESSION_IS_NUMBER(EXPRESSION_LEFT(y)))
                 mpc_neg(EXPRESSION_LEFT(y)->number.value, EXPRESSION_LEFT(y)->number.value, MPC_RNDNN);

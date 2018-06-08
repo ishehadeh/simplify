@@ -202,25 +202,23 @@ int main() {
                 '=',
                 expression_new_number_si(-5))
         },
-        {"23 ^ x = 2", OP_EVALUATE | OP_ISOLATE_X,
+        {"2 ^ x = 2", OP_EVALUATE | OP_ISOLATE_X,
             expression_new_operator(
                 expression_new_variable("x"),
                 '=',
-                expression_new_number_d(0.2210647294575037169472))
+                expression_new_number_d(1))
         },
-        {"2 ^ x = 10", OP_EVALUATE | OP_ISOLATE_X,
+        {"2 ^ x = 4", OP_EVALUATE | OP_ISOLATE_X,
             expression_new_operator(
                 expression_new_variable("x"),
                 '=',
-                expression_new_number_d(3.3219280948873617376193))
+                expression_new_number_d(2))
         },
-        /* TODO(IanS5) this test should be corrected once better approximating is implemented
-            For now it will be just .0000007132118753361282 off */
         {"log(2, x + 5) = 3", OP_EVALUATE | OP_ISOLATE_X,
             expression_new_operator(
                 expression_new_variable("x"),
                 '=',
-                expression_new_number_d(3.0000007132118753361282))
+                expression_new_number_si(3))
         },
     };
 

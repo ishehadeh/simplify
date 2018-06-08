@@ -42,8 +42,8 @@ struct string_format {
     .whitespace = " ",                   \
     .omit_parameter_commas = false,      \
     .omit_parmeter_parentheses = false,  \
-    .force_brief_multiplication = true,  \
-    .brief_multiplication = true,        \
+    .force_brief_multiplication = false, \
+    .brief_multiplication = false,       \
     .format = STRING_FORMAT_ASCII        \
 }
 

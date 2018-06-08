@@ -35,6 +35,10 @@ error_t builtin_const_ ## NAME(scope_t* scope, expression_t** out) { \
 #define _EXPORT_BUILTIN_FUNC(SCOPE, NAME) \
     scope_define_internal_function(SCOPE, #NAME, builtin_func_ ## NAME, 1, "__arg0")
 
+
+#define _EXPORT_BUILTIN_FUNC2(SCOPE, NAME) \
+    scope_define_internal_function(SCOPE, #NAME, builtin_func_ ## NAME, 2, "__arg0", "__arg1")
+
 #define _EXPORT_BUILTIN_CONST(SCOPE, NAME) scope_define_internal_const(SCOPE, #NAME, builtin_const_ ## NAME)
 
 _DEFINE_MPFR_BUILTIN(cos)
@@ -152,7 +156,8 @@ void simplify_export_builtins(scope_t* scope) {
 
     _EXPORT_BUILTIN_FUNC(scope, random);
     _EXPORT_BUILTIN_FUNC(scope, random_imaginary);
-    _EXPORT_BUILTIN_FUNC(scope, log);
+    _EXPORT_BUILTIN_FUNC(scope, ln);
+    _EXPORT_BUILTIN_FUNC2(scope, log);
 
     _EXPORT_BUILTIN_CONST(scope, pi);
     _EXPORT_BUILTIN_CONST(scope, i);
