@@ -37,6 +37,10 @@ static inline mp_prec_t __math_max_prec(mpc_ptr* nums) {
 
 #define INITS(PREC, ...)  __math_multi_init(PREC, (mpc_ptr[]){__VA_ARGS__, NULL});
 #define CLEARS(...)       __math_multi_clean((mpc_ptr[]){__VA_ARGS__, NULL})
+
+/* get the maximum precision in a list of mpc_ptrs,
+ each mpfr_t in the mpc_t struct is counted individually
+*/
 #define GET_MAX_PREC(...) __math_max_prec((mpc_ptr[]){__VA_ARGS__, NULL})
 
 void simplify_const_e(mpc_ptr);
