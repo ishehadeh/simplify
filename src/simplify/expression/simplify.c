@@ -44,6 +44,7 @@ int _expression_init_chain(expression_t* root, expression_t* var) {
 error_t _expression_do_quadratic(char* var, expression_t* out, expression_t* x, expression_t* y, expression_t* z) {
     assert(EXPRESSION_IS_OPERATOR(x));
     assert(EXPRESSION_IS_OPERATOR(y));
+    if (z) assert(EXPRESSION_IS_NUMBER(z));
 
     mpc_ptr a = NULL;
     mpc_ptr b = NULL;
@@ -57,15 +58,19 @@ error_t _expression_do_quadratic(char* var, expression_t* out, expression_t* x, 
     if (x->operator.infix == '*') {
         if (EXPRESSION_IS_NUMBER(EXPRESSION_LEFT(x))) {
             a = EXPRESSION_LEFT(x)->number.value;
+            free(EXPRESSION_LEFT(x));
         } else if (EXPRESSION_IS_NUMBER(EXPRESSION_RIGHT(x))) {
             a = EXPRESSION_RIGHT(x)->number.value;
+            free(EXPRESSION_RIGHT(x));
         }
     }
 
     if (EXPRESSION_IS_NUMBER(EXPRESSION_LEFT(y))) {
         b = EXPRESSION_LEFT(y)->number.value;
+        free(EXPRESSION_LEFT(y));
     } else if (EXPRESSION_IS_NUMBER(EXPRESSION_RIGHT(y))) {
         b = EXPRESSION_RIGHT(y)->number.value;
+        free(EXPRESSION_RIGHT(y));
     } else {
         return ERROR_NO_ERROR;
     }
@@ -86,8 +91,10 @@ error_t _expression_do_quadratic(char* var, expression_t* out, expression_t* x, 
 
     if (mpfr_zero_p(mpc_realref(c)) && mpfr_zero_p(mpc_imagref(c))) {
         expression_init_operator(out, expression_new_variable(var), b_op, expression_new_number(b));
+        mpc_clear(c);
     } else if (mpfr_zero_p(mpc_realref(b)) && mpfr_zero_p(mpc_imagref(b))) {
         expression_init_operator(out, expression_new_variable(var), c_op, expression_new_number(c));
+        mpc_clear(b);
     } else {
         expression_init_operator(out,
             expression_new_operator(expression_new_variable(var), b_op, expression_new_number(b)),
@@ -96,9 +103,9 @@ error_t _expression_do_quadratic(char* var, expression_t* out, expression_t* x, 
     }
 
     if (a) mpc_clear(a);
-    free(z);
     free(x);
     free(y);
+    free(z);
 
     return ERROR_NO_ERROR;
 }
@@ -179,11 +186,13 @@ void _expression_distribute(expression_t* expr) {
         if (EXPRESSION_IS_NUMBER(EXPRESSION_LEFT(target))) {
             left = expression_new_number(EXPRESSION_LEFT(target)->number.value);
             mpc_mul(left->number.value, left->number.value, mul->number.value, MPC_RNDNN);
+            free(EXPRESSION_LEFT(target));
         }
 
         if (EXPRESSION_IS_NUMBER(EXPRESSION_RIGHT(target))) {
             right = expression_new_number(EXPRESSION_RIGHT(target)->number.value);
             mpc_mul(right->number.value, right->number.value, mul->number.value, MPC_RNDNN);
+            free(EXPRESSION_RIGHT(target));
         }
     }
 
@@ -204,6 +213,7 @@ void _expression_distribute(expression_t* expr) {
 
     if (EXPRESSION_IS_OPERATOR(right) && right->operator.infix == '*')
         _expression_distribute(right);
+    free(target);
 }
 
 void _expression_simplify_polynomials_recursive(expression_t* expr) {

@@ -217,10 +217,10 @@ void _write_number(string_t* string, string_format_t* fmt, expression_t* number)
         _write_mpfr(string, fmt, real);
     } else if (!hasimag) {
         string_append_char(string, '0');
-        return;
+        goto cleanup;
     }
 
-    if (!hasimag) return;
+    if (!hasimag) goto cleanup;
 
     if (mpfr_sgn(imag) < 0) {
         if (!hasreal) {
@@ -240,6 +240,10 @@ void _write_number(string_t* string, string_format_t* fmt, expression_t* number)
     if (mpfr_cmp_ui(imag, 1) != 0)
         _write_mpfr(string, fmt, imag);
     string_append_cstring(string, fmt->imaginary);
+
+cleanup:
+    mpfr_clear(real);
+    mpfr_clear(imag);
     return;
 }
 
