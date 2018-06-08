@@ -70,18 +70,29 @@ error_t _expression_do_quadratic(char* var, expression_t* out, expression_t* x, 
         return ERROR_NO_ERROR;
     }
 
-    /* use `b` and `c` as output variables */
+    /* use `b` and `c` as output variables, to avoid extra allocations */
     perform_quadratic_equation(c, b, a, b, c, MPC_RNDNN);
 
+    operator_t b_op = '-';
+    operator_t c_op = '-';
+    if (mpfr_sgn(mpc_realref(b)) < 0) {
+        b_op = '+';
+        mpc_neg(b, b, MPC_RNDNN);
+    }
+    if (mpfr_sgn(mpc_realref(c)) < 0) {
+        c_op = '+';
+        mpc_neg(c, c, MPC_RNDNN);
+    }
+
     if (mpfr_zero_p(mpc_realref(c)) && mpfr_zero_p(mpc_imagref(c))) {
-        expression_init_operator(out, expression_new_variable(var), '-', expression_new_number(b));
+        expression_init_operator(out, expression_new_variable(var), b_op, expression_new_number(b));
     } else if (mpfr_zero_p(mpc_realref(b)) && mpfr_zero_p(mpc_imagref(b))) {
-        expression_init_operator(out, expression_new_variable(var), '-', expression_new_number(c));
+        expression_init_operator(out, expression_new_variable(var), c_op, expression_new_number(c));
     } else {
         expression_init_operator(out,
-            expression_new_operator(expression_new_variable(var), '-', expression_new_number(b)),
+            expression_new_operator(expression_new_variable(var), b_op, expression_new_number(b)),
             '*',
-            expression_new_operator(expression_new_variable(var), '-', expression_new_number(c)));
+            expression_new_operator(expression_new_variable(var), c_op, expression_new_number(c)));
     }
 
     if (a) mpc_clear(a);

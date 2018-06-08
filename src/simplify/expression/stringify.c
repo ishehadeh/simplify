@@ -211,20 +211,30 @@ void _write_number(string_t* string, string_format_t* fmt, expression_t* number)
     mpc_real(real, number->number.value, MPFR_RNDN);
     mpc_imag(imag, number->number.value, MPFR_RNDN);
 
-    if (!mpfr_zero_p(real)) {
+    bool hasreal = !mpfr_zero_p(real);
+    bool hasimag = !mpfr_zero_p(imag);
+    if (hasreal) {
         _write_mpfr(string, fmt, real);
-        if (!mpfr_zero_p(imag)) {
-            string_append_cstring(string, fmt->whitespace);
-            string_append_char(string, '+');
-            string_append_cstring(string, fmt->whitespace);
-        }
-    } else if (mpfr_zero_p(imag)) {
+    } else if (!hasimag) {
         string_append_char(string, '0');
         return;
     }
 
-    if (mpfr_zero_p(imag)) {
-        return;
+    if (!hasimag) return;
+
+    if (mpfr_sgn(imag) < 0) {
+        if (!hasreal) {
+            string_append_char(string, '-');
+        } else {
+            string_append_cstring(string, fmt->whitespace);
+            string_append_char(string, '-');
+            string_append_cstring(string, fmt->whitespace);
+        }
+        mpfr_neg(imag, imag, MPFR_RNDNA);
+    } else if (hasreal) {
+        string_append_cstring(string, fmt->whitespace);
+        string_append_char(string, '+');
+        string_append_cstring(string, fmt->whitespace);
     }
 
     if (mpfr_cmp_ui(imag, 1) != 0)
