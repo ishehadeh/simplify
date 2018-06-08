@@ -23,6 +23,7 @@
 char* stringify(expression_t* expr);
 
 void write_expression(string_t* string, string_format_t* format, expression_t* expr);
+
 void expression_fprint(expression_t* expr, FILE* f);
 
 static inline void expression_print(expression_t* expr) {

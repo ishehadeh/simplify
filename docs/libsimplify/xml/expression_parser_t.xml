@@ -23,7 +23,7 @@
       <type name="lexer_t" qualifier="*" ref="lexer_t#lexer_t" />
     </argument>
   </function>
-  <function id="parser_parse_expression" name="parser_parse_expression">
+  <function id="expression_parser_parse" name="expression_parser_parse">
     <brief> parse an expression</brief>
     <doc>NOTE: most of the time it's safer and easier to use the `parse_string` or `parse_file` functions
 
@@ -32,10 +32,10 @@
       <doc>returns an error code</doc>
       <type name="error_t" ref="error_t#error_t" />
     </return>
-    <argument id="parser_parse_expression::parser" name="parser">
+    <argument id="expression_parser_parse::parser" name="parser">
       <type name="expression_parser_t" qualifier="*" ref="expression_parser_t#expression_parser_t" />
     </argument>
-    <argument id="parser_parse_expression::result" name="result">
+    <argument id="expression_parser_parse::result" name="result">
       <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
     </argument>
   </function>

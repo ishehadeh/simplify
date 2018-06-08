@@ -57,7 +57,7 @@ struct lexer {
  * @lexer the lexer to initialize
  * @buffer the buffer to read, the buffer is copied
  */
-static inline void lexer_init_from_string(lexer_t* lexer, char* buffer) {
+static inline void lexer_init_from_string(lexer_t* lexer, const char* buffer) {
     lexer->buffer_length = strlen(buffer);
     lexer->buffer = malloc(lexer->buffer_length);
     lexer->buffer_position = 0;

@@ -34,7 +34,7 @@ static inline void expression_parser_clean(expression_parser_t* parser) {
  * @result The expression that should be filled.
  * @return returns an error code
  */
-error_t parser_parse_expression(expression_parser_t* parser, expression_t* result);
+error_t expression_parser_parse(expression_parser_t* parser, expression_t* result);
 
 /* parses an expression from a string
  *
