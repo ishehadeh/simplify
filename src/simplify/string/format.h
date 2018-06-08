@@ -4,7 +4,7 @@
 #define SIMPLIFY_STRING_FORMAT_H_
 
 #include <stdbool.h>
-#include <stdint.h>
+#include <stdlib.h>
 
 /* a string format holds information about how to transform an expression into a string */
 typedef struct string_format string_format_t;
@@ -44,6 +44,7 @@ struct string_format {
     .omit_parmeter_parentheses = false,  \
     .force_brief_multiplication = true,  \
     .brief_multiplication = true,        \
+    .format = STRING_FORMAT_ASCII        \
 }
 
 #endif  // SIMPLIFY_STRING_FORMAT_H_

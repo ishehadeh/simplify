@@ -2,9 +2,9 @@
 
 
 void perform_cubic_equation(mpc_ptr C1, mpc_ptr C2, mpc_ptr a, mpc_ptr b, mpc_ptr c, mpc_ptr d, mpc_rnd_t rnd) {
-    DECLARE_NUMBERS(
-        MAX_PRECISION(a, b, c, d),
-        e, f, h, g);
+    mp_prec_t precision = GET_MAX_PREC(a, b, c, d);
+    mpc_t e, f, h, g;
+    INITS(precision, e, f, h, g);
 
     /* first calculate `d = b^2 - 3ac` */
     mpc_sqr(e, b, rnd);
@@ -44,16 +44,17 @@ void perform_cubic_equation(mpc_ptr C1, mpc_ptr C2, mpc_ptr a, mpc_ptr b, mpc_pt
     mpc_div_ui(C1, C1, 2, rnd);
     mpc_div_ui(C2, C2, 2, rnd);
 
-    CLEAN(d, e, f, h);
+    CLEARS(d, e, f, h);
     return;
 }
 
 void perform_quadratic_equation(mpc_ptr C1, mpc_ptr C2, mpc_ptr a, mpc_ptr b, mpc_ptr c, mpc_rnd_t rnd) {
-    /* d, e in the expression (-b +/- d) / e,
-        f is a placeholder */
-    DECLARE_NUMBERS(
-        MAX_PRECISION(a, b, c),
-        d, e, f);
+    mp_prec_t precision = GET_MAX_PREC(b, c);
+
+    /* d, e in the expression (-b +/- d) / e */
+    /* f is a placeholder */
+    mpc_t d, e, f;
+    INITS(precision, d, e, f);
 
 
     /* set e to 2a */
@@ -80,6 +81,6 @@ void perform_quadratic_equation(mpc_ptr C1, mpc_ptr C2, mpc_ptr a, mpc_ptr b, mp
     mpc_div(C1, C1, e, rnd);
     mpc_div(C2, C2, e, rnd);
 
-    CLEAN(d, e, f);
+    CLEARS(d, e, f);
     return;
 }

@@ -81,9 +81,13 @@ void _write_operator_prec_recursive(string_t* string, string_format_t* fmt, expr
 
     _write_expression_prec(string, fmt, op->operator.left, myprec);
 
-    string_append_cstring(string, fmt->whitespace);
-    string_append_char(string, op->operator.infix);
-    string_append_cstring(string, fmt->whitespace);
+
+    if (!(op->operator.infix == '*' && fmt->brief_multiplication
+        && !(EXPRESSION_IS_VARIABLE(EXPRESSION_LEFT(op)) && EXPRESSION_IS_VARIABLE(EXPRESSION_RIGHT(op))))) {
+            string_append_cstring(string, fmt->whitespace);
+            string_append_char(string, op->operator.infix);
+            string_append_cstring(string, fmt->whitespace);
+    }
 
     _write_expression_prec(string, fmt, op->operator.right, myprec);
 
@@ -113,9 +117,12 @@ void _write_number(string_t* string, string_format_t* fmt, expression_t* number)
             string_append_char(string, '+');
             string_append_cstring(string, fmt->whitespace);
         }
+    } else if (mpfr_zero_p(imag)) {
+        string_append_char(string, '0');
+        return;
     }
 
-        if (mpfr_zero_p(imag)) {
+    if (mpfr_zero_p(imag)) {
         return;
     }
 

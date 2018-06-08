@@ -1,4 +1,6 @@
-#include "src/simplify/builtins.h"
+/* Copyright Ian Shehadeh 2018 */
+
+#include "simplify/builtins.h"
 
 bool _g_rand_state_initialized;
 gmp_randstate_t _g_rand_state;
@@ -12,7 +14,7 @@ error_t builtin_func_ ## NAME(scope_t* scope, expression_t** out) { \
         return ERROR_NO_ERROR; \
     } \
     mpc_ptr num = malloc(sizeof(mpc_t)); \
-    mpc_init2(num, MAX_PRECISION(input.number.value)); \
+    mpc_init2(num, GET_MAX_PREC(input.number.value)); \
     mpfr_set_si(mpc_imagref(num), 0, MPFR_RNDN); \
     mpfr_## NAME(mpc_realref(num), mpc_realref(input.number.value), MPC_RNDNN); \
     *out = expression_new_number(num); \

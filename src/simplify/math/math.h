@@ -4,21 +4,21 @@
 
 #include <mpc.h>
 
-static inline void _multi_init(mp_prec_t prec, mpc_ptr* inits) {
+static inline void __math_multi_init(mp_prec_t prec, mpc_ptr* inits) {
     while (*inits != NULL) {
         mpc_init2(*inits, prec);
         ++inits;
     }
 }
 
-static inline void _multi_clean(mpc_ptr* nums) {
+static inline void __math_multi_clean(mpc_ptr* nums) {
     while (*nums != NULL) {
         mpc_clear(*nums);
         ++nums;
     }
 }
 
-static inline mp_prec_t _max_prec(mpc_ptr* nums) {
+static inline mp_prec_t __math_max_prec(mpc_ptr* nums) {
     mp_prec_t real;
     mp_prec_t imag;
     mp_prec_t max = 0;
@@ -35,13 +35,9 @@ static inline mp_prec_t _max_prec(mpc_ptr* nums) {
     return max;
 }
 
-#define DECLARE_NUMBERS(PREC, ...)                 \
-mpc_t __VA_ARGS__;                                 \
-_multi_init(PREC, (mpc_ptr[]){__VA_ARGS__, NULL}); \
-
-#define CLEAN(...) _multi_clean((mpc_ptr[]){__VA_ARGS__, NULL})
-
-#define MAX_PRECISION(...) _max_prec((mpc_ptr[]){__VA_ARGS__, NULL})
+#define INITS(PREC, ...)  __math_multi_init(PREC, (mpc_ptr[]){__VA_ARGS__, NULL});
+#define CLEARS(...)       __math_multi_clean((mpc_ptr[]){__VA_ARGS__, NULL})
+#define GET_MAX_PREC(...) __math_max_prec((mpc_ptr[]){__VA_ARGS__, NULL})
 
 void simplify_const_e(mpc_ptr);
 void simplify_const_pi(mpc_ptr);
