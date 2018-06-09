@@ -21,13 +21,11 @@ typedef struct lexer lexer_t;
 
 /* A token labels part of a buffer
  */
-typedef struct token        token_t;
+typedef struct token token_t;
 
 /* Enumerates the different kinds of tokens
  */
-typedef enum   token_type   token_type_t;
-
-enum token_type {
+typedef enum token_type {
     TOKEN_TYPE_OPERATOR,
     TOKEN_TYPE_NUMBER,
     TOKEN_TYPE_IDENTIFIER,
@@ -35,7 +33,7 @@ enum token_type {
     TOKEN_TYPE_RIGHT_PAREN,
     TOKEN_TYPE_COMMA,
     TOKEN_TYPE_EOF,
-};
+} token_type_t;
 
 struct token {
     token_type_t type;

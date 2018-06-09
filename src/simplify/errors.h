@@ -8,9 +8,7 @@
  * Error also has the value `ERROR_NO_ERROR`, meaning no error occurred. This value
  * will always be zero, so it's safe to check if an error occurred with `if (error) { ... }`.
  */
-typedef enum error error_t;
-
-enum error {
+typedef enum error {
     ERROR_NO_ERROR = 0,
     ERROR_INVALID_TOKEN,
     ERROR_INVALID_CHARACTER,
@@ -44,7 +42,7 @@ enum error {
     ERROR_IS_A_FUNCTION,
     ERROR_IS_A_VARIABLE,
     ERROR_MISSING_ARGUMENTS,
-};
+} error_t;
 
 /* get a description of the error
  *

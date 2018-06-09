@@ -274,15 +274,20 @@ void _write_function(string_t* string, string_format_t* fmt, expression_t* func)
 void _write_expression_prec(string_t* string, string_format_t* fmt, expression_t* expr, operator_precedence_t prec) {
     switch (expr->type) {
         case EXPRESSION_TYPE_FUNCTION:
-            return _write_function(string, fmt, expr);
+            _write_function(string, fmt, expr);
+            break;
         case EXPRESSION_TYPE_PREFIX:
-            return _write_prefix(string, fmt, expr, prec);
+            _write_prefix(string, fmt, expr, prec);
+            break;
         case EXPRESSION_TYPE_OPERATOR:
-            return _write_operator_prec_recursive(string, fmt, expr, prec);
+            _write_operator_prec_recursive(string, fmt, expr, prec);
+            break;
         case EXPRESSION_TYPE_VARIABLE:
-            return _write_variable(string, expr);
+            _write_variable(string, expr);
+            break;
         case EXPRESSION_TYPE_NUMBER:
-            return _write_number(string, fmt, expr);
+            _write_number(string, fmt, expr);
+            break;
     }
 }
 

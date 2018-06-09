@@ -9,13 +9,11 @@
 /* a string format holds information about how to transform an expression into a string */
 typedef struct string_format string_format_t;
 
-typedef enum string_format_type string_format_type_t;
-
-enum string_format_type {
+typedef enum string_format_type {
     STRING_FORMAT_ASCII,
     STRING_FORMAT_LATEX,
     STRING_FORMAT_HTML,
-};
+} string_format_type_t;
 
 struct string_format {
     char* whitespace;

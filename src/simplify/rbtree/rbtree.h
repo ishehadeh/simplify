@@ -26,13 +26,10 @@ typedef struct rbtree       rbtree_t;
 
 /* Either Red, or Black
  */
-typedef enum   rbtree_color rbtree_color_t;
-
-
-enum rbtree_color {
+typedef enum rbtree_color {
     RBTREE_COLOR_RED,
     RBTREE_COLOR_BLACK,
-};
+} rbtree_color_t;
 
 struct rbtree_node {
     rbtree_color_t color;

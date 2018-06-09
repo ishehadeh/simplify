@@ -83,7 +83,7 @@ int main() {
         lexer_t flexer;
 
         FILE* f = fopen("lexer_test.txt", "w+");
-        if (!f) FATAL("Failed to open file lexer_test.txt");
+        if (!f) FATAL("%s", "Failed to open file lexer_test.txt");
 
         lexer_init_from_string(&lexer, __string_token_pairs[i].string);
         fwrite(__string_token_pairs[i].string, strlen(__string_token_pairs[i].string), 1, f);
@@ -128,7 +128,7 @@ int main() {
             if (err == __token_error_pairs[i].error)
                 break;
             if (tok.type == TOKEN_TYPE_EOF)
-                FATAL("error never encountered");
+                FATAL("%s", "error never encountered");
         }
         lexer_clean(&lexer);
     }

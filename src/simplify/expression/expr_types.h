@@ -90,14 +90,8 @@ typedef char                  operator_t;
 /* A variable is a null terminated string. */
 typedef char*                 variable_t;
 
-/* Enumerates the values that can be held in `expression_t` */
-typedef enum  expression_type expression_type_t;
-
 /* A singly linked list of expressions */
 typedef struct expression_list expression_list_t;
-
-/* Operator precedence enumerates the different precedence levels for groups of operators. */
-typedef enum operator_precedence operator_precedence_t;
 
 /* a variable, constant, or function's value */
 typedef union variable_value variable_value_t;
@@ -111,7 +105,8 @@ typedef union variable_value variable_value_t;
  */
 typedef error_t(*simplify_func_t)(scope_t*, expression_t**);
 
-enum operator_precedence {
+/* Operator precedence enumerates the different precedence levels for groups of operators. */
+typedef enum operator_precedence {
     /* this value is used to say, "anything can follow this operator".
      * it should __never__ be assigned to an actual operator.
      */
@@ -124,15 +119,16 @@ enum operator_precedence {
 
     /* similar to `OPERATOR_PRECEDENCE_MINIMUM` but just the opposite */
     OPERATOR_PRECEDENCE_MAXIMUM,
-};
+} operator_precedence_t;
 
-enum expression_type {
+/* Enumerates the values that can be held in `expression_t` */
+typedef enum expression_type {
     EXPRESSION_TYPE_NUMBER,
     EXPRESSION_TYPE_PREFIX,
     EXPRESSION_TYPE_OPERATOR,
     EXPRESSION_TYPE_VARIABLE,
     EXPRESSION_TYPE_FUNCTION,
-};
+} expression_type_t;
 
 union variable_value {
     simplify_func_t internal;

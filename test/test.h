@@ -106,12 +106,12 @@ void expression_assert_eq(expression_t* expr1, expression_t* expr2) {
             expression_list_t* other = expr2->function.parameters;
             EXPRESSION_LIST_FOREACH(param1, expr1->function.parameters) {
                 if (!other)
-                    FATAL("ASSERT FAILED: argument count doesn't match");
+                    FATAL("%s", "ASSERT FAILED: arguments don't match");
                 expression_assert_eq(param1, other->value);
                 other = other->next;
             }
             if (other)
-                FATAL("ASSERT FAILED: argument count doesn't match");
+                FATAL("%s", "ASSERT FAILED: arguments don't match");
         }
     }
 }
