@@ -15,6 +15,8 @@
 #include "simplify/errors.h"
 #include "simplify/rbtree/rbtree.h"
 
+#define MANGLE_INTERNAL_VARIABLE(VAR) "@" VAR "@"
+
 #define EXPRESSION_IS_OPERATOR(EXPR) ((EXPR)->type == (EXPRESSION_TYPE_OPERATOR))
 #define EXPRESSION_IS_VARIABLE(EXPR) ((EXPR)->type == (EXPRESSION_TYPE_VARIABLE))
 #define EXPRESSION_IS_NUMBER(EXPR)   ((EXPR)->type == (EXPRESSION_TYPE_NUMBER))

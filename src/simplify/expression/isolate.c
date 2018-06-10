@@ -77,9 +77,9 @@ error_t _expression_setup_natural_log(expression_t* y, expression_t* expr) {
             expression_new_operator(
                 expr_e,
                 '^',
-                expression_new_variable("x")));
+                expression_new_variable(MANGLE_INTERNAL_VARIABLE("NaturalLogarithmResult"))));
 
-        err = _expression_isolate_variable_recursive(expr->operator.right, &expr->operator.left, "x");
+        err = _expression_isolate_variable_recursive(expr->operator.right, &expr->operator.left, MANGLE_INTERNAL_VARIABLE("NaturalLogarithmResult"));
         if (err) return err;
         expression_collapse_right(expr);
 #   endif

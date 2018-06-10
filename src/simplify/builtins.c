@@ -108,8 +108,8 @@ error_t builtin_func_ln(scope_t* scope, expression_t** out) {
     expression_t input;
     scope_get_value(scope, "__arg0", &input);
     if (!EXPRESSION_IS_NUMBER(&input)) {
-        return ERROR_NO_ERROR;
         expression_clean(&input);
+        return ERROR_NO_ERROR;
     }
     mpc_ptr num = malloc(sizeof(mpc_t));
     mpc_init2(num, 256);
@@ -127,6 +127,12 @@ error_t builtin_func_log(scope_t* scope, expression_t** out) {
 
     scope_get_value(scope, "__arg0", b);
     scope_get_value(scope, "__arg1", y);
+
+    if (!EXPRESSION_IS_NUMBER(b)) {
+        expression_free(b);
+        expression_free(y);
+        return ERROR_NO_ERROR;
+    }
 
     err = expression_do_logarithm(b, y, out);
     if (err) return err;

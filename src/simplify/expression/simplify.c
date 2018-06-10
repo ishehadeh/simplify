@@ -318,11 +318,11 @@ error_t expression_do_logarithm(expression_t* b, expression_t* y, expression_t**
     */
     error_t err;
     *out = expression_new_operator(
-        expression_new_operator(b, '^', expression_new_variable("x") ),
+        expression_new_operator(b, '^', expression_new_variable(MANGLE_INTERNAL_VARIABLE("LogarithmResult"))),
         '=',
         y);
 
-    err = expression_isolate_variable(*out, "x");
+    err = expression_isolate_variable(*out, MANGLE_INTERNAL_VARIABLE("LogarithmResult"));
     if (err) return err;
 
     expression_collapse_left(*out);
