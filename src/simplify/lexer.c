@@ -47,6 +47,14 @@ void lexer_init_from_file_buffered(lexer_t* lexer, FILE* file) {
     lexer->buffer_position = 0;
 }
 
+void lexer_init_from_string(lexer_t* lexer, const char* buffer) {
+    lexer->buffer_length = strlen(buffer);
+    lexer->buffer = (char*)malloc(lexer->buffer_length);
+    lexer->buffer_position = 0;
+
+    strncpy(lexer->buffer, buffer, lexer->buffer_length);
+}
+
 void lexer_init_from_file(lexer_t* lexer, FILE* file) {
     fseek(file, 0, SEEK_END);
     size_t len = (size_t)ftell(file);
@@ -55,7 +63,7 @@ void lexer_init_from_file(lexer_t* lexer, FILE* file) {
         return;
     }
 
-    lexer->buffer = malloc(len + 1);
+    lexer->buffer = (char*)malloc(len + 1);
     lexer->buffer_length = len;
     lexer->buffer_position = 0;
 

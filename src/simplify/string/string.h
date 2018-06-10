@@ -31,18 +31,6 @@ static inline size_t string_len(string_t* string) { return string->len; }
 /* get the capacity of a string */
 static inline size_t string_cap(string_t* string) { return string->cap; }
 
-/* grow the string's capacity */
-static inline void string_grow(string_t* string) {
-    string->buffer = realloc(string->buffer, string->cap *= 2);
-}
-
-/* grow a string to fit an extra `size` bytes */
-static inline void string_fit(string_t* string, size_t size) {
-    while (string_cap(string) <= string_len(string) + size) {
-        string_grow(string);
-    }
-}
-
 /* copy `len` chars from a buffer, and append them to the end of the string
  *
  * @string

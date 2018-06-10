@@ -51,49 +51,52 @@ static inline void expression_swap(expression_t* expr) {
     expr->operator.right = lx;
 }
 
+expression_t* expression_new_uninialized();
+expression_list_t* expression_list_new_uninialized();
+
 static inline expression_t* expression_new_operator(expression_t* left, operator_t op, expression_t* right) {
-    expression_t* x = malloc(sizeof(expression_t));
+    expression_t* x = expression_new_uninialized();
     expression_init_operator(x, left, op, right);
     return x;
 }
 
 static inline expression_t* expression_new_prefix(operator_t op, expression_t* right) {
-    expression_t* x = malloc(sizeof(expression_t));
+    expression_t* x = expression_new_uninialized();
     expression_init_prefix(x, op, right);
     return x;
 }
 
 
 static inline expression_t* expression_new_number(mpc_ptr num) {
-    expression_t* x = malloc(sizeof(expression_t));
+    expression_t* x = expression_new_uninialized();
     expression_init_number(x, num);
     return x;
 }
 
 
 static inline expression_t* expression_new_number_d(double num) {
-    expression_t* x = malloc(sizeof(expression_t));
+    expression_t* x = expression_new_uninialized();
     expression_init_number_d(x, num);
     return x;
 }
 
 static inline expression_t* expression_new_number_si(long num) {
-    expression_t* x = malloc(sizeof(expression_t));
+    expression_t* x = expression_new_uninialized();
     expression_init_number_si(x, num);
     return x;
 }
 
 static inline expression_t* expression_new_variable(variable_t var) {
-    expression_t* x = malloc(sizeof(expression_t));
+    expression_t* x = expression_new_uninialized();
     expression_init_variable(x, var, strlen(var));
     return x;
 }
 
 static inline expression_t* expression_new_function(variable_t name, int param_count, ...) {
-    expression_t* x = malloc(sizeof(expression_t));
+    expression_t* x = expression_new_uninialized();
     va_list args;
     va_start(args, param_count);
-    expression_list_t* params = malloc(sizeof(expression_list_t));
+    expression_list_t* params = expression_list_new_uninialized();
     expression_list_init(params);
 
     for (int i = 0; i < param_count; ++i) {

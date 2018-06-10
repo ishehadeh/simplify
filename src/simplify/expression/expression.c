@@ -3,6 +3,13 @@
 #include "simplify/expression/expression.h"
 #include "simplify/expression/stringify.h"
 
+expression_t* expression_new_uninialized() {
+    return (expression_t*)malloc(sizeof(expression_t));
+}
+
+expression_list_t* expression_list_new_uninialized() {
+    return (expression_list_t*)malloc(sizeof(expression_list_t));
+}
 
 int index_of(char* x, char* y) {
     int i = 0;

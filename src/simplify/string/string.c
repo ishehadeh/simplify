@@ -3,6 +3,18 @@
 #include <stdlib.h>
 #include "simplify/string/string.h"
 
+/* grow the string's capacity */
+static inline void string_grow(string_t* string) {
+    string->buffer = realloc(string->buffer, string->cap *= 2);
+}
+
+/* grow a string to fit an extra `size` bytes */
+static inline void string_fit(string_t* string, size_t size) {
+    while (string_cap(string) <= string_len(string) + size) {
+        string_grow(string);
+    }
+}
+
 void string_init(string_t* string) {
     string_init_cap(string, STRING_DEFAULT_CAPACITY);
 }

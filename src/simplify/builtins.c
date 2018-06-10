@@ -13,8 +13,7 @@ error_t builtin_func_ ## NAME(scope_t* scope, expression_t** out) { \
         expression_clean(&input); \
         return ERROR_NO_ERROR; \
     } \
-    mpc_ptr num = malloc(sizeof(mpc_t)); \
-    mpc_init2(num, GET_MAX_PREC(input.number.value)); \
+    mpc_ptr num = simplify_new_number(GET_MAX_PREC(input.number.value)); \
     mpfr_set_si(mpc_imagref(num), 0, MPFR_RNDN); \
     mpfr_## NAME(mpc_realref(num), mpc_realref(input.number.value), MPC_RNDNN); \
     *out = expression_new_number(num); \
@@ -25,8 +24,7 @@ error_t builtin_func_ ## NAME(scope_t* scope, expression_t** out) { \
 #define _DEFINE_CONST(NAME) \
 error_t builtin_const_ ## NAME(scope_t* scope, expression_t** out) { \
     (void)scope; \
-    mpc_ptr num = malloc(sizeof(mpc_t)); \
-    mpc_init2(num, 256); \
+    mpc_ptr num = simplify_new_number(SIMPLIFY_DEFAULT_PRECISION); \
     simplify_const_## NAME(num); \
     *out = expression_new_number(num); \
     return ERROR_NO_ERROR; \
@@ -75,9 +73,7 @@ error_t builtin_func_random_imaginary(scope_t* scope, expression_t** out) {
         gmp_randseed_ui(_g_rand_state, (unsigned long)time(NULL));
     }
 
-    mpc_ptr num = malloc(sizeof(mpc_t));
-    mpc_init2(num, 256);
-
+    mpc_ptr num = simplify_new_number(SIMPLIFY_DEFAULT_PRECISION);
     mpc_urandom(num, _g_rand_state);
     *out = expression_new_number(num);
 
@@ -94,8 +90,7 @@ error_t builtin_func_random(scope_t* scope, expression_t** out) {
         gmp_randseed_ui(_g_rand_state, (unsigned long)time(NULL));
     }
 
-    mpc_ptr num = malloc(sizeof(mpc_t));
-    mpc_init2(num, 256);
+    mpc_ptr num = simplify_new_number(SIMPLIFY_DEFAULT_PRECISION);
     mpfr_set_si(mpc_imagref(num), 0, MPFR_RNDN);
     mpfr_urandom(mpc_realref(num), _g_rand_state, MPFR_RNDN);
     *out = expression_new_number(num);
@@ -111,8 +106,7 @@ error_t builtin_func_ln(scope_t* scope, expression_t** out) {
         expression_clean(&input);
         return ERROR_NO_ERROR;
     }
-    mpc_ptr num = malloc(sizeof(mpc_t));
-    mpc_init2(num, 256);
+    mpc_ptr num = simplify_new_number(SIMPLIFY_DEFAULT_PRECISION);
     mpc_log(num, input.number.value, MPC_RNDNN);
     *out = expression_new_number(num);
     mpc_clear(num);
@@ -122,8 +116,8 @@ error_t builtin_func_ln(scope_t* scope, expression_t** out) {
 
 error_t builtin_func_log(scope_t* scope, expression_t** out) {
     error_t err;
-    expression_t* b = malloc(sizeof(expression_t));
-    expression_t* y = malloc(sizeof(expression_t));
+    expression_t* b = expression_new_uninialized();
+    expression_t* y = expression_new_uninialized();
 
     scope_get_value(scope, "__arg0", b);
     scope_get_value(scope, "__arg1", y);

@@ -55,18 +55,12 @@ struct lexer {
  * @lexer the lexer to initialize
  * @buffer the buffer to read, the buffer is copied
  */
-static inline void lexer_init_from_string(lexer_t* lexer, const char* buffer) {
-    lexer->buffer_length = strlen(buffer);
-    lexer->buffer = malloc(lexer->buffer_length);
-    lexer->buffer_position = 0;
-
-    strncpy(lexer->buffer, buffer, lexer->buffer_length);
-}
+void lexer_init_from_string(lexer_t* lexer, const char* buffer);
 
 /* initialize a lexer from a file
  *
  * This function reads the file block-by-block into an intermediate buffer,
- * instead of immediately checking it's length and reading the entire file.
+ * instead of immediately checking its length and reading the entire file.
  * Generally it's optimal to use lexer_init_from_file, instead of this function.
  * `lexer_init_from_file` will call this function if it can't determine the length anyway.
  * 
