@@ -29,20 +29,16 @@
 #define TRUE_STRING "true"
 #define FALSE_STRING "false"
 
-static gmp_randstate_t _g_rand_state;
-static bool _g_rand_state_initialized;
-static mpc_ptr _g_eulers_constant;
-
 void usage(char* arg0) {
     puts(INFO);
     printf("\nUSAGE: %s [OPTIONS] [...EXPRESSION]\n", arg0);
     puts("OPTIONS:");
-    puts("\t-h,--help ..................... print this message");
-    puts("\t-v,--verbose .................. print status updates while running, not just the expression's result");
-    puts("\t-q,--quiet .................... only print errors (this overides -v)");
-    puts("\t-d,--define NAME=EXPR ......... define a variable `NAME' as `EXPR'");
-    puts("\t-i,--isolate NAME ............. if the variable `NAME' exists than attempt to isolate it");
-    puts("\t-f,--file FILE ................ execute the file `FILE' before any expression(s)");
+    puts("\t-h, --help ..................... print this message");
+    puts("\t-v, --verbose .................. print status updates while running, not just the expression's result");
+    puts("\t-q, --quiet .................... only print errors (this overides -v)");
+    puts("\t-d, --define NAME=EXPR ......... define a variable `NAME' as `EXPR'");
+    puts("\t-i, --isolate NAME ............. if the variable `NAME' exists than attempt to isolate it");
+    puts("\t-f, --file FILE ................ execute the file `FILE' before any expression(s)");
 }
 
 error_t do_assignment(char* assignment, scope_t* scope) {
@@ -139,10 +135,17 @@ int main(int argc, char** argv) {
     scope_init(&scope);
     simplify_export_builtins(&scope);
     error_t err = ERROR_NO_ERROR;
-    PARSE_FLAGS(FLAG('h', "help", usage(argv[0]); goto cleanup) FLAG('v', "verbose", verbosity = 1) FLAG(
-        'q', "quiet", verbosity = -1) FLAG('d', "define", err = do_assignment(FLAG_VALUE, &scope); if (err) goto error)
-                    FLAG('i', "isolate", isolation_target = FLAG_VALUE)
-                        FLAG('f', "file", err = execute_file(FLAG_VALUE, &scope); if (err) goto error))
+
+    /* clang-format off */
+    PARSE_FLAGS(
+        FLAG('h', "help", usage(argv[0]); goto cleanup)
+        FLAG('v', "verbose", verbosity = 1)
+        FLAG('q', "quiet", verbosity = -1)
+        FLAG('d', "define", err = do_assignment(FLAG_VALUE, &scope); if (err) goto error)
+        FLAG('i', "isolate", isolation_target = FLAG_VALUE)
+        FLAG('f', "file", err = execute_file(FLAG_VALUE, &scope); if (err) goto error)
+    )
+    /* clang-format on */
 
     if (err) goto error;
 
@@ -182,11 +185,5 @@ error:
 cleanup:
     scope_clean(&scope);
     mpfr_free_cache();
-    if (_g_rand_state_initialized) gmp_randclear(_g_rand_state);
-
-    if (_g_eulers_constant) {
-        mpc_clear(_g_eulers_constant);
-        free(_g_eulers_constant);
-    }
     return 0;
 }
