@@ -1,18 +1,18 @@
 /* Copyright Ian Shehadeh 2018 */
 
-#include <time.h>
 #include <stdio.h>
+#include <time.h>
 
 #if defined(_WIN32) || defined(_WIN64)
-#   include <io.h>
+#include <io.h>
 #elif defined(unix) || defined(__unix__) || defined(__unix) || defined(__APPLE__) || defined(__MACH__)
-#   include <unistd.h>
+#include <unistd.h>
 #else
-#   error "Your system doesn't appear to be Windows or unix-like!"
+#error "Your system doesn't appear to be Windows or unix-like!"
 #endif
 
 #ifndef STDIN_FILENO
-#   define STDIN_FILENO 0
+#define STDIN_FILENO 0
 #endif
 
 #include "flags/flags.h"
@@ -22,15 +22,16 @@
 #define DATE __DATE__
 #define COPYRIGHT "Copyright Ian Shehadeh 2018, all rights reserved."
 
-#define INFO "simplify v" VERSION ". Compiled " DATE ".\n" COPYRIGHT \
-"\n  simplify is a simple utility to evaluate a mathmatical expression."
+#define INFO                                                \
+    "simplify v" VERSION ". Compiled " DATE ".\n" COPYRIGHT \
+    "\n  simplify is a simple utility to evaluate a mathmatical expression."
 
-#define TRUE_STRING  "true"
+#define TRUE_STRING "true"
 #define FALSE_STRING "false"
 
 static gmp_randstate_t _g_rand_state;
-static bool            _g_rand_state_initialized;
-static mpc_ptr        _g_eulers_constant;
+static bool _g_rand_state_initialized;
+static mpc_ptr _g_eulers_constant;
 
 void usage(char* arg0) {
     puts(INFO);
@@ -52,15 +53,13 @@ error_t do_assignment(char* assignment, scope_t* scope) {
 
     if (result.type != EXPRESSION_TYPE_OPERATOR) {
         return ERROR_INVALID_ASSIGNMENT_EXPRESSION;
-    } else if (result.operator.infix != '=' ||
-        result.operator.left->type != EXPRESSION_TYPE_VARIABLE) {
+    } else if (result.operator.infix != '=' || result.operator.left->type != EXPRESSION_TYPE_VARIABLE) {
         return ERROR_INVALID_ASSIGNMENT_EXPRESSION;
     }
 
     scope_define(scope, result.operator.left->variable.value, result.operator.right);
     return ERROR_NO_ERROR;
 }
-
 
 error_t execute_file(char* fname, scope_t* scope) {
     int free_fname = 0;
@@ -79,8 +78,7 @@ error_t execute_file(char* fname, scope_t* scope) {
     }
 
     FILE* f = fopen(fname, "r");
-    if (!f)
-        return ERROR_UNABLE_TO_OPEN_FILE;
+    if (!f) return ERROR_UNABLE_TO_OPEN_FILE;
 
     expression_list_t* exprs = malloc(sizeof(expression_list_t));
     expression_list_init(exprs);
@@ -97,10 +95,8 @@ error_t execute_file(char* fname, scope_t* scope) {
     }
 
     expression_list_free(exprs);
-    if (f != stdin)
-        fclose(f);
-    if (free_fname)
-        free(fname);
+    if (f != stdin) fclose(f);
+    if (free_fname) free(fname);
     return ERROR_NO_ERROR;
 }
 
@@ -135,8 +131,6 @@ error_t simplify_and_print(scope_t* scope, expression_t* expr, char* isolate_tar
     return ERROR_NO_ERROR;
 }
 
-
-
 int main(int argc, char** argv) {
     int verbosity = 0;
     variable_t isolation_target = NULL;
@@ -145,17 +139,12 @@ int main(int argc, char** argv) {
     scope_init(&scope);
     simplify_export_builtins(&scope);
     error_t err = ERROR_NO_ERROR;
-    PARSE_FLAGS(
-        FLAG('h', "help",    usage(argv[0]); goto cleanup)
-        FLAG('v', "verbose", verbosity = 1)
-        FLAG('q', "quiet",   verbosity = -1)
-        FLAG('d', "define",  err = do_assignment(FLAG_VALUE, &scope); if (err) goto error)
-        FLAG('i', "isolate", isolation_target = FLAG_VALUE)
-        FLAG('f', "file",    err = execute_file(FLAG_VALUE, &scope); if (err) goto error)
-    )
+    PARSE_FLAGS(FLAG('h', "help", usage(argv[0]); goto cleanup) FLAG('v', "verbose", verbosity = 1) FLAG(
+        'q', "quiet", verbosity = -1) FLAG('d', "define", err = do_assignment(FLAG_VALUE, &scope); if (err) goto error)
+                    FLAG('i', "isolate", isolation_target = FLAG_VALUE)
+                        FLAG('f', "file", err = execute_file(FLAG_VALUE, &scope); if (err) goto error))
 
     if (err) goto error;
-
 
     if (stdin && !isatty(STDIN_FILENO)) {
         expression_t* expr;
@@ -193,8 +182,7 @@ error:
 cleanup:
     scope_clean(&scope);
     mpfr_free_cache();
-    if (_g_rand_state_initialized)
-        gmp_randclear(_g_rand_state);
+    if (_g_rand_state_initialized) gmp_randclear(_g_rand_state);
 
     if (_g_eulers_constant) {
         mpc_clear(_g_eulers_constant);

@@ -23,26 +23,19 @@ struct string_format {
 
     size_t approximate_tolerance; /* zero to disable approximation */
 
-    bool brief_multiplication; /* x * 1 => x1 */
+    bool brief_multiplication;       /* x * 1 => x1 */
     bool force_brief_multiplication; /* 1 * 2 => 1(2) */
-    bool omit_parmeter_parentheses; /* f(x, y, z) => f x,y,z */
-    bool omit_parameter_commas; /* f(x, y, z) => f(xyz) */
+    bool omit_parmeter_parentheses;  /* f(x, y, z) => f x,y,z */
+    bool omit_parameter_commas;      /* f(x, y, z) => f(xyz) */
     string_format_type_t format;
 };
 
 /* get a string format with the default settings. */
-#define STRING_FORMAT_DEFAULT()          \
-{                                        \
-    .approximate_tolerance = 5,          \
-    .not_a_number = "NaN",               \
-    .infinity = "Inf",                   \
-    .imaginary = "i",                    \
-    .whitespace = " ",                   \
-    .omit_parameter_commas = false,      \
-    .omit_parmeter_parentheses = false,  \
-    .force_brief_multiplication = false, \
-    .brief_multiplication = false,       \
-    .format = STRING_FORMAT_ASCII        \
-}
+#define STRING_FORMAT_DEFAULT()                                                                                    \
+    {                                                                                                              \
+        .approximate_tolerance = 5, .not_a_number = "NaN", .infinity = "Inf", .imaginary = "i", .whitespace = " ", \
+        .omit_parameter_commas = false, .omit_parmeter_parentheses = false, .force_brief_multiplication = false,   \
+        .brief_multiplication = false, .format = STRING_FORMAT_ASCII                                               \
+    }
 
 #endif  // SIMPLIFY_STRING_FORMAT_H_

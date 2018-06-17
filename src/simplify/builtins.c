@@ -5,39 +5,37 @@
 bool _g_rand_state_initialized;
 gmp_randstate_t _g_rand_state;
 
-#define _DEFINE_MPFR_BUILTIN(NAME) \
-error_t builtin_func_ ## NAME(scope_t* scope, expression_t** out) { \
-    expression_t input; \
-    scope_get_value(scope, "__arg0", &input); \
-    if (!EXPRESSION_IS_NUMBER(&input) || !mpfr_zero_p(mpc_imagref(input.number.value))) { \
-        expression_clean(&input); \
-        return ERROR_NO_ERROR; \
-    } \
-    mpc_ptr num = simplify_new_number(GET_MAX_PREC(input.number.value)); \
-    mpfr_set_si(mpc_imagref(num), 0, MPFR_RNDN); \
-    mpfr_## NAME(mpc_realref(num), mpc_realref(input.number.value), MPC_RNDNN); \
-    *out = expression_new_number(num); \
-    expression_clean(&input); \
-    return ERROR_NO_ERROR; \
-}
+#define _DEFINE_MPFR_BUILTIN(NAME)                                                            \
+    error_t builtin_func_##NAME(scope_t* scope, expression_t** out) {                         \
+        expression_t input;                                                                   \
+        scope_get_value(scope, "__arg0", &input);                                             \
+        if (!EXPRESSION_IS_NUMBER(&input) || !mpfr_zero_p(mpc_imagref(input.number.value))) { \
+            expression_clean(&input);                                                         \
+            return ERROR_NO_ERROR;                                                            \
+        }                                                                                     \
+        mpc_ptr num = simplify_new_number(GET_MAX_PREC(input.number.value));                  \
+        mpfr_set_si(mpc_imagref(num), 0, MPFR_RNDN);                                          \
+        mpfr_##NAME(mpc_realref(num), mpc_realref(input.number.value), MPC_RNDNN);            \
+        *out = expression_new_number(num);                                                    \
+        expression_clean(&input);                                                             \
+        return ERROR_NO_ERROR;                                                                \
+    }
 
-#define _DEFINE_CONST(NAME) \
-error_t builtin_const_ ## NAME(scope_t* scope, expression_t** out) { \
-    (void)scope; \
-    mpc_ptr num = simplify_new_number(SIMPLIFY_DEFAULT_PRECISION); \
-    simplify_const_## NAME(num); \
-    *out = expression_new_number(num); \
-    return ERROR_NO_ERROR; \
-}
+#define _DEFINE_CONST(NAME)                                            \
+    error_t builtin_const_##NAME(scope_t* scope, expression_t** out) { \
+        (void)scope;                                                   \
+        mpc_ptr num = simplify_new_number(SIMPLIFY_DEFAULT_PRECISION); \
+        simplify_const_##NAME(num);                                    \
+        *out = expression_new_number(num);                             \
+        return ERROR_NO_ERROR;                                         \
+    }
 
-#define _EXPORT_BUILTIN_FUNC(SCOPE, NAME) \
-    scope_define_internal_function(SCOPE, #NAME, builtin_func_ ## NAME, 1, "__arg0")
-
+#define _EXPORT_BUILTIN_FUNC(SCOPE, NAME) scope_define_internal_function(SCOPE, #NAME, builtin_func_##NAME, 1, "__arg0")
 
 #define _EXPORT_BUILTIN_FUNC2(SCOPE, NAME) \
-    scope_define_internal_function(SCOPE, #NAME, builtin_func_ ## NAME, 2, "__arg0", "__arg1")
+    scope_define_internal_function(SCOPE, #NAME, builtin_func_##NAME, 2, "__arg0", "__arg1")
 
-#define _EXPORT_BUILTIN_CONST(SCOPE, NAME) scope_define_internal_const(SCOPE, #NAME, builtin_const_ ## NAME)
+#define _EXPORT_BUILTIN_CONST(SCOPE, NAME) scope_define_internal_const(SCOPE, #NAME, builtin_const_##NAME)
 
 _DEFINE_MPFR_BUILTIN(cos)
 _DEFINE_MPFR_BUILTIN(sin)
@@ -80,7 +78,6 @@ error_t builtin_func_random_imaginary(scope_t* scope, expression_t** out) {
     return ERROR_NO_ERROR;
 }
 
-
 error_t builtin_func_random(scope_t* scope, expression_t** out) {
     (void)scope;
 
@@ -97,7 +94,6 @@ error_t builtin_func_random(scope_t* scope, expression_t** out) {
 
     return ERROR_NO_ERROR;
 }
-
 
 error_t builtin_func_ln(scope_t* scope, expression_t** out) {
     expression_t input;

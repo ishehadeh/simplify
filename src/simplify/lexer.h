@@ -3,15 +3,15 @@
 #ifndef SIMPLIFY_LEXER_H_
 #define SIMPLIFY_LEXER_H_
 
-#include <string.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "simplify/errors.h"
 
 #ifndef LEXER_FILE_BUFFER_SIZE
-#   define LEXER_FILE_BUFFER_SIZE 1024
+#define LEXER_FILE_BUFFER_SIZE 1024
 #endif
 
 /* lexical analyzer
@@ -38,20 +38,19 @@ typedef enum token_type {
 struct token {
     token_type_t type;
 
-    char*  start;
+    char* start;
     size_t length;
 };
-
 
 struct lexer {
     token_t token;
 
-    char*   buffer;
-    size_t  buffer_length;
-    size_t  buffer_position;
+    char* buffer;
+    size_t buffer_length;
+    size_t buffer_position;
 };
 
-/* initialize lexer from a null terminated string 
+/* initialize lexer from a null terminated string
  * @lexer the lexer to initialize
  * @buffer the buffer to read, the buffer is copied
  */
@@ -63,7 +62,7 @@ void lexer_init_from_string(lexer_t* lexer, const char* buffer);
  * instead of immediately checking its length and reading the entire file.
  * Generally it's optimal to use lexer_init_from_file, instead of this function.
  * `lexer_init_from_file` will call this function if it can't determine the length anyway.
- * 
+ *
  * @lexer the lexer to initialize
  * @file the file read
  */
@@ -80,12 +79,10 @@ void lexer_init_from_file(lexer_t* lexer, FILE* file);
  * @lexer the lexer to clean
  */
 static inline void lexer_clean(lexer_t* lexer) {
-    if (lexer->buffer)
-        free(lexer->buffer);
+    if (lexer->buffer) free(lexer->buffer);
     lexer->buffer_length = 0;
     lexer->buffer_position = 0;
 }
-
 
 /* draw the next token from the lexer
  * @lexer the lexer to draw from
@@ -98,10 +95,6 @@ error_t lexer_next(lexer_t* lexer, token_t* token);
  * @c the character to check
  * @return a boolean integer, true if `c` is valid
  */
-static inline int isident(char c) {
-    return (c <= 'Z' && c >= 'A')
-            || (c <= 'z' && c >= 'a')
-            || c == '_';
-}
+static inline int isident(char c) { return (c <= 'Z' && c >= 'A') || (c <= 'z' && c >= 'a') || c == '_'; }
 
 #endif  // SIMPLIFY_LEXER_H_

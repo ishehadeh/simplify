@@ -3,20 +3,15 @@
 #include "simplify/expression/expression.h"
 #include "simplify/expression/stringify.h"
 
-expression_t* expression_new_uninialized() {
-    return (expression_t*)malloc(sizeof(expression_t));
-}
+expression_t* expression_new_uninialized() { return (expression_t*)malloc(sizeof(expression_t)); }
 
-expression_list_t* expression_list_new_uninialized() {
-    return (expression_list_t*)malloc(sizeof(expression_list_t));
-}
+expression_list_t* expression_list_new_uninialized() { return (expression_list_t*)malloc(sizeof(expression_list_t)); }
 
 int index_of(char* x, char* y) {
     int i = 0;
     int yi = 0;
     while (x[i]) {
-        if (!y[yi])
-            return i;
+        if (!y[yi]) return i;
         if (y[yi] == x[i])
             ++yi;
         else
@@ -93,8 +88,7 @@ int strnumcmp(char* x, char* y, int lenx, int leny) {
     if (decy < 0) decy = leny;
 
     int cmp = strintcmp(x, y, decx, decy, false);
-    if (cmp != 0 || (decx == lenx && decy == leny))
-        return cmp;
+    if (cmp != 0 || (decx == lenx && decy == leny)) return cmp;
 
     return strintcmp(x + decx, y + decy, lenx - decx, leny - decy, true);
 }
@@ -141,8 +135,7 @@ compare_result_t _expression_compare_numbers(expression_t* expr1, expression_t* 
 }
 
 compare_result_t _expression_compare_recursive(expression_t* expr1, expression_t* expr2) {
-    if (expr1->type != expr2->type)
-        return COMPARE_RESULT_INCOMPARABLE;
+    if (expr1->type != expr2->type) return COMPARE_RESULT_INCOMPARABLE;
 
     switch (expr1->type) {
         case EXPRESSION_TYPE_NUMBER:
@@ -160,7 +153,7 @@ compare_result_t _expression_compare_recursive(expression_t* expr1, expression_t
                 EXPRESSION_LIST_FOREACH2(arg1, arg2, expr1->function.parameters, expr2->function.parameters) {
                     compare_result_t next = _expression_compare_recursive(arg1, arg2);
                     if (current == COMPARE_RESULT_EQUAL && next == COMPARE_RESULT_EQUAL) {
-                            current = next;
+                        current = next;
                     } else {
                         return COMPARE_RESULT_INCOMPARABLE;
                     }
@@ -174,10 +167,8 @@ compare_result_t _expression_compare_recursive(expression_t* expr1, expression_t
                 return COMPARE_RESULT_INCOMPARABLE;
             else
                 return _expression_compare_recursive(expr1->prefix.right, expr2->prefix.right);
-        case EXPRESSION_TYPE_OPERATOR:
-        {
-            if (expr1->operator.infix != expr2->operator.infix)
-                return COMPARE_RESULT_INCOMPARABLE;
+        case EXPRESSION_TYPE_OPERATOR: {
+            if (expr1->operator.infix != expr2->operator.infix) return COMPARE_RESULT_INCOMPARABLE;
             compare_result_t result_left = _expression_compare_recursive(expr1->operator.left, expr2->operator.left);
             compare_result_t result_right = _expression_compare_recursive(expr1->operator.right, expr2->operator.right);
             if (result_left == result_right && result_left != COMPARE_RESULT_INCOMPARABLE) {
@@ -201,14 +192,12 @@ compare_result_t expression_compare(expression_t* expr1, expression_t* expr2) {
     return _expression_compare_recursive(expr1, expr2);
 }
 
-
 variable_t _expression_find_variable_recursive(expression_t* expr) {
     switch (expr->type) {
         case EXPRESSION_TYPE_FUNCTION:
         case EXPRESSION_TYPE_NUMBER:
             return NULL;
-        case EXPRESSION_TYPE_OPERATOR:
-        {
+        case EXPRESSION_TYPE_OPERATOR: {
             variable_t var = _expression_find_variable_recursive(expr->operator.left);
             if (var) return var;
             var = _expression_find_variable_recursive(expr->operator.right);
@@ -222,23 +211,17 @@ variable_t _expression_find_variable_recursive(expression_t* expr) {
     return NULL;
 }
 
-
 int _expression_has_variable_or_function_recursive(expression_t* expr, variable_t var) {
     switch (expr->type) {
         case EXPRESSION_TYPE_NUMBER:
             return 0;
-        case EXPRESSION_TYPE_OPERATOR:
-        {
-            if (_expression_has_variable_or_function_recursive(expr->operator.left, var))
-                return 1;
-            if (_expression_has_variable_or_function_recursive(expr->operator.right, var))
-                return 1;
+        case EXPRESSION_TYPE_OPERATOR: {
+            if (_expression_has_variable_or_function_recursive(expr->operator.left, var)) return 1;
+            if (_expression_has_variable_or_function_recursive(expr->operator.right, var)) return 1;
             return 0;
         }
-        case EXPRESSION_TYPE_PREFIX:
-        {
-            if (_expression_has_variable_or_function_recursive(expr->prefix.right, var))
-                return 1;
+        case EXPRESSION_TYPE_PREFIX: {
+            if (_expression_has_variable_or_function_recursive(expr->prefix.right, var)) return 1;
             return 0;
         }
         case EXPRESSION_TYPE_VARIABLE:
@@ -249,11 +232,8 @@ int _expression_has_variable_or_function_recursive(expression_t* expr, variable_
     return 0;
 }
 
-
 int expression_has_variable_or_function(expression_t* expr, variable_t var) {
     return _expression_has_variable_or_function_recursive(expr, var);
 }
 
-variable_t expression_find_variable(expression_t* expr) {
-    return _expression_find_variable_recursive(expr);
-}
+variable_t expression_find_variable(expression_t* expr) { return _expression_find_variable_recursive(expr); }

@@ -5,19 +5,19 @@
 
 #define __LEXER_LOOP_END() __lexer_loop_continue = 0
 
-#define __LEXER_LOOP(LEXER, BLOCK) {                           \
-    int __lexer_loop_continue = 1;                             \
-    while (1) {                                                \
-        if ((LEXER)->buffer_position >= (LEXER)->buffer_length)\
-            break;                                             \
-        BLOCK;                                                 \
-        if (__lexer_loop_continue) {                           \
-            lexer_advance(LEXER);                              \
-        } else {                                               \
-            break;                                             \
-        }                                                      \
-    }                                                          \
-}
+#define __LEXER_LOOP(LEXER, BLOCK)                                         \
+    {                                                                      \
+        int __lexer_loop_continue = 1;                                     \
+        while (1) {                                                        \
+            if ((LEXER)->buffer_position >= (LEXER)->buffer_length) break; \
+            BLOCK;                                                         \
+            if (__lexer_loop_continue) {                                   \
+                lexer_advance(LEXER);                                      \
+            } else {                                                       \
+                break;                                                     \
+            }                                                              \
+        }                                                                  \
+    }
 
 #define __LEXER_SKIP_WHILE(LEXER, FUNC) __LEXER_LOOP(LEXER, if (!FUNC(lexer_current(LEXER))) __LEXER_LOOP_END())
 
@@ -27,7 +27,7 @@
  * instead of immediately checking it's length and reading the entire file.
  * Generally it's optimal to use lexer_init_from_file, instead of this function.
  * `lexer_init_from_file` will call this function if it can't determine the length anyway.
- * 
+ *
  * @lexer the lexer to initialize
  * @file the file read
  */
@@ -73,17 +73,11 @@ void lexer_init_from_file(lexer_t* lexer, FILE* file) {
     fread(lexer->buffer, len, 1, file);
 }
 
-static inline char lexer_current(lexer_t* lexer) {
-    return lexer->buffer[lexer->buffer_position];
-}
+static inline char lexer_current(lexer_t* lexer) { return lexer->buffer[lexer->buffer_position]; }
 
-static inline void lexer_advance(lexer_t* lexer) {
-    ++lexer->buffer_position;
-}
+static inline void lexer_advance(lexer_t* lexer) { ++lexer->buffer_position; }
 
-static inline int lexer_eof(lexer_t* lexer) {
-    return lexer->buffer_position >= lexer->buffer_length;
-}
+static inline int lexer_eof(lexer_t* lexer) { return lexer->buffer_position >= lexer->buffer_length; }
 
 error_t lexer_get_number(lexer_t* lexer, token_t* token) {
     token->start = lexer->buffer + lexer->buffer_position;
@@ -98,8 +92,7 @@ error_t lexer_get_number(lexer_t* lexer, token_t* token) {
 
     if (!lexer_eof(lexer) && (lexer_current(lexer) == 'e' || lexer_current(lexer) == 'E')) {
         lexer_advance(lexer);
-        if (lexer_current(lexer) == '-')
-            lexer_advance(lexer);
+        if (lexer_current(lexer) == '-') lexer_advance(lexer);
         __LEXER_SKIP_WHILE(lexer, isdigit);
     }
 
@@ -153,31 +146,79 @@ error_t lexer_next(lexer_t* lexer, token_t* token) {
             token->length = 1;
             ++lexer->buffer_position;
             break;
-        case 'a': case 'b': case 'c': case 'd': case 'e': 
-        case 'f': case 'g': case 'h': case 'i': case 'j':
-        case 'k': case 'l': case 'm': case 'n': case 'o': 
-        case 'p': case 'q': case 'r': case 's': case 't':
-        case 'u': case 'v': case 'w': case 'x': case 'y': 
+        case 'a':
+        case 'b':
+        case 'c':
+        case 'd':
+        case 'e':
+        case 'f':
+        case 'g':
+        case 'h':
+        case 'i':
+        case 'j':
+        case 'k':
+        case 'l':
+        case 'm':
+        case 'n':
+        case 'o':
+        case 'p':
+        case 'q':
+        case 'r':
+        case 's':
+        case 't':
+        case 'u':
+        case 'v':
+        case 'w':
+        case 'x':
+        case 'y':
         case 'z':
-        case 'A': case 'B': case 'C': case 'D': case 'E': 
-        case 'F': case 'G': case 'H': case 'I': case 'J':
-        case 'K': case 'L': case 'M': case 'N': case 'O': 
-        case 'P': case 'Q': case 'R': case 'S': case 'T':
-        case 'U': case 'V': case 'W': case 'X': case 'Y': 
+        case 'A':
+        case 'B':
+        case 'C':
+        case 'D':
+        case 'E':
+        case 'F':
+        case 'G':
+        case 'H':
+        case 'I':
+        case 'J':
+        case 'K':
+        case 'L':
+        case 'M':
+        case 'N':
+        case 'O':
+        case 'P':
+        case 'Q':
+        case 'R':
+        case 'S':
+        case 'T':
+        case 'U':
+        case 'V':
+        case 'W':
+        case 'X':
+        case 'Y':
         case 'Z':
         case '_':
-            token->type  = TOKEN_TYPE_IDENTIFIER;
+            token->type = TOKEN_TYPE_IDENTIFIER;
             token->start = lexer->buffer + lexer->buffer_position;
             __LEXER_SKIP_WHILE(lexer, isident)
             token->length = lexer->buffer + lexer->buffer_position - token->start;
             break;
-        case '0': case '1': case '2': case '3': case '4':
-        case '5': case '6': case '7': case '8': case '9':
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
         case '.':
             return lexer_get_number(lexer, token);
         default:
             return ERROR_INVALID_CHARACTER;
-        }
+    }
 
     return ERROR_NO_ERROR;
 }

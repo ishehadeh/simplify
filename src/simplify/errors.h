@@ -3,7 +3,6 @@
 #ifndef SIMPLIFY_ERRORS_H_
 #define SIMPLIFY_ERRORS_H_
 
-
 /* Enumerates all errors that may occur.
  * Error also has the value `ERROR_NO_ERROR`, meaning no error occurred. This value
  * will always be zero, so it's safe to check if an error occurred with `if (error) { ... }`.
@@ -104,6 +103,5 @@ static inline const char* error_string(error_t err) {
     }
     return "unkown error type";
 }
-
 
 #endif  // SIMPLIFY_ERRORS_H_

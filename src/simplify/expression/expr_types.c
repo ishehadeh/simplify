@@ -1,20 +1,20 @@
 /* Copyright Ian Shehadeh 2018 */
 
-#include "simplify/errors.h"
 #include "simplify/expression/expr_types.h"
+#include "simplify/errors.h"
 #include "simplify/expression/evaluate.h"
 
-void expression_init_operator(expression_t* expr,  expression_t* left, operator_t op, expression_t* right) {
+void expression_init_operator(expression_t* expr, expression_t* left, operator_t op, expression_t* right) {
     expr->type = EXPRESSION_TYPE_OPERATOR;
     expr->operator.infix = op;
     expr->operator.right = right;
-    expr->operator.left  = left;
+    expr->operator.left = left;
 }
 
 void expression_init_prefix(expression_t* expr, operator_t op, expression_t* right) {
     expr->type = EXPRESSION_TYPE_PREFIX;
     expr->prefix.prefix = op;
-    expr->prefix.right  = right;
+    expr->prefix.right = right;
 }
 
 void expression_init_variable(expression_t* expr, char* name, size_t len) {
@@ -87,24 +87,21 @@ void expression_free(expression_t* expr) {
 
 void expression_copy(expression_t* expr, expression_t* out) {
     switch (expr->type) {
-        case EXPRESSION_TYPE_PREFIX:
-        {
+        case EXPRESSION_TYPE_PREFIX: {
             expression_t* right = (expression_t*)malloc(sizeof(expression_t));
             expression_copy(expr->prefix.right, right);
             expression_init_prefix(out, expr->prefix.prefix, right);
             break;
         }
-        case EXPRESSION_TYPE_OPERATOR:
-        {
+        case EXPRESSION_TYPE_OPERATOR: {
             expression_t* right = (expression_t*)malloc(sizeof(expression_t));
             expression_t* left = (expression_t*)malloc(sizeof(expression_t));
             expression_copy(expr->operator.right, right);
-            expression_copy(expr->operator.left,  left);
+            expression_copy(expr->operator.left, left);
             expression_init_operator(out, left, expr->operator.infix, right);
             break;
         }
-        case EXPRESSION_TYPE_NUMBER:
-        {
+        case EXPRESSION_TYPE_NUMBER: {
             mpc_ptr copy = malloc(sizeof(mpc_t));
             mp_prec_t real;
             mp_prec_t imag;
@@ -118,8 +115,7 @@ void expression_copy(expression_t* expr, expression_t* out) {
             expression_init_variable(out, expr->variable.value, strlen(expr->variable.value));
             out->variable.binding = expr->variable.binding;
             break;
-        case EXPRESSION_TYPE_FUNCTION:
-        {
+        case EXPRESSION_TYPE_FUNCTION: {
             expression_list_t* params = malloc(sizeof(expression_list_t));
             expression_list_init(params);
             expression_list_copy(expr->function.parameters, params);
@@ -154,21 +150,70 @@ inline operator_precedence_t operator_precedence(operator_t op) {
             return OPERATOR_PRECEDENCE_MINIMUM;
         case ':':
             return OPERATOR_PRECEDENCE_ASSIGN;
-        // numbers and identifiers aren't operators, but it's legal to omit the '*' operator, so we pretend they are.
-        case 'a': case 'b': case 'c': case 'd': case 'e': 
-        case 'f': case 'g': case 'h': case 'i': case 'j':
-        case 'k': case 'l': case 'm': case 'n': case 'o': 
-        case 'p': case 'q': case 'r': case 's': case 't':
-        case 'u': case 'v': case 'w': case 'x': case 'y': 
+        // numbers and identifiers aren't operators, but it's legal to omit the
+        // '*' operator, so we pretend they are.
+        case 'a':
+        case 'b':
+        case 'c':
+        case 'd':
+        case 'e':
+        case 'f':
+        case 'g':
+        case 'h':
+        case 'i':
+        case 'j':
+        case 'k':
+        case 'l':
+        case 'm':
+        case 'n':
+        case 'o':
+        case 'p':
+        case 'q':
+        case 'r':
+        case 's':
+        case 't':
+        case 'u':
+        case 'v':
+        case 'w':
+        case 'x':
+        case 'y':
         case 'z':
-        case 'A': case 'B': case 'C': case 'D': case 'E': 
-        case 'F': case 'G': case 'H': case 'I': case 'J':
-        case 'K': case 'L': case 'M': case 'N': case 'O': 
-        case 'P': case 'Q': case 'R': case 'S': case 'T':
-        case 'U': case 'V': case 'W': case 'X': case 'Y': 
+        case 'A':
+        case 'B':
+        case 'C':
+        case 'D':
+        case 'E':
+        case 'F':
+        case 'G':
+        case 'H':
+        case 'I':
+        case 'J':
+        case 'K':
+        case 'L':
+        case 'M':
+        case 'N':
+        case 'O':
+        case 'P':
+        case 'Q':
+        case 'R':
+        case 'S':
+        case 'T':
+        case 'U':
+        case 'V':
+        case 'W':
+        case 'X':
+        case 'Y':
         case 'Z':
-        case '0': case '1': case '2': case '3': case '4':
-        case '5': case '6': case '7': case '8': case '9':
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
         case '.':
         case '_':
             return OPERATOR_PRECEDENCE_PRODUCT;
@@ -196,7 +241,7 @@ void expression_list_append(expression_list_t* list, expression_t* expr) {
 
     expression_list_t* next = malloc(sizeof(expression_list_t));
     next->value = expr;
-    next->next  = NULL;
+    next->next = NULL;
     while (list->next) list = list->next;
 
     list->next = next;
@@ -212,13 +257,10 @@ void expression_list_copy(expression_list_t* list1, expression_list_t* list2) {
 }
 
 void variable_info_free(variable_info_t* info) {
-    if (info->named_inputs)
-        expression_list_free(info->named_inputs);
-    if (!info->is_internal)
-        expression_free(info->value.expression);
+    if (info->named_inputs) expression_list_free(info->named_inputs);
+    if (!info->is_internal) expression_free(info->value.expression);
     free(info);
 }
-
 
 error_t scope_define(scope_t* scope, char* variable, expression_t* value) {
     variable_info_t* info = malloc(sizeof(variable_info_t));
@@ -299,7 +341,6 @@ error_t scope_define_internal_function(scope_t* scope, char* name, simplify_func
     return rbtree_insert(&scope->variables, name, info);
 }
 
-
 error_t _scope_run_function(scope_t* scope, variable_t name, expression_list_t* arg_values, expression_t* out) {
     scope_t fn_scope;
     variable_info_t* func_info;
@@ -309,8 +350,7 @@ error_t _scope_run_function(scope_t* scope, variable_t name, expression_list_t* 
     scope_init(&fn_scope);
 
     err = scope_get_variable_info(scope, name, &func_info);
-    if (err)
-        goto cleanup;
+    if (err) goto cleanup;
 
     if (err) goto cleanup;
 
@@ -354,8 +394,7 @@ error_t scope_call(scope_t* scope, char* name, expression_list_t* args, expressi
     variable_info_t* info;
     error_t err = scope_get_variable_info(scope, name, &info);
     if (err) return err;
-    if (!info->named_inputs)
-        return ERROR_IS_A_VARIABLE;
+    if (!info->named_inputs) return ERROR_IS_A_VARIABLE;
 
     expression_list_t args_copy;
     expression_list_init(&args_copy);
@@ -369,8 +408,7 @@ error_t scope_get_value(scope_t* scope, char* name, expression_t* expr) {
     variable_info_t* info;
     error_t err = scope_get_variable_info(scope, name, &info);
     if (err) return err;
-    if (info->named_inputs)
-        return ERROR_IS_A_FUNCTION;
+    if (info->named_inputs) return ERROR_IS_A_FUNCTION;
 
     if (info->is_internal) {
         expression_t* new_expr = NULL;
@@ -399,8 +437,7 @@ void expression_collapse_left(expression_t* expr) {
     assert(EXPRESSION_IS_OPERATOR(expr) || EXPRESSION_IS_PREFIX(expr));
 
     expression_t* right = EXPRESSION_RIGHT(expr);
-    if (EXPRESSION_LEFT(expr))
-        expression_free(EXPRESSION_LEFT(expr));
+    if (EXPRESSION_LEFT(expr)) expression_free(EXPRESSION_LEFT(expr));
 
     *expr = *right;
     free(right);

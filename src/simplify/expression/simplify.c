@@ -27,15 +27,12 @@ static inline int _diff_precedence(expression_t* expr1, expression_t* expr2) {
 int _expression_init_chain(expression_t* root, expression_t* var) {
     expression_t* right = EXPRESSION_RIGHT(var);
 
-    if (EXPRESSION_IS_VARIABLE(right)
-        && _diff_precedence(root, var) >= 0
-        && !strcmp(right->variable.value, EXPRESSION_RIGHT(root)->variable.value)) {
-            char* varname = right->variable.value;
-            expression_init_operator(right,
-                expression_new_variable(varname),
-                _operator_collapsed_equivelent(root->operator.infix),
-                expression_new_number_si(2));
-            return 0;
+    if (EXPRESSION_IS_VARIABLE(right) && _diff_precedence(root, var) >= 0 &&
+        !strcmp(right->variable.value, EXPRESSION_RIGHT(root)->variable.value)) {
+        char* varname = right->variable.value;
+        expression_init_operator(right, expression_new_variable(varname),
+                                 _operator_collapsed_equivelent(root->operator.infix), expression_new_number_si(2));
+        return 0;
     }
 
     return 1;
@@ -96,9 +93,8 @@ error_t _expression_do_quadratic(char* var, expression_t* out, expression_t* x, 
         expression_init_operator(out, expression_new_variable(var), c_op, expression_new_number(c));
         mpc_clear(b);
     } else {
-        expression_init_operator(out,
-            expression_new_operator(expression_new_variable(var), b_op, expression_new_number(b)),
-            '*',
+        expression_init_operator(
+            out, expression_new_operator(expression_new_variable(var), b_op, expression_new_number(b)), '*',
             expression_new_operator(expression_new_variable(var), c_op, expression_new_number(c)));
     }
 
@@ -150,12 +146,12 @@ bool _expression_check_for_polynomial(expression_t* expr) {
                 mpc_neg(EXPRESSION_RIGHT(y)->number.value, EXPRESSION_RIGHT(y)->number.value, MPC_RNDNN);
         }
 
-        if (z && expr->operator.infix == '-')
-            mpc_neg(z->number.value, z->number.value, MPC_RNDNN);
+        if (z && expr->operator.infix == '-') mpc_neg(z->number.value, z->number.value, MPC_RNDNN);
 
-        if (EXPRESSION_IS_OPERATOR(x) && EXPRESSION_IS_OPERATOR(y) && y->operator.infix == '*'
-            && (EXPRESSION_IS_VARIABLE(EXPRESSION_LEFT(y)) || EXPRESSION_IS_VARIABLE(EXPRESSION_RIGHT(y))))
-                _expression_do_quadratic(varr, expr, x, y, z);
+        if (EXPRESSION_IS_OPERATOR(x) && EXPRESSION_IS_OPERATOR(y) &&
+            y->operator.infix ==
+            '*' &&(EXPRESSION_IS_VARIABLE(EXPRESSION_LEFT(y)) || EXPRESSION_IS_VARIABLE(EXPRESSION_RIGHT(y))))
+            _expression_do_quadratic(varr, expr, x, y, z);
         else
             return false;
         return true;
@@ -169,14 +165,14 @@ void _expression_distribute(expression_t* expr) {
 
     expression_t* target;
     expression_t* mul;
-    if (EXPRESSION_IS_OPERATOR(EXPRESSION_RIGHT(expr))
-        && operator_precedence(expr->operator.infix) > operator_precedence(EXPRESSION_RIGHT(expr)->operator.infix)) {
-            target = EXPRESSION_RIGHT(expr);
-            mul = EXPRESSION_LEFT(expr);
-    } else if (EXPRESSION_IS_OPERATOR(EXPRESSION_LEFT(expr))
-        && operator_precedence(expr->operator.infix) > operator_precedence(EXPRESSION_LEFT(expr)->operator.infix)) {
-            target = EXPRESSION_LEFT(expr);
-            mul = EXPRESSION_RIGHT(expr);
+    if (EXPRESSION_IS_OPERATOR(EXPRESSION_RIGHT(expr)) &&
+        operator_precedence(expr->operator.infix) > operator_precedence(EXPRESSION_RIGHT(expr)->operator.infix)) {
+        target = EXPRESSION_RIGHT(expr);
+        mul = EXPRESSION_LEFT(expr);
+    } else if (EXPRESSION_IS_OPERATOR(EXPRESSION_LEFT(expr)) &&
+               operator_precedence(expr->operator.infix) > operator_precedence(EXPRESSION_LEFT(expr)->operator.infix)) {
+        target = EXPRESSION_LEFT(expr);
+        mul = EXPRESSION_RIGHT(expr);
     } else {
         return;
     }
@@ -208,11 +204,9 @@ void _expression_distribute(expression_t* expr) {
     }
 
     expression_init_operator(expr, left, target->operator.infix, right);
-    if (EXPRESSION_IS_OPERATOR(left) && left->operator.infix == '*')
-        _expression_distribute(left);
+    if (EXPRESSION_IS_OPERATOR(left) && left->operator.infix == '*') _expression_distribute(left);
 
-    if (EXPRESSION_IS_OPERATOR(right) && right->operator.infix == '*')
-        _expression_distribute(right);
+    if (EXPRESSION_IS_OPERATOR(right) && right->operator.infix == '*') _expression_distribute(right);
     free(target);
 }
 
@@ -223,8 +217,7 @@ void _expression_simplify_polynomials_recursive(expression_t* expr) {
         case EXPRESSION_TYPE_FUNCTION:
         case EXPRESSION_TYPE_PREFIX:
             break;
-        case EXPRESSION_TYPE_OPERATOR:
-        {
+        case EXPRESSION_TYPE_OPERATOR: {
             if (_expression_check_for_polynomial(expr)) return;
             _expression_simplify_polynomials_recursive(EXPRESSION_LEFT(expr));
             _expression_simplify_polynomials_recursive(EXPRESSION_RIGHT(expr));
@@ -240,8 +233,7 @@ error_t _expression_collapse_variables_recursive(expression_t* expr) {
         case EXPRESSION_TYPE_FUNCTION:
         case EXPRESSION_TYPE_PREFIX:
             break;
-        case EXPRESSION_TYPE_OPERATOR:
-        {
+        case EXPRESSION_TYPE_OPERATOR: {
             error_t err = _expression_collapse_variables_recursive(EXPRESSION_LEFT(expr));
             if (err) return err;
 
@@ -250,19 +242,17 @@ error_t _expression_collapse_variables_recursive(expression_t* expr) {
             operator_t equiv_op = _operator_collapsed_equivelent(expr->operator.infix);
 
             // Don't know how to deal with this operator yet
-            if (!equiv_op)
-                break;
+            if (!equiv_op) break;
 
             // If there are two variables right next to each other try to combine them
-            if (EXPRESSION_IS_VARIABLE(EXPRESSION_LEFT(expr))
-                && EXPRESSION_IS_VARIABLE(EXPRESSION_RIGHT(expr))
-                && !strcmp(EXPRESSION_RIGHT(expr)->variable.value, EXPRESSION_LEFT(expr)->variable.value)) {
-                    expr->operator.infix = equiv_op;
-                    expression_clean(expr->operator.right);
-                    expression_init_number_si(EXPRESSION_RIGHT(expr), 2);
+            if (EXPRESSION_IS_VARIABLE(EXPRESSION_LEFT(expr)) && EXPRESSION_IS_VARIABLE(EXPRESSION_RIGHT(expr)) &&
+                !strcmp(EXPRESSION_RIGHT(expr)->variable.value, EXPRESSION_LEFT(expr)->variable.value)) {
+                expr->operator.infix = equiv_op;
+                expression_clean(expr->operator.right);
+                expression_init_number_si(EXPRESSION_RIGHT(expr), 2);
 
-                    // the `while` loop condition will fail immediately, so just break here
-                    break;
+                // the `while` loop condition will fail immediately, so just break here
+                break;
             }
 
             /* If possible try to add to any expressions up the tree
@@ -270,17 +260,16 @@ error_t _expression_collapse_variables_recursive(expression_t* expr) {
             while (EXPRESSION_IS_VARIABLE(EXPRESSION_RIGHT(expr)) && EXPRESSION_IS_OPERATOR(EXPRESSION_LEFT(expr))) {
                 /* While possible worm our way up the tree, looking for the expression */
                 expression_t* right = EXPRESSION_LEFT(expr);
-                while (EXPRESSION_IS_OPERATOR(right)
-                        && EXPRESSION_IS_OPERATOR(EXPRESSION_RIGHT(right))
-                        && _diff_precedence(right, expr) >= 0)
-                            right = EXPRESSION_RIGHT(right);
+                while (EXPRESSION_IS_OPERATOR(right) && EXPRESSION_IS_OPERATOR(EXPRESSION_RIGHT(right)) &&
+                       _diff_precedence(right, expr) >= 0)
+                    right = EXPRESSION_RIGHT(right);
 
                 expression_t* variable = EXPRESSION_LEFT(right);
                 expression_t* count = EXPRESSION_RIGHT(right);
 
                 /* If the variable / count is an operator expression, if it includes the right
                     variable we may be able to start a new chain */
-                if (!EXPRESSION_IS_NUMBER(count) ||!EXPRESSION_IS_VARIABLE(variable)) {
+                if (!EXPRESSION_IS_NUMBER(count) || !EXPRESSION_IS_VARIABLE(variable)) {
                     if (!EXPRESSION_IS_VARIABLE(variable)) {
                         if (!_expression_init_chain(expr, right)) {
                             *expr = *EXPRESSION_LEFT(expr);
@@ -310,7 +299,6 @@ error_t _expression_collapse_variables_recursive(expression_t* expr) {
     return ERROR_NO_ERROR;
 }
 
-
 error_t expression_do_logarithm(expression_t* b, expression_t* y, expression_t** out) {
     /* expression_isolate_variable can solve logarithms,
         so this function will set that up expand to b^x = y, then call
@@ -318,9 +306,7 @@ error_t expression_do_logarithm(expression_t* b, expression_t* y, expression_t**
     */
     error_t err;
     *out = expression_new_operator(
-        expression_new_operator(b, '^', expression_new_variable(MANGLE_INTERNAL_VARIABLE("LogarithmResult"))),
-        '=',
-        y);
+        expression_new_operator(b, '^', expression_new_variable(MANGLE_INTERNAL_VARIABLE("LogarithmResult"))), '=', y);
 
     err = expression_isolate_variable(*out, MANGLE_INTERNAL_VARIABLE("LogarithmResult"));
     if (err) return err;

@@ -6,10 +6,10 @@
 #include <time.h>
 
 #include "simplify/errors.h"
-#include "simplify/expression/expression.h"
-#include "simplify/expression/simplify.h"
-#include "simplify/expression/isolate.h"
 #include "simplify/expression/evaluate.h"
+#include "simplify/expression/expression.h"
+#include "simplify/expression/isolate.h"
+#include "simplify/expression/simplify.h"
 #include "simplify/math/math.h"
 
 /* export all builtin variables & functions into a scope

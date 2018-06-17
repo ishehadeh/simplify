@@ -1,76 +1,70 @@
 /* Copyright Ian Shehadeh 2018 */
 
-#include "test/test.h"
 #include "simplify/lexer.h"
+#include "test/test.h"
 
 struct {
-    char*    string;
+    char* string;
     token_t tokens[7];
 } __string_token_pairs[] = {
-    {"",
-        {{TOKEN_TYPE_EOF, "", 0}}
+    {"", {{TOKEN_TYPE_EOF, "", 0}}},
+    {
+        "5",
+        {{TOKEN_TYPE_NUMBER, "5", 1}, {TOKEN_TYPE_EOF, "", 0}},
     },
-    {"5",
-        {{TOKEN_TYPE_NUMBER, "5", 1},
-         {TOKEN_TYPE_EOF,    "",  0}},
+    {
+        "   094351267 ",
+        {{TOKEN_TYPE_NUMBER, "094351267", 9}, {TOKEN_TYPE_EOF, "", 0}},
     },
-    {"   094351267 ",
-        {{TOKEN_TYPE_NUMBER, "094351267", 9},
-         {TOKEN_TYPE_EOF,    "",          0}},
+    {
+        "1E",
+        {{TOKEN_TYPE_NUMBER, "1E", 2}, {TOKEN_TYPE_EOF, "", 0}},
     },
-    {"1E",
-        {{TOKEN_TYPE_NUMBER, "1E", 2},
-         {TOKEN_TYPE_EOF,    "",   0}},
+    {
+        "1e90",
+        {{TOKEN_TYPE_NUMBER, "1e90", 4}, {TOKEN_TYPE_EOF, "", 0}},
     },
-    {"1e90",
-        {{TOKEN_TYPE_NUMBER, "1e90", 4},
-         {TOKEN_TYPE_EOF,    "",     0}},
+    {
+        "1.1e02",
+        {{TOKEN_TYPE_NUMBER, "1.1e02", 6}, {TOKEN_TYPE_EOF, "", 0}},
     },
-    {"1.1e02",
-        {{TOKEN_TYPE_NUMBER, "1.1e02", 6},
-         {TOKEN_TYPE_EOF,    "",       0}},
+    {
+        "1.4e-2",
+        {{TOKEN_TYPE_NUMBER, "1.4e-2", 6}, {TOKEN_TYPE_EOF, "", 0}},
     },
-    {"1.4e-2",
-        {{TOKEN_TYPE_NUMBER, "1.4e-2", 6},
-         {TOKEN_TYPE_EOF,    "",       0}},
+    {
+        "_",
+        {{TOKEN_TYPE_IDENTIFIER, "_", 1}, {TOKEN_TYPE_EOF, "", 0}},
     },
-    {"_",
-        {{TOKEN_TYPE_IDENTIFIER, "_", 1},
-         {TOKEN_TYPE_EOF,        "",  0}},
-    },
-    {"ALL CAPS",
-        {{TOKEN_TYPE_IDENTIFIER, "ALL",  3},
-        {TOKEN_TYPE_IDENTIFIER, "CAPS",  4},
-        {TOKEN_TYPE_EOF,        "",     0}},
+    {
+        "ALL CAPS",
+        {{TOKEN_TYPE_IDENTIFIER, "ALL", 3}, {TOKEN_TYPE_IDENTIFIER, "CAPS", 4}, {TOKEN_TYPE_EOF, "", 0}},
     },
     {"12345 + 32134 ) \\",
-        {{TOKEN_TYPE_NUMBER,    "12345",  5},
-        {TOKEN_TYPE_OPERATOR,    "+",     1},
-        {TOKEN_TYPE_NUMBER,      "32134", 5},
-        {TOKEN_TYPE_RIGHT_PAREN, ")",     1},
-        {TOKEN_TYPE_OPERATOR,    "\\",    1},
-        {TOKEN_TYPE_EOF,         "",      0}}
-    },
+     {{TOKEN_TYPE_NUMBER, "12345", 5},
+      {TOKEN_TYPE_OPERATOR, "+", 1},
+      {TOKEN_TYPE_NUMBER, "32134", 5},
+      {TOKEN_TYPE_RIGHT_PAREN, ")", 1},
+      {TOKEN_TYPE_OPERATOR, "\\", 1},
+      {TOKEN_TYPE_EOF, "", 0}}},
     {"var / * () other_var",
-        {{TOKEN_TYPE_IDENTIFIER, "var",       3},
-        {TOKEN_TYPE_OPERATOR,    "/",         1},
-        {TOKEN_TYPE_OPERATOR,    "*",         1},
-        {TOKEN_TYPE_LEFT_PAREN,  "(",         1},
-        {TOKEN_TYPE_RIGHT_PAREN, ")",         1},
-        {TOKEN_TYPE_IDENTIFIER,  "other_var", 9},
-        {TOKEN_TYPE_EOF,         "",          0}}
-    },
+     {{TOKEN_TYPE_IDENTIFIER, "var", 3},
+      {TOKEN_TYPE_OPERATOR, "/", 1},
+      {TOKEN_TYPE_OPERATOR, "*", 1},
+      {TOKEN_TYPE_LEFT_PAREN, "(", 1},
+      {TOKEN_TYPE_RIGHT_PAREN, ")", 1},
+      {TOKEN_TYPE_IDENTIFIER, "other_var", 9},
+      {TOKEN_TYPE_EOF, "", 0}}},
 };
 
 struct {
-    char*    string;
-    error_t  error;
+    char* string;
+    error_t error;
 } __token_error_pairs[] = {
-    {"$",       ERROR_INVALID_CHARACTER},
+    {"$", ERROR_INVALID_CHARACTER},
     {"easda$_", ERROR_INVALID_CHARACTER},
-    {"123e&",   ERROR_INVALID_CHARACTER},
+    {"123e&", ERROR_INVALID_CHARACTER},
 };
-
 
 int main() {
     token_t tok;
@@ -98,7 +92,7 @@ int main() {
         }
         fclose(f);
 
-        for (int j = 0; ; ++j) {
+        for (int j = 0;; ++j) {
             err = lexer_next(&lexer, &tok);
             if (err) {
                 FATAL("failed to get next token (string lexer): %s", error_string(err));
@@ -109,10 +103,9 @@ int main() {
                 FATAL("failed to get next token (file lexer): %s", error_string(err));
             }
             assert_token_eq(&tok, &ftok);
-            assert_token_eq(&tok,  &__string_token_pairs[i].tokens[j]);
+            assert_token_eq(&tok, &__string_token_pairs[i].tokens[j]);
             assert_token_eq(&ftok, &__string_token_pairs[i].tokens[j]);
-            if (tok.type == TOKEN_TYPE_EOF)
-                break;
+            if (tok.type == TOKEN_TYPE_EOF) break;
         }
         lexer_clean(&lexer);
     }
@@ -123,12 +116,10 @@ int main() {
         lexer_t lexer;
         lexer_init_from_string(&lexer, __token_error_pairs[i].string);
 
-        for (int j = 0; ; ++j) {
+        for (int j = 0;; ++j) {
             err = lexer_next(&lexer, &tok);
-            if (err == __token_error_pairs[i].error)
-                break;
-            if (tok.type == TOKEN_TYPE_EOF)
-                FATAL("%s", "error never encountered");
+            if (err == __token_error_pairs[i].error) break;
+            if (tok.type == TOKEN_TYPE_EOF) FATAL("%s", "error never encountered");
         }
         lexer_clean(&lexer);
     }

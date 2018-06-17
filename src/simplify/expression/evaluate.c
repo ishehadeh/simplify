@@ -1,7 +1,7 @@
 /* Copyright Ian Shehadeh 2018 */
 
-#include "simplify/expression/isolate.h"
 #include "simplify/expression/evaluate.h"
+#include "simplify/expression/isolate.h"
 
 /* evaluate an expression, try to put it in it's simplest terms. Only apply operator and expand variables and function.
  *
@@ -104,7 +104,7 @@ error_t _expression_apply_operator(expression_t* expr) {
 
     mpc_ptr result;
 
-    mpc_ptr left  = expr->operator.left->number.value;
+    mpc_ptr left = expr->operator.left->number.value;
     mpc_ptr right = expr->operator.right->number.value;
 
     switch (expr->operator.infix) {
@@ -156,15 +156,14 @@ error_t _expression_apply_operator(expression_t* expr) {
     return ERROR_NO_ERROR;
 }
 
-
 /* subsitute a variable expression with the variable's value, if available.
  *
- * This function will __not__ simplify the variable's result. 
- * 
+ * This function will __not__ simplify the variable's result.
+ *
  * @expr the variable expression to substitute
  * @scope the scope to search for the variable
  * @return returns an error code
- */ 
+ */
 error_t _expression_substitute_variable(expression_t* expr, scope_t* scope) {
     assert(EXPRESSION_IS_VARIABLE(expr));
 
@@ -195,16 +194,14 @@ error_t _expression_evaluate_recursive(expression_t* expr, scope_t* scope) {
             break;
         case EXPRESSION_TYPE_VARIABLE:
             return _expression_substitute_variable(expr, scope);
-        case EXPRESSION_TYPE_FUNCTION:
-        {
+        case EXPRESSION_TYPE_FUNCTION: {
             error_t err = scope_call(scope, expr->function.name, expr->function.parameters, expr);
             if (err && err != ERROR_NONEXISTANT_KEY) return err;
             return ERROR_NO_ERROR;
         }
         case EXPRESSION_TYPE_PREFIX:
             return _expression_apply_prefix(expr, scope);
-        case EXPRESSION_TYPE_OPERATOR:
-        {
+        case EXPRESSION_TYPE_OPERATOR: {
             if (expr->operator.infix == ':') {
                 return _expression_apply_assignment(expr, scope);
             } else {
@@ -212,8 +209,9 @@ error_t _expression_evaluate_recursive(expression_t* expr, scope_t* scope) {
                 if (err) return err;
 
                 err = _expression_evaluate_recursive(expr->operator.left, scope);
-                if (!expression_is_comparison(expr) && expr->operator.right->type == expr->operator.left->type &&
-                        expr->operator.left->type == EXPRESSION_TYPE_NUMBER) {
+                if (!expression_is_comparison(expr) &&
+                    expr->operator.right->type == expr->operator.left->type && expr->operator.left->type ==
+                    EXPRESSION_TYPE_NUMBER) {
                     return _expression_apply_operator(expr);
                 }
                 return err;
@@ -235,8 +233,7 @@ expression_result_t _expression_evaluate_comparisons_recursive(expression_t* exp
             return EXPRESSION_RESULT_NONBINARY;
         case EXPRESSION_TYPE_PREFIX:
             return EXPRESSION_RESULT_NONBINARY;
-        case EXPRESSION_TYPE_OPERATOR:
-        {
+        case EXPRESSION_TYPE_OPERATOR: {
             expression_result_t right = _expression_evaluate_comparisons_recursive(expr->operator.right);
             expression_result_t left = _expression_evaluate_comparisons_recursive(expr->operator.left);
 
@@ -248,7 +245,7 @@ expression_result_t _expression_evaluate_comparisons_recursive(expression_t* exp
             if (expression_is_comparison(expr)) {
                 compare_result_t x = expression_compare(EXPRESSION_LEFT(expr), EXPRESSION_RIGHT(expr));
                 if (x == COMPARE_RESULT_INCOMPARABLE)
-                    return  EXPRESSION_RESULT_NONBINARY;
+                    return EXPRESSION_RESULT_NONBINARY;
                 else if (expr->operator.infix == '<' && x == COMPARE_RESULT_LESS)
                     result = EXPRESSION_RESULT_TRUE;
                 else if (expr->operator.infix == '>' && x == COMPARE_RESULT_GREATER)
@@ -272,9 +269,7 @@ expression_result_t _expression_evaluate_comparisons_recursive(expression_t* exp
     return result;
 }
 
-error_t expression_evaluate(expression_t* expr, scope_t* scope) {
-    return _expression_evaluate_recursive(expr, scope);
-}
+error_t expression_evaluate(expression_t* expr, scope_t* scope) { return _expression_evaluate_recursive(expr, scope); }
 
 expression_result_t expression_evaluate_comparisons(expression_t* expr) {
     return _expression_evaluate_comparisons_recursive(expr);

@@ -1,12 +1,10 @@
 /* Copyright Ian Shehadeh 2018 */
 
-#include <stdlib.h>
 #include "simplify/string/string.h"
+#include <stdlib.h>
 
 /* grow the string's capacity */
-static inline void string_grow(string_t* string) {
-    string->buffer = realloc(string->buffer, string->cap *= 2);
-}
+static inline void string_grow(string_t* string) { string->buffer = realloc(string->buffer, string->cap *= 2); }
 
 /* grow a string to fit an extra `size` bytes */
 static inline void string_fit(string_t* string, size_t size) {
@@ -15,9 +13,7 @@ static inline void string_fit(string_t* string, size_t size) {
     }
 }
 
-void string_init(string_t* string) {
-    string_init_cap(string, STRING_DEFAULT_CAPACITY);
-}
+void string_init(string_t* string) { string_init_cap(string, STRING_DEFAULT_CAPACITY); }
 
 void string_init_cap(string_t* string, size_t cap) {
     string->cap = cap;
@@ -31,9 +27,7 @@ void string_append_buffer(string_t* string, char* buffer, size_t len) {
     string->len += len;
 }
 
-void string_append_cstring(string_t* string, char* str) {
-    string_append_buffer(string, str, strlen(str));
-}
+void string_append_cstring(string_t* string, char* str) { string_append_buffer(string, str, strlen(str)); }
 
 void string_append_char(string_t* string, char c) {
     string_fit(string, 1);

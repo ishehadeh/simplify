@@ -14,7 +14,6 @@ static inline void _reverse(char* x, size_t i, size_t n) {
     }
 }
 
-
 size_t _stringifier_round_number(char* str, size_t start) {
     /* round direction is `1` to round up or `-1` to round down */
     int round_direction = str[start] >= '5' ? 1 : -1;
@@ -22,7 +21,7 @@ size_t _stringifier_round_number(char* str, size_t start) {
     /* round the digits before the decimal point */
     size_t i;
     for (i = start; i > 0 && isdigit(str[i]); --i) {
-        if (str[i] + round_direction < '0' ||  str[i] + round_direction > '9') {
+        if (str[i] + round_direction < '0' || str[i] + round_direction > '9') {
             /* if the current character can't safely be rounded than zero it and continue */
             str[i] = '0';
         } else {
@@ -50,7 +49,7 @@ size_t _stringifier_round_number(char* str, size_t start) {
     size_t d = i;
     /* try to round everything before the decimal */
     for (; d > 0 && isdigit(str[d]); --d) {
-        if (str[d] + round_direction < '0' ||  str[d] + round_direction > '9') {
+        if (str[d] + round_direction < '0' || str[d] + round_direction > '9') {
             str[d] = '0';
         } else {
             str[d] += round_direction;
@@ -71,7 +70,6 @@ size_t _stringifier_round_number(char* str, size_t start) {
 finished:
     return i;
 }
-
 
 size_t _approximate_number(char* str, size_t tolerance, size_t length) {
     size_t decimal_index = 0;
@@ -104,7 +102,7 @@ size_t _approximate_number(char* str, size_t tolerance, size_t length) {
 
     if (chain >= tolerance) {
         if (last == '9') {
-           idx =  _stringifier_round_number(str, length - 1);
+            idx = _stringifier_round_number(str, length - 1);
         } else if (last == '0') {
             idx = length - chain - 1;
         }
@@ -114,7 +112,6 @@ finished:
     if (str[idx - 1] == '.') --idx;
     return idx;
 }
-
 
 void _write_mpfr(string_t* string, string_format_t* format, mpfr_ptr num) {
     mpfr_t int_part;
@@ -159,9 +156,8 @@ void _write_mpfr(string_t* string, string_format_t* format, mpfr_ptr num) {
             string_append_char(string, mpfr_get_si(int_part_frac, MPFR_RNDN) + '0');
         }
         if (format->approximate_tolerance > 0)
-            string->len = start + _approximate_number(string->buffer + start,
-                                                    format->approximate_tolerance,
-                                                    string->len - start);
+            string->len =
+                start + _approximate_number(string->buffer + start, format->approximate_tolerance, string->len - start);
     }
 
     mpfr_clear(int_part);
@@ -173,27 +169,25 @@ void _write_variable(string_t* string, expression_t* variable) {
     string_append_cstring(string, variable->variable.value);
 }
 
-void _write_operator_prec_recursive(string_t* string, string_format_t* fmt, expression_t* op, operator_precedence_t prec) {
+void _write_operator_prec_recursive(string_t* string, string_format_t* fmt, expression_t* op,
+                                    operator_precedence_t prec) {
     assert(EXPRESSION_IS_OPERATOR(op));
 
     operator_precedence_t myprec = operator_precedence(op->operator.infix);
-    if (myprec < prec)
-        string_append_char(string, '(');
+    if (myprec < prec) string_append_char(string, '(');
 
     _write_expression_prec(string, fmt, op->operator.left, myprec);
 
-
-    if (!(op->operator.infix == '*' && fmt->brief_multiplication
-        && !(EXPRESSION_IS_VARIABLE(EXPRESSION_LEFT(op)) && EXPRESSION_IS_VARIABLE(EXPRESSION_RIGHT(op))))) {
-            string_append_cstring(string, fmt->whitespace);
-            string_append_char(string, op->operator.infix);
-            string_append_cstring(string, fmt->whitespace);
+    if (!(op->operator.infix == '*' && fmt->brief_multiplication && !(EXPRESSION_IS_VARIABLE(EXPRESSION_LEFT(op)) &&
+                                                                      EXPRESSION_IS_VARIABLE(EXPRESSION_RIGHT(op))))) {
+        string_append_cstring(string, fmt->whitespace);
+        string_append_char(string, op->operator.infix);
+        string_append_cstring(string, fmt->whitespace);
     }
 
     _write_expression_prec(string, fmt, op->operator.right, myprec);
 
-    if (myprec < prec)
-        string_append_char(string, ')');
+    if (myprec < prec) string_append_char(string, ')');
 }
 
 void _write_prefix(string_t* string, string_format_t* fmt, expression_t* pre, operator_precedence_t prec) {
@@ -237,8 +231,7 @@ void _write_number(string_t* string, string_format_t* fmt, expression_t* number)
         string_append_cstring(string, fmt->whitespace);
     }
 
-    if (mpfr_cmp_ui(imag, 1) != 0)
-        _write_mpfr(string, fmt, imag);
+    if (mpfr_cmp_ui(imag, 1) != 0) _write_mpfr(string, fmt, imag);
     string_append_cstring(string, fmt->imaginary);
 
 cleanup:
@@ -247,7 +240,7 @@ cleanup:
     return;
 }
 
-void _write_function(string_t* string, string_format_t* fmt, expression_t* func)  {
+void _write_function(string_t* string, string_format_t* fmt, expression_t* func) {
     assert(EXPRESSION_IS_FUNCTION(func));
 
     string_append_cstring(string, func->function.name);
@@ -259,16 +252,14 @@ void _write_function(string_t* string, string_format_t* fmt, expression_t* func)
 
     expression_t* arg;
     EXPRESSION_LIST_FOREACH(arg, func->function.parameters) {
-    _write_expression_prec(string, fmt, arg, OPERATOR_PRECEDENCE_MINIMUM);
+        _write_expression_prec(string, fmt, arg, OPERATOR_PRECEDENCE_MINIMUM);
         if (__item->next && !fmt->omit_parameter_commas) {
             string_append_char(string, ',');
-            if (!fmt->omit_parmeter_parentheses)
-                string_append_cstring(string, fmt->whitespace);
+            if (!fmt->omit_parmeter_parentheses) string_append_cstring(string, fmt->whitespace);
         }
     }
 
-    if (!fmt->omit_parmeter_parentheses)
-        string_append_char(string, ')');
+    if (!fmt->omit_parmeter_parentheses) string_append_char(string, ')');
 }
 
 void _write_expression_prec(string_t* string, string_format_t* fmt, expression_t* expr, operator_precedence_t prec) {

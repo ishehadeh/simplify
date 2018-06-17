@@ -7,27 +7,27 @@
 #include "simplify/errors.h"
 
 /* language */
+#include "simplify/builtins.h"
 #include "simplify/lexer.h"
 #include "simplify/parser.h"
-#include "simplify/builtins.h"
 
 /* math */
-#include "simplify/math/math.h"
 #include "simplify/math/algebra.h"
+#include "simplify/math/math.h"
 
 /* red-black tree */
 #include "simplify/rbtree/rbtree.h"
 
 /* strings */
-#include "simplify/string/string.h"
 #include "simplify/string/format.h"
+#include "simplify/string/string.h"
 
 /* expressions */
+#include "simplify/expression/evaluate.h"
 #include "simplify/expression/expr_types.h"
 #include "simplify/expression/expression.h"
-#include "simplify/expression/evaluate.h"
 #include "simplify/expression/isolate.h"
-#include "simplify/expression/stringify.h"
 #include "simplify/expression/simplify.h"
+#include "simplify/expression/stringify.h"
 
 #endif  // SIMPLIFY_SIMPLIFY_H_

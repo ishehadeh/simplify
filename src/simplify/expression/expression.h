@@ -6,17 +6,16 @@
 #include <stdarg.h>
 
 #include "simplify/errors.h"
-#include "simplify/rbtree/rbtree.h"
 #include "simplify/expression/expr_types.h"
+#include "simplify/rbtree/rbtree.h"
 
 /* the result of comparing two expressions */
 typedef enum compare_result {
     COMPARE_RESULT_INCOMPARABLE = 0x0,
-    COMPARE_RESULT_EQUAL        = 0x1,
-    COMPARE_RESULT_LESS         = 0x2,
-    COMPARE_RESULT_GREATER      = 0x4,
+    COMPARE_RESULT_EQUAL = 0x1,
+    COMPARE_RESULT_LESS = 0x2,
+    COMPARE_RESULT_GREATER = 0x4,
 } compare_result_t;
-
 
 /* check for a variable or function in the expression
  *
@@ -37,12 +36,11 @@ compare_result_t expression_compare(expression_t* expr1, expression_t* expr2);
  *
  * @expr the expression to search
  * @return returns the variable's name, or NULL if it was not found
- */ 
+ */
 variable_t expression_find_variable(expression_t* expr);
 
-
 /* swap an operator expression's left and right branch
- * 
+ *
  * @expr _expr->type must be EXPRESSION_TYPE_OPERATOR_ expression to swap
  */
 static inline void expression_swap(expression_t* expr) {
@@ -66,13 +64,11 @@ static inline expression_t* expression_new_prefix(operator_t op, expression_t* r
     return x;
 }
 
-
 static inline expression_t* expression_new_number(mpc_ptr num) {
     expression_t* x = expression_new_uninialized();
     expression_init_number(x, num);
     return x;
 }
-
 
 static inline expression_t* expression_new_number_d(double num) {
     expression_t* x = expression_new_uninialized();
@@ -106,6 +102,5 @@ static inline expression_t* expression_new_function(variable_t name, int param_c
     expression_init_function(x, name, strlen(name), params);
     return x;
 }
-
 
 #endif  // SIMPLIFY_EXPRESSION_EXPRESSION_H_

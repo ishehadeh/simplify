@@ -3,11 +3,11 @@
 #ifndef SIMPLIFY_STRING_STRING_H_
 #define SIMPLIFY_STRING_STRING_H_
 
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifndef STRING_DEFAULT_CAPACITY
-#   define STRING_DEFAULT_CAPACITY 512
+#define STRING_DEFAULT_CAPACITY 512
 #endif
 
 /* string is a dynamically sized, ASCII encoded string */
@@ -16,7 +16,7 @@ typedef struct string string_t;
 struct string {
     size_t cap;
     size_t len;
-    char*  buffer;
+    char* buffer;
 };
 
 /* initialize a string with the default capacity (this is a compile-time option) */
@@ -36,7 +36,7 @@ static inline size_t string_cap(string_t* string) { return string->cap; }
  * @string
  * @buf the buffer to draw from
  * @len the number of chars to pull
- */ 
+ */
 void string_append_buffer(string_t* string, char* buf, size_t len);
 
 /* append a NULL terminated char* to the end of the string
@@ -69,12 +69,10 @@ void string_insert_char(string_t* string, size_t index, char c);
  */
 void string_insert_cstr(string_t* string, size_t index, char* c);
 
-/* free a string's internal buffer 
+/* free a string's internal buffer
  *
  * @string
  */
-static inline void string_clean(string_t* string) {
-    free(string->buffer);
-}
+static inline void string_clean(string_t* string) { free(string->buffer); }
 
 #endif  // SIMPLIFY_STRING_STRING_H_

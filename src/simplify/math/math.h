@@ -3,15 +3,15 @@
 #define SIMPLIFY_MATH_MATH_H_
 
 #include <mpc.h>
-
+#include <stdlib.h>
 
 #define SIMPLIFY_DEFAULT_PRECISION ((mp_prec_t)0)
 
 /* Init several variables with precision PREC */
-#define INITS(PREC, ...)  __math_multi_init(PREC, (mpc_ptr[]){__VA_ARGS__, NULL});
+#define INITS(PREC, ...) __math_multi_init(PREC, (mpc_ptr[]){__VA_ARGS__, NULL});
 
 /* Clear several variables (this doesn't free them if they were allocated with simplify_new_number) */
-#define CLEARS(...)       __math_multi_clean((mpc_ptr[]){__VA_ARGS__, NULL})
+#define CLEARS(...) __math_multi_clean((mpc_ptr[]){__VA_ARGS__, NULL})
 
 /* get the maximum precision in a list of mpc_ptrs,
  each mpfr_t in the mpc_t struct is counted individually */
@@ -48,7 +48,6 @@ static inline mp_prec_t __math_max_prec(mpc_ptr* nums) {
     }
     return max;
 }
-
 
 mpc_ptr simplify_new_number(mp_prec_t);
 mp_prec_t simplify_get_default_precision();

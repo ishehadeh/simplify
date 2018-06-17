@@ -1,6 +1,5 @@
 #include "simplify/math/algebra.h"
 
-
 void perform_cubic_equation(mpc_ptr C1, mpc_ptr C2, mpc_ptr a, mpc_ptr b, mpc_ptr c, mpc_ptr d, mpc_rnd_t rnd) {
     mp_prec_t precision = GET_MAX_PREC(a, b, c, d);
     mpc_t e, f, h, g;
@@ -55,7 +54,6 @@ void perform_quadratic_equation(mpc_ptr C1, mpc_ptr C2, mpc_ptr a, mpc_ptr b, mp
     /* f is a placeholder */
     mpc_t d, e, f;
     INITS(precision, d, e, f);
-
 
     /* set e to 2a */
     if (!a) {

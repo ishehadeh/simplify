@@ -15,7 +15,7 @@ typedef enum expression_result {
 } expression_result_t;
 
 /* evaluate an expression as much as possible
- * 
+ *
  * @expr the expression to simplify
  * @scope the where variables should be assigned and looked up.
  * @return returns an error

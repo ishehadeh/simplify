@@ -8,26 +8,23 @@
 
 /* transforms a stream of tokens into an expression.
  */
-typedef struct expression_parser   expression_parser_t;
+typedef struct expression_parser expression_parser_t;
 
 struct expression_parser {
     lexer_t* lexer;
-    token_t  previous;
+    token_t previous;
 };
 
 static inline void expression_parser_init(expression_parser_t* parser, lexer_t* lexer) {
-    parser->lexer = lexer,
-    lexer_next(lexer, &parser->previous);
+    parser->lexer = lexer, lexer_next(lexer, &parser->previous);
 }
 
 /* clean all resources associated with a parser
  * @parser the parser to clean
  */
-static inline void expression_parser_clean(expression_parser_t* parser) {
-    (void)parser;
-}
+static inline void expression_parser_clean(expression_parser_t* parser) { (void)parser; }
 
-/* parse an expression 
+/* parse an expression
  * NOTE: most of the time it's safer and easier to use the `parse_string` or `parse_file` functions
  *
  * @parser The parser used to draw the expression.
@@ -51,6 +48,5 @@ error_t parse_string(char* source, expression_t* result);
  * @return returns an error code
  */
 error_t parse_file(FILE* source, expression_list_t* result);
-
 
 #endif  // SIMPLIFY_PARSER_H_

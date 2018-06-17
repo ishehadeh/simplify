@@ -12,11 +12,10 @@
  */
 error_t expression_simplify(expression_t* expr);
 
-
 /* find the value of x in the expression `b^x = y`
  * @b
  * @y
- * @out out will be filled with the value of `x`, or NULL if an error is returned 
+ * @out out will be filled with the value of `x`, or NULL if an error is returned
  * @returns a error code
  */
 error_t expression_do_logarithm(expression_t* b, expression_t* y, expression_t** out);

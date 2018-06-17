@@ -1,9 +1,9 @@
-#include "test.h"
+#include "simplify/expression/evaluate.h"
 #include "simplify/expression/expression.h"
-#include "simplify/expression/stringify.h"
 #include "simplify/expression/isolate.h"
 #include "simplify/expression/simplify.h"
-#include "simplify/expression/evaluate.h"
+#include "simplify/expression/stringify.h"
+#include "test.h"
 
 static struct {
     char* expr1;
@@ -32,44 +32,37 @@ static struct {
 
 int main() {
     error_t err;
-    for (int i = 0; i < (int) (sizeof(__expr_result_pairs) / sizeof(__expr_result_pairs[0])); ++i) {
+    for (int i = 0; i < (int)(sizeof(__expr_result_pairs) / sizeof(__expr_result_pairs[0])); ++i) {
         expression_t expr1;
         expression_t expr2;
-        scope_t      scope;
+        scope_t scope;
 
         printf("starting test #%d...", i + 1);
         err = parse_string(__expr_result_pairs[i].expr1, &expr1);
-        if (err)
-            FATAL("failed to parse expression 1/2 \"%s\": %s", __expr_result_pairs[i].expr1, error_string(err));
+        if (err) FATAL("failed to parse expression 1/2 \"%s\": %s", __expr_result_pairs[i].expr1, error_string(err));
 
         err = parse_string(__expr_result_pairs[i].expr2, &expr2);
-        if (err)
-            FATAL("failed to parse expression 2/2 \"%s\": %s", __expr_result_pairs[i].expr2, error_string(err));
+        if (err) FATAL("failed to parse expression 2/2 \"%s\": %s", __expr_result_pairs[i].expr2, error_string(err));
 
         scope_init(&scope);
 
-
         err = expression_evaluate(&expr1, &scope);
-        if (err)
-            FATAL("failed to evaluate 1/2 \"%s\": %s", __expr_result_pairs[i].expr1, error_string(err));
+        if (err) FATAL("failed to evaluate 1/2 \"%s\": %s", __expr_result_pairs[i].expr1, error_string(err));
 
         err = expression_evaluate(&expr2, &scope);
-        if (err)
-            FATAL("failed to evaluate 2/2 \"%s\": %s", __expr_result_pairs[i].expr2, error_string(err));
+        if (err) FATAL("failed to evaluate 2/2 \"%s\": %s", __expr_result_pairs[i].expr2, error_string(err));
 
         err = expression_simplify(&expr1);
-        if (err)
-            FATAL("failed to simplify expression 1/2 \"%s\": %s", __expr_result_pairs[i].expr1, error_string(err));
+        if (err) FATAL("failed to simplify expression 1/2 \"%s\": %s", __expr_result_pairs[i].expr1, error_string(err));
 
         err = expression_simplify(&expr2);
-        if (err)
-            FATAL("failed to simplify expression 2/2 \"%s\": %s", __expr_result_pairs[i].expr2, error_string(err));
+        if (err) FATAL("failed to simplify expression 2/2 \"%s\": %s", __expr_result_pairs[i].expr2, error_string(err));
 
         compare_result_t cmp = expression_compare(&expr1, &expr2);
         if (cmp != __expr_result_pairs[i].result) {
             FATAL("Test failed, expected the relationship of '%s' and '%s' to be %s, got %s",
-                __expr_result_pairs[i].expr1, __expr_result_pairs[i].expr2,
-                print_compare_result(__expr_result_pairs[i].result), print_compare_result(cmp));
+                  __expr_result_pairs[i].expr1, __expr_result_pairs[i].expr2,
+                  print_compare_result(__expr_result_pairs[i].result), print_compare_result(cmp));
         }
         scope_clean(&scope);
         expression_clean(&expr1);
