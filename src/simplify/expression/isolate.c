@@ -46,8 +46,6 @@ bool _expression_operator_is_reversible(expression_t* expr) {
     }
 }
 
-#include "simplify/expression/stringify.h"
-
 /* transform expr into `e^x = y`, the call _expression_isolate_variable_recursive on `y`
  * @y the y value of the logarithm
  * @expr the output expression

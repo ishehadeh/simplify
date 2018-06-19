@@ -38,6 +38,38 @@ int _expression_init_chain(expression_t* root, expression_t* var) {
     return 1;
 }
 
+void _expression_add_recursive(expression_t* left, expression_t* right) {
+    switch (left->type) {
+        case EXPRESSION_TYPE_NUMBER:
+            mpc_add(left->number.value, left->number.value, right->number.value, MPC_RNDNN);
+            return;
+        case EXPRESSION_TYPE_VARIABLE:
+            expression_init_operator(left, expression_new_variable(right->variable.value), '*',
+                                     expression_new_number_si(2));
+            return;
+        case EXPRESSION_TYPE_PREFIX:
+            _expression_add_recursive(EXPRESSION_RIGHT(left), EXPRESSION_RIGHT(right));
+            return;
+        case EXPRESSION_TYPE_FUNCTION:
+            expression_init_operator(left, expression_new_variable(right->variable.value), '*',
+                                     expression_new_number_si(2));
+            return;
+        case EXPRESSION_TYPE_OPERATOR: {
+            if (expression_compare_structure(EXPRESSION_LEFT(left), EXPRESSION_LEFT(right))) {
+                _expression_add_recursive(EXPRESSION_LEFT(left), EXPRESSION_LEFT(right));
+            } else if (expression_compare_structure(EXPRESSION_LEFT(left), EXPRESSION_RIGHT(right))) {
+                _expression_add_recursive(EXPRESSION_LEFT(left), EXPRESSION_RIGHT(right));
+            }
+
+            if (expression_compare_structure(EXPRESSION_RIGHT(left), EXPRESSION_RIGHT(right))) {
+                _expression_add_recursive(EXPRESSION_RIGHT(left), EXPRESSION_RIGHT(right));
+            } else if (expression_compare_structure(EXPRESSION_RIGHT(left), EXPRESSION_LEFT(right))) {
+                _expression_add_recursive(EXPRESSION_RIGHT(left), EXPRESSION_LEFT(right));
+            }
+        }
+    }
+}
+
 error_t _expression_do_quadratic(char* var, expression_t* out, expression_t* x, expression_t* y, expression_t* z) {
     assert(EXPRESSION_IS_OPERATOR(x));
     assert(EXPRESSION_IS_OPERATOR(y));
@@ -226,6 +258,37 @@ void _expression_simplify_polynomials_recursive(expression_t* expr) {
     }
 }
 
+#include "stringify.h"
+
+void _expression_try_add(expression_t* expr) {
+    assert(EXPRESSION_IS_OPERATOR(expr));
+    if (expr->operator.infix != '+') return;
+
+    expression_t* left = EXPRESSION_LEFT(expr);
+    expression_t* right = EXPRESSION_RIGHT(expr);
+    expression_t* right_parent = expr;
+
+    while (EXPRESSION_IS_OPERATOR(left) && operator_precedence(left->operator.infix) <= OPERATOR_PRECEDENCE_SUM)
+        left = EXPRESSION_RIGHT(left);
+
+    while (EXPRESSION_IS_OPERATOR(right) && operator_precedence(right->operator.infix) <= OPERATOR_PRECEDENCE_SUM) {
+        right_parent = right;
+        right = EXPRESSION_LEFT(right);
+    }
+
+    printf(" LEFT(%s) RIGHT(%s)\n", stringify(left), stringify(right));
+    if (expression_compare_structure(left, right)) {
+        _expression_add_recursive(left, right);
+
+        if (EXPRESSION_RIGHT(right_parent) == right) {
+            expression_collapse_right(right_parent);
+        } else {
+            expression_collapse_left(right_parent);
+        }
+        return;
+    }
+}
+
 error_t _expression_collapse_variables_recursive(expression_t* expr) {
     switch (expr->type) {
         case EXPRESSION_TYPE_NUMBER:
@@ -239,6 +302,8 @@ error_t _expression_collapse_variables_recursive(expression_t* expr) {
 
             err = _expression_collapse_variables_recursive(EXPRESSION_RIGHT(expr));
             if (err) return err;
+
+            _expression_try_add(expr);
             operator_t equiv_op = _operator_collapsed_equivelent(expr->operator.infix);
 
             // Don't know how to deal with this operator yet
@@ -293,6 +358,7 @@ error_t _expression_collapse_variables_recursive(expression_t* expr) {
                     mpc_add_si(x, x, 1, MPC_RNDNN);
                     *expr = *EXPRESSION_LEFT(expr);
                 }
+                break;
             }
         }
     }
@@ -317,6 +383,6 @@ error_t expression_do_logarithm(expression_t* b, expression_t* y, expression_t**
 }
 
 error_t expression_simplify(expression_t* expr) {
-    _expression_simplify_polynomials_recursive(expr);
+    // _expression_simplify_polynomials_recursive(expr);
     return _expression_collapse_variables_recursive(expr);
 }

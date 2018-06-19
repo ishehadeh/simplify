@@ -100,7 +100,7 @@ error_t _expression_apply_prefix(expression_t* expr, scope_t* scope) {
 error_t _expression_apply_operator(expression_t* expr) {
     assert(EXPRESSION_IS_OPERATOR(expr));
 
-    static const int round_mode = MPC_RNDNN;
+    static const mpc_rnd_t round_mode = MPC_RNDNN;
 
     mpc_ptr result;
 

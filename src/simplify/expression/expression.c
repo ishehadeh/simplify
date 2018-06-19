@@ -188,8 +188,58 @@ compare_result_t _expression_compare_recursive(expression_t* expr1, expression_t
     return COMPARE_RESULT_INCOMPARABLE;
 }
 
+bool _expression_compare_structure_recursive(expression_t* expr1, expression_t* expr2) {
+    /* structures can't possibly match if the expressions are of different types, so exit quickly */
+    if (expr1->type != expr2->type) return false;
+
+    switch (expr1->type) {
+        /* number's always count as the same structure. */
+        case EXPRESSION_TYPE_NUMBER:
+            return true;
+
+        /* function's and variable's names must match */
+        case EXPRESSION_TYPE_FUNCTION: {
+            expression_t* arg1;
+            expression_t* arg2;
+
+            if (strcmp(expr1->function.name, expr2->function.name) != 0) return false;
+            EXPRESSION_LIST_FOREACH2(arg1, arg2, expr1->function.parameters, expr2->function.parameters) {
+                if (!_expression_compare_structure_recursive(arg1, arg2)) return false;
+            }
+            return true;
+        }
+        case EXPRESSION_TYPE_VARIABLE:
+            return strcmp(expr1->variable.value, expr2->variable.value) == 0;
+
+        /* fail if the one prefix is `-` and the other isn't */
+        case EXPRESSION_TYPE_PREFIX: {
+            if ((expr1->prefix.prefix == '-' || expr2->prefix.prefix == '-') &&
+                expr1->prefix.prefix != expr2->prefix.prefix)
+                return false;
+            return _expression_compare_structure_recursive(EXPRESSION_RIGHT(expr1), EXPRESSION_RIGHT(expr2));
+        }
+        case EXPRESSION_TYPE_OPERATOR: {
+            if (expr1->operator.infix != expr2->operator.infix) return false;
+
+            if (_expression_compare_structure_recursive(EXPRESSION_LEFT(expr1), EXPRESSION_LEFT(expr2)) &&
+                _expression_compare_structure_recursive(EXPRESSION_RIGHT(expr1), EXPRESSION_RIGHT(expr2)))
+                return true;
+            if (expr1->operator.infix == '*' || expr1->operator.infix == '+') {
+                return _expression_compare_structure_recursive(EXPRESSION_LEFT(expr1), EXPRESSION_RIGHT(expr2)) &&
+                       _expression_compare_structure_recursive(EXPRESSION_RIGHT(expr1), EXPRESSION_LEFT(expr2));
+            }
+            return false;
+        }
+    }
+    return false;
+}
+
 compare_result_t expression_compare(expression_t* expr1, expression_t* expr2) {
     return _expression_compare_recursive(expr1, expr2);
+}
+
+bool expression_compare_structure(expression_t* expr1, expression_t* expr2) {
+    return _expression_compare_structure_recursive(expr1, expr2);
 }
 
 variable_t _expression_find_variable_recursive(expression_t* expr) {

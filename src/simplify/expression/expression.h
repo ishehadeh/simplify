@@ -32,6 +32,14 @@ int expression_has_variable_or_function(expression_t* expr, variable_t var);
  */
 compare_result_t expression_compare(expression_t* expr1, expression_t* expr2);
 
+/* Compare the structure of two expressions (i.e. perform expression_compare, but don't check the numbers)
+ *
+ * @expr1
+ * @expr2
+ * @returns true if the expressions have the same structure
+ */
+bool expression_compare_structure(expression_t* expr1, expression_t* expr2);
+
 /* get the name of the first variable that appears in an expression
  *
  * @expr the expression to search
