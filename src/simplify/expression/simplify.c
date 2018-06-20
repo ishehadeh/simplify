@@ -46,7 +46,7 @@ static inline bool _expression_is_var_mul(expression_t* expr) {
 }
 
 expression_t* _expression_multiplaction_scalar(expression_t* expr) {
-    assert(EXPRESSION_IS_OPERATOR(expr));
+    if (!EXPRESSION_IS_OPERATOR(expr)) return NULL;
     if (EXPRESSION_IS_NUMBER(EXPRESSION_LEFT(expr))) {
         return EXPRESSION_LEFT(expr);
     } else if (EXPRESSION_IS_NUMBER(EXPRESSION_RIGHT(expr))) {
@@ -130,13 +130,15 @@ void _expression_add_recursive(expression_t* out, expression_t* left, expression
         }
     }
 
-    if (_expression_is_var_mul(left) && EXPRESSION_IS_VARIABLE(right)) {
-        mpc_add_si(EXPRESSION_RIGHT(left)->number.value, EXPRESSION_RIGHT(left)->number.value, 1, MPC_RNDNN);
+    expression_t* scalar_l = _expression_multiplaction_scalar(left);
+    expression_t* scalar_r = _expression_multiplaction_scalar(right);
+    if (scalar_l && EXPRESSION_IS_VARIABLE(right)) {
+        mpc_add_si(scalar_l->number.value, scalar_l->number.value, 1, MPC_RNDNN);
         *out = *left;
         return;
-    } else if (_expression_is_var_mul(right) && EXPRESSION_IS_VARIABLE(left)) {
-        mpc_add_si(EXPRESSION_RIGHT(left)->number.value, EXPRESSION_RIGHT(left)->number.value, 1, MPC_RNDNN);
-        *out = *left;
+    } else if (scalar_r && EXPRESSION_IS_VARIABLE(left)) {
+        mpc_add_si(scalar_r->number.value, scalar_r->number.value, 1, MPC_RNDNN);
+        *out = *right;
         return;
     } else if (EXPRESSION_IS_OPERATOR(left) && operator_precedence(left->operator.infix) <= OPERATOR_PRECEDENCE_SUM) {
         if (expression_compare_structure(EXPRESSION_LEFT(left), right)) {
