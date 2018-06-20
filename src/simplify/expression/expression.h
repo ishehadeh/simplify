@@ -40,6 +40,23 @@ compare_result_t expression_compare(expression_t* expr1, expression_t* expr2);
  */
 bool expression_compare_structure(expression_t* expr1, expression_t* expr2);
 
+/* Add two expressions
+ *
+ * The specific operation this function performs differs depending on the expressions.
+ * If lexpr is `1` and rexpr is `2` than result will be the expression `3`.
+ * However if both expressions are the same variiable (e.g. `x`) than result will equal `2x`.
+ * Result will _always be equivelent to lexpr `+` rexpr, and it will try to make it a scalar value,
+ * but if that's not possible result may end up being an operator expression.
+ * After the operation is performed both _lexpr_ and _rexpr_ are both valid.
+ * Result may be either to _lexpr_ or _rexpr_, in that case it will replace any data the _lexpr_ or _rexpr
+ * points to.
+ *
+ * @result result of the addition expression
+ * @lexpr the left hand side of the addition expression
+ * @rexpr the right hand side of the addition expression
+ */
+void expression_add(expression_t* result, expression_t* left, expression_t* right);
+
 /* get the name of the first variable that appears in an expression
  *
  * @expr the expression to search

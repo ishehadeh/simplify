@@ -26,10 +26,10 @@
 /* get the right hand side of an expression or NULL if it does not exist */
 #define EXPRESSION_RIGHT(EXPR)                           \
     (EXPRESSION_IS_PREFIX(EXPR) ? ((EXPR)->prefix.right) \
-                                : (EXPRESSION_IS_OPERATOR(EXPR) ? (EXPR->operator.right) : (expression_t*)NULL))
+                                : (EXPRESSION_IS_OPERATOR(EXPR) ? ((EXPR)->operator.right) : (expression_t*)NULL))
 
 /* get the left hand side of an expression, or NULL if it does not exist */
-#define EXPRESSION_LEFT(EXPR) (EXPRESSION_IS_OPERATOR(EXPR) ? (EXPR->operator.left) : (expression_t*)NULL)
+#define EXPRESSION_LEFT(EXPR) (EXPRESSION_IS_OPERATOR(EXPR) ? ((EXPR)->operator.left) : (expression_t*)NULL)
 
 /* get an expressions operator, or `0` if it does not exist */
 #define EXPRESSION_OPERATOR(EXPR)                         \
