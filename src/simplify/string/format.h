@@ -27,6 +27,7 @@ struct string_format {
     bool force_brief_multiplication; /* 1 * 2 => 1(2) */
     bool omit_parmeter_parentheses;  /* f(x, y, z) => f x,y,z */
     bool omit_parameter_commas;      /* f(x, y, z) => f(xyz) */
+    bool explicit_precedence;        /* put parentheses around every operator expression */
     string_format_type_t format;
 };
 
@@ -35,7 +36,7 @@ struct string_format {
     {                                                                                                              \
         .approximate_tolerance = 5, .not_a_number = "NaN", .infinity = "Inf", .imaginary = "i", .whitespace = " ", \
         .omit_parameter_commas = false, .omit_parmeter_parentheses = false, .force_brief_multiplication = false,   \
-        .brief_multiplication = false, .format = STRING_FORMAT_ASCII                                               \
+        .brief_multiplication = false, .format = STRING_FORMAT_ASCII, .explicit_precedence = false                 \
     }
 
 #endif  // SIMPLIFY_STRING_FORMAT_H_

@@ -174,7 +174,7 @@ void _write_operator_prec_recursive(string_t* string, string_format_t* fmt, expr
     assert(EXPRESSION_IS_OPERATOR(op));
 
     operator_precedence_t myprec = operator_precedence(op->operator.infix);
-    if (myprec < prec) string_append_char(string, '(');
+    if (myprec < prec || fmt->explicit_precedence) string_append_char(string, '(');
 
     _write_expression_prec(string, fmt, op->operator.left, myprec);
 
@@ -187,7 +187,7 @@ void _write_operator_prec_recursive(string_t* string, string_format_t* fmt, expr
 
     _write_expression_prec(string, fmt, op->operator.right, myprec);
 
-    if (myprec < prec) string_append_char(string, ')');
+    if (myprec < prec || fmt->explicit_precedence) string_append_char(string, ')');
 }
 
 void _write_prefix(string_t* string, string_format_t* fmt, expression_t* pre, operator_precedence_t prec) {

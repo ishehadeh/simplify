@@ -11,10 +11,10 @@
 
 /* the result of comparing two expressions */
 typedef enum compare_result {
-    COMPARE_RESULT_INCOMPARABLE = 0x0,
-    COMPARE_RESULT_EQUAL = 0x1,
-    COMPARE_RESULT_LESS = 0x2,
-    COMPARE_RESULT_GREATER = 0x4,
+    COMPARE_RESULT_INCOMPARABLE,
+    COMPARE_RESULT_EQUAL,
+    COMPARE_RESULT_LESS,
+    COMPARE_RESULT_GREATER,
 } compare_result_t;
 
 /* check for a variable or function in the expression
