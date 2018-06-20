@@ -170,7 +170,6 @@ void _expression_simplify_polynomials_recursive(expression_t* expr) {
             if (_expression_check_for_polynomial(expr)) return;
             _expression_simplify_polynomials_recursive(EXPRESSION_LEFT(expr));
             _expression_simplify_polynomials_recursive(EXPRESSION_RIGHT(expr));
-            if (expr->operator.infix == '*') _expression_distribute(expr);
         }
     }
 }
@@ -189,18 +188,23 @@ error_t _expression_collapse_variables_recursive(expression_t* expr) {
             err = _expression_collapse_variables_recursive(EXPRESSION_RIGHT(expr));
             if (err) return err;
 
-            switch (expr->operator.infix) {
-                case '+':
-                    expression_add(expr, EXPRESSION_LEFT(expr), EXPRESSION_RIGHT(expr));
-                    break;
-                case '-':
-                    expression_subtract(expr, EXPRESSION_LEFT(expr), EXPRESSION_RIGHT(expr));
-                    break;
-                case '*':
-                    expression_multiply(expr, EXPRESSION_LEFT(expr), EXPRESSION_RIGHT(expr));
-                    break;
-                default:
-                    break;
+            operator_t last = '\0';
+            while (EXPRESSION_IS_OPERATOR(expr) && last != expr->operator.infix) {
+                last = expr->operator.infix;
+
+                switch (expr->operator.infix) {
+                    case '+':
+                        expression_add(expr, EXPRESSION_LEFT(expr), EXPRESSION_RIGHT(expr));
+                        break;
+                    case '-':
+                        expression_subtract(expr, EXPRESSION_LEFT(expr), EXPRESSION_RIGHT(expr));
+                        break;
+                    case '*':
+                        expression_multiply(expr, EXPRESSION_LEFT(expr), EXPRESSION_RIGHT(expr));
+                        break;
+                    default:
+                        break;
+                }
             }
         }
     }
@@ -226,5 +230,6 @@ error_t expression_do_logarithm(expression_t* b, expression_t* y, expression_t**
 
 error_t expression_simplify(expression_t* expr) {
     _expression_simplify_polynomials_recursive(expr);
-    return _expression_collapse_variables_recursive(expr);
+    _expression_collapse_variables_recursive(expr);
+    return ERROR_NO_ERROR;
 }

@@ -105,8 +105,6 @@ error_t simplify_and_print(scope_t* scope, expression_t* expr, char* isolate_tar
     err = expression_simplify(expr);
     if (err) return err;
 
-    err = expression_evaluate(expr, scope);
-
     if (isolate_target) {
         err = expression_isolate_variable(expr, isolate_target);
         if (!err) {

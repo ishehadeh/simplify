@@ -345,7 +345,12 @@ void _expression_add_recursive(expression_t* out, expression_t* left, expression
             }
 
             default: {
-                expression_init_operator(out, left, left->operator.infix, right);
+                expression_t* left_copy = expression_new_uninialized();
+                expression_t* right_copy = expression_new_uninialized();
+                expression_copy(left, left_copy);
+                expression_copy(right, right_copy);
+
+                expression_init_operator(out, left_copy, left->operator.infix, right_copy);
 
                 if (expression_compare_structure(EXPRESSION_LEFT(left), EXPRESSION_LEFT(right))) {
                     if (expression_compare_structure(EXPRESSION_RIGHT(left), EXPRESSION_RIGHT(right))) {
@@ -474,7 +479,12 @@ void _expression_subtract_recursive(expression_t* out, expression_t* left, expre
             }
 
             default: {
-                expression_init_operator(out, left, left->operator.infix, right);
+                expression_t* left_copy = expression_new_uninialized();
+                expression_t* right_copy = expression_new_uninialized();
+                expression_copy(left, left_copy);
+                expression_copy(right, right_copy);
+
+                expression_init_operator(out, left_copy, left->operator.infix, right_copy);
 
                 if (expression_compare_structure(EXPRESSION_LEFT(left), EXPRESSION_LEFT(right))) {
                     if (expression_compare_structure(EXPRESSION_RIGHT(left), EXPRESSION_RIGHT(right))) {
@@ -606,60 +616,29 @@ void _expression_multiply_recursive(expression_t* out, expression_t* left, expre
                 break;
             }
 
-            default: {
-                expression_init_operator(out, left, left->operator.infix, right);
-
-                if (expression_compare_structure(EXPRESSION_LEFT(left), EXPRESSION_LEFT(right))) {
-                    if (expression_compare_structure(EXPRESSION_RIGHT(left), EXPRESSION_RIGHT(right))) {
-                        _expression_multiply_recursive(EXPRESSION_LEFT(out), EXPRESSION_LEFT(left),
-                                                       EXPRESSION_LEFT(right));
-                        _expression_multiply_recursive(EXPRESSION_RIGHT(out), EXPRESSION_RIGHT(left),
-                                                       EXPRESSION_RIGHT(right));
-                    } else {
-                        _expression_multiply_recursive(EXPRESSION_LEFT(EXPRESSION_LEFT(out)), EXPRESSION_LEFT(left),
-                                                       EXPRESSION_LEFT(right));
-                        expression_collapse_left(EXPRESSION_RIGHT(out));
-                    }
-                } else if (expression_compare_structure(EXPRESSION_RIGHT(left), EXPRESSION_LEFT(right))) {
-                    if (expression_compare_structure(EXPRESSION_LEFT(left), EXPRESSION_RIGHT(right))) {
-                        _expression_multiply_recursive(EXPRESSION_LEFT(out), EXPRESSION_RIGHT(left),
-                                                       EXPRESSION_LEFT(right));
-                        _expression_multiply_recursive(EXPRESSION_RIGHT(out), EXPRESSION_LEFT(left),
-                                                       EXPRESSION_RIGHT(right));
-                    } else {
-                        _expression_multiply_recursive(EXPRESSION_RIGHT(EXPRESSION_LEFT(out)), EXPRESSION_RIGHT(left),
-                                                       EXPRESSION_LEFT(right));
-                        expression_collapse_left(EXPRESSION_RIGHT(out));
-                    }
-                } else if (expression_compare_structure(EXPRESSION_LEFT(left), EXPRESSION_RIGHT(right))) {
-                    if (expression_compare_structure(EXPRESSION_RIGHT(left), EXPRESSION_LEFT(right))) {
-                        _expression_multiply_recursive(EXPRESSION_LEFT(out), EXPRESSION_LEFT(left),
-                                                       EXPRESSION_RIGHT(right));
-                        _expression_multiply_recursive(EXPRESSION_RIGHT(out), EXPRESSION_RIGHT(left),
-                                                       EXPRESSION_LEFT(right));
-                    } else {
-                        _expression_multiply_recursive(EXPRESSION_LEFT(EXPRESSION_LEFT(out)), EXPRESSION_LEFT(left),
-                                                       EXPRESSION_LEFT(right));
-                        expression_collapse_right(EXPRESSION_RIGHT(out));
-                    }
-                }
-                return;
+            case '+': {
+                goto distribute;
             }
+
+            default:
+                return;
         }
     }
 
+distribute:
     if (EXPRESSION_IS_OPERATOR(left) && operator_precedence(left->operator.infix) <= OPERATOR_PRECEDENCE_SUM) {
         expression_t left_copy;
         expression_copy(left, &left_copy);
-        _expression_multiply_recursive(EXPRESSION_RIGHT(&left_copy), EXPRESSION_RIGHT(&left_copy), right);
-        _expression_multiply_recursive(EXPRESSION_LEFT(&left_copy), EXPRESSION_LEFT(&left_copy), right);
+        _expression_multiply_recursive(EXPRESSION_RIGHT(&left_copy), EXPRESSION_RIGHT(left), right);
+        _expression_multiply_recursive(EXPRESSION_LEFT(&left_copy), EXPRESSION_LEFT(left), right);
         *out = left_copy;
         return;
     } else if (EXPRESSION_IS_OPERATOR(right) && operator_precedence(right->operator.infix) <= OPERATOR_PRECEDENCE_SUM) {
         expression_t right_copy;
         expression_copy(right, &right_copy);
-        _expression_multiply_recursive(EXPRESSION_RIGHT(&right_copy), EXPRESSION_RIGHT(&right_copy), left);
-        _expression_multiply_recursive(EXPRESSION_LEFT(&right_copy), EXPRESSION_LEFT(&right_copy), left);
+
+        _expression_multiply_recursive(EXPRESSION_RIGHT(&right_copy), EXPRESSION_RIGHT(right), left);
+        _expression_multiply_recursive(EXPRESSION_LEFT(&right_copy), EXPRESSION_LEFT(right), left);
         *out = right_copy;
         return;
     }
