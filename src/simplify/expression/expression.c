@@ -31,6 +31,8 @@ static inline bool _expression_is_var_mul(expression_t* expr) {
 
 static inline expression_t* _expression_multiplaction_scalar(expression_t* expr) {
     if (!EXPRESSION_IS_OPERATOR(expr)) return NULL;
+    if (expr->operator.infix != '*') return NULL;
+
     if (EXPRESSION_IS_NUMBER(EXPRESSION_LEFT(expr))) {
         return EXPRESSION_LEFT(expr);
     } else if (EXPRESSION_IS_NUMBER(EXPRESSION_RIGHT(expr))) {
@@ -437,6 +439,242 @@ void _expression_add_recursive(expression_t* out, expression_t* left, expression
     expression_init_operator(out, left, '+', right);
 }
 
+void _expression_subtract_recursive(expression_t* out, expression_t* left, expression_t* right) {
+    /* TODO handle prefixes */
+
+    if (EXPRESSION_IS_NUMBER(left) && EXPRESSION_IS_NUMBER(right)) {
+        expression_t num;
+        expression_init_number_si(&num, 0);
+        mpc_sub(num.number.value, left->number.value, right->number.value, MPC_RNDNN);
+        *out = num;
+        return;
+    }
+
+    if (((EXPRESSION_IS_VARIABLE(left) && EXPRESSION_IS_VARIABLE(right)) ||
+         ((EXPRESSION_IS_FUNCTION(left) && EXPRESSION_IS_FUNCTION(right)))) &&
+        expression_compare(left, right) == COMPARE_RESULT_EQUAL) {
+        expression_init_number_si(out, 0);
+        return;
+    }
+
+    if (EXPRESSION_IS_OPERATOR(left) && EXPRESSION_IS_OPERATOR(right) &&
+        right->operator.infix == left->operator.infix &&(left->operator.infix == '*' || left->operator.infix == '+')) {
+        switch (left->operator.infix) {
+            case '*': {
+                expression_t* scalar_l = _expression_multiplaction_scalar(left);
+                expression_t* scalar_r = _expression_multiplaction_scalar(right);
+                expression_init_operator(
+                    out, scalar_l == EXPRESSION_LEFT(left) ? EXPRESSION_RIGHT(left) : EXPRESSION_LEFT(left), '*',
+                    expression_new_uninialized());
+                if (scalar_l && scalar_r) {
+                    _expression_subtract_recursive(EXPRESSION_RIGHT(out), scalar_l, scalar_r);
+                    return;
+                }
+                break;
+            }
+
+            default: {
+                expression_init_operator(out, left, left->operator.infix, right);
+
+                if (expression_compare_structure(EXPRESSION_LEFT(left), EXPRESSION_LEFT(right))) {
+                    if (expression_compare_structure(EXPRESSION_RIGHT(left), EXPRESSION_RIGHT(right))) {
+                        _expression_subtract_recursive(EXPRESSION_LEFT(out), EXPRESSION_LEFT(left),
+                                                       EXPRESSION_LEFT(right));
+                        _expression_subtract_recursive(EXPRESSION_RIGHT(out), EXPRESSION_RIGHT(left),
+                                                       EXPRESSION_RIGHT(right));
+                    } else {
+                        _expression_subtract_recursive(EXPRESSION_LEFT(EXPRESSION_LEFT(out)), EXPRESSION_LEFT(left),
+                                                       EXPRESSION_LEFT(right));
+                        expression_collapse_left(EXPRESSION_RIGHT(out));
+                    }
+                } else if (expression_compare_structure(EXPRESSION_RIGHT(left), EXPRESSION_LEFT(right))) {
+                    if (expression_compare_structure(EXPRESSION_LEFT(left), EXPRESSION_RIGHT(right))) {
+                        _expression_subtract_recursive(EXPRESSION_LEFT(out), EXPRESSION_RIGHT(left),
+                                                       EXPRESSION_LEFT(right));
+                        _expression_subtract_recursive(EXPRESSION_RIGHT(out), EXPRESSION_LEFT(left),
+                                                       EXPRESSION_RIGHT(right));
+                    } else {
+                        _expression_subtract_recursive(EXPRESSION_RIGHT(EXPRESSION_LEFT(out)), EXPRESSION_RIGHT(left),
+                                                       EXPRESSION_LEFT(right));
+                        expression_collapse_left(EXPRESSION_RIGHT(out));
+                    }
+                } else if (expression_compare_structure(EXPRESSION_LEFT(left), EXPRESSION_RIGHT(right))) {
+                    if (expression_compare_structure(EXPRESSION_RIGHT(left), EXPRESSION_LEFT(right))) {
+                        _expression_subtract_recursive(EXPRESSION_LEFT(out), EXPRESSION_LEFT(left),
+                                                       EXPRESSION_RIGHT(right));
+                        _expression_subtract_recursive(EXPRESSION_RIGHT(out), EXPRESSION_RIGHT(left),
+                                                       EXPRESSION_LEFT(right));
+                    } else {
+                        _expression_subtract_recursive(EXPRESSION_LEFT(EXPRESSION_LEFT(out)), EXPRESSION_LEFT(left),
+                                                       EXPRESSION_LEFT(right));
+                        expression_collapse_right(EXPRESSION_RIGHT(out));
+                    }
+                }
+                return;
+            }
+        }
+    }
+
+    expression_t* scalar_l = _expression_multiplaction_scalar(left);
+    expression_t* scalar_r = _expression_multiplaction_scalar(right);
+
+    if (scalar_l && EXPRESSION_IS_VARIABLE(right)) {
+        expression_t num;
+        expression_init_number_si(&num, 0);
+        mpc_sub_ui(num.number.value, scalar_l->number.value, 1, MPC_RNDNN);
+        expression_copy(left, out);
+        if (scalar_l == EXPRESSION_LEFT(left))
+            *out->operator.left = num;
+        else
+            *out->operator.right = num;
+        return;
+    } else if (scalar_r && EXPRESSION_IS_VARIABLE(left)) {
+        expression_t num;
+        expression_init_number_si(&num, 0);
+        mpc_sub_ui(num.number.value, scalar_r->number.value, 1, MPC_RNDNN);
+        expression_copy(right, out);
+        if (scalar_r == EXPRESSION_LEFT(right))
+            *out->operator.left = num;
+        else
+            *out->operator.right = num;
+        return;
+    } else if (EXPRESSION_IS_OPERATOR(left) && operator_precedence(left->operator.infix) <= OPERATOR_PRECEDENCE_SUM) {
+        if (expression_compare_structure(EXPRESSION_LEFT(left), right)) {
+            expression_t left_copy;
+            expression_copy(left, &left_copy);
+            _expression_subtract_recursive(EXPRESSION_LEFT(&left_copy), EXPRESSION_LEFT(left), right);
+            *out = left_copy;
+            return;
+        } else if (expression_compare_structure(EXPRESSION_RIGHT(left), right)) {
+            expression_t left_copy;
+            expression_copy(left, &left_copy);
+            _expression_subtract_recursive(EXPRESSION_RIGHT(&left_copy), EXPRESSION_RIGHT(left), right);
+            *out = left_copy;
+            return;
+        }
+    } else if (EXPRESSION_IS_OPERATOR(right) && operator_precedence(right->operator.infix) <= OPERATOR_PRECEDENCE_SUM) {
+        if (expression_compare_structure(EXPRESSION_LEFT(right), left)) {
+            expression_t right_copy;
+            expression_copy(right, &right_copy);
+            _expression_subtract_recursive(EXPRESSION_LEFT(&right_copy), EXPRESSION_LEFT(&right_copy), right);
+            *out = right_copy;
+            return;
+        } else if (expression_compare_structure(EXPRESSION_RIGHT(right), left)) {
+            expression_t right_copy;
+            expression_copy(right, &right_copy);
+            _expression_subtract_recursive(EXPRESSION_RIGHT(&right_copy), EXPRESSION_RIGHT(&right_copy), right);
+            *out = right_copy;
+            return;
+        }
+    }
+
+    expression_init_operator(out, left, '-', right);
+}
+
+void _expression_multiply_recursive(expression_t* out, expression_t* left, expression_t* right) {
+    if (EXPRESSION_IS_NUMBER(left) && EXPRESSION_IS_NUMBER(right)) {
+        expression_t num;
+        expression_init_number_si(&num, 0);
+        mpc_mul(num.number.value, left->number.value, right->number.value, MPC_RNDNN);
+        *out = num;
+        return;
+    }
+
+    if (((EXPRESSION_IS_VARIABLE(left) && EXPRESSION_IS_VARIABLE(right)) ||
+         ((EXPRESSION_IS_FUNCTION(left) && EXPRESSION_IS_FUNCTION(right)))) &&
+        expression_compare(left, right) == COMPARE_RESULT_EQUAL) {
+        expression_t* left_copy = expression_new_uninialized();
+        expression_copy(left, left_copy);
+
+        expression_init_operator(out, left_copy, '^', expression_new_number_si(2));
+        return;
+    }
+
+    if (EXPRESSION_IS_OPERATOR(left) && EXPRESSION_IS_OPERATOR(right) &&
+        right->operator.infix == left->operator.infix &&(left->operator.infix == '*' || left->operator.infix == '+')) {
+        switch (left->operator.infix) {
+            case '*': {
+                expression_t* scalar_l = _expression_multiplaction_scalar(left);
+                expression_t* scalar_r = _expression_multiplaction_scalar(right);
+                expression_init_operator(
+                    out, scalar_l == EXPRESSION_LEFT(left) ? EXPRESSION_RIGHT(left) : EXPRESSION_LEFT(left), '^',
+                    expression_new_uninialized());
+                if (scalar_l && scalar_r) {
+                    _expression_multiply_recursive(EXPRESSION_RIGHT(out), scalar_l, scalar_r);
+                    return;
+                }
+                break;
+            }
+
+            default: {
+                expression_init_operator(out, left, left->operator.infix, right);
+
+                if (expression_compare_structure(EXPRESSION_LEFT(left), EXPRESSION_LEFT(right))) {
+                    if (expression_compare_structure(EXPRESSION_RIGHT(left), EXPRESSION_RIGHT(right))) {
+                        _expression_multiply_recursive(EXPRESSION_LEFT(out), EXPRESSION_LEFT(left),
+                                                       EXPRESSION_LEFT(right));
+                        _expression_multiply_recursive(EXPRESSION_RIGHT(out), EXPRESSION_RIGHT(left),
+                                                       EXPRESSION_RIGHT(right));
+                    } else {
+                        _expression_multiply_recursive(EXPRESSION_LEFT(EXPRESSION_LEFT(out)), EXPRESSION_LEFT(left),
+                                                       EXPRESSION_LEFT(right));
+                        expression_collapse_left(EXPRESSION_RIGHT(out));
+                    }
+                } else if (expression_compare_structure(EXPRESSION_RIGHT(left), EXPRESSION_LEFT(right))) {
+                    if (expression_compare_structure(EXPRESSION_LEFT(left), EXPRESSION_RIGHT(right))) {
+                        _expression_multiply_recursive(EXPRESSION_LEFT(out), EXPRESSION_RIGHT(left),
+                                                       EXPRESSION_LEFT(right));
+                        _expression_multiply_recursive(EXPRESSION_RIGHT(out), EXPRESSION_LEFT(left),
+                                                       EXPRESSION_RIGHT(right));
+                    } else {
+                        _expression_multiply_recursive(EXPRESSION_RIGHT(EXPRESSION_LEFT(out)), EXPRESSION_RIGHT(left),
+                                                       EXPRESSION_LEFT(right));
+                        expression_collapse_left(EXPRESSION_RIGHT(out));
+                    }
+                } else if (expression_compare_structure(EXPRESSION_LEFT(left), EXPRESSION_RIGHT(right))) {
+                    if (expression_compare_structure(EXPRESSION_RIGHT(left), EXPRESSION_LEFT(right))) {
+                        _expression_multiply_recursive(EXPRESSION_LEFT(out), EXPRESSION_LEFT(left),
+                                                       EXPRESSION_RIGHT(right));
+                        _expression_multiply_recursive(EXPRESSION_RIGHT(out), EXPRESSION_RIGHT(left),
+                                                       EXPRESSION_LEFT(right));
+                    } else {
+                        _expression_multiply_recursive(EXPRESSION_LEFT(EXPRESSION_LEFT(out)), EXPRESSION_LEFT(left),
+                                                       EXPRESSION_LEFT(right));
+                        expression_collapse_right(EXPRESSION_RIGHT(out));
+                    }
+                }
+                return;
+            }
+        }
+    }
+
+    if (EXPRESSION_IS_OPERATOR(left) && operator_precedence(left->operator.infix) <= OPERATOR_PRECEDENCE_SUM) {
+        expression_t left_copy;
+        expression_copy(left, &left_copy);
+        _expression_multiply_recursive(EXPRESSION_RIGHT(&left_copy), EXPRESSION_RIGHT(&left_copy), right);
+        _expression_multiply_recursive(EXPRESSION_LEFT(&left_copy), EXPRESSION_LEFT(&left_copy), right);
+        *out = left_copy;
+        return;
+    } else if (EXPRESSION_IS_OPERATOR(right) && operator_precedence(right->operator.infix) <= OPERATOR_PRECEDENCE_SUM) {
+        expression_t right_copy;
+        expression_copy(right, &right_copy);
+        _expression_multiply_recursive(EXPRESSION_RIGHT(&right_copy), EXPRESSION_RIGHT(&right_copy), left);
+        _expression_multiply_recursive(EXPRESSION_LEFT(&right_copy), EXPRESSION_LEFT(&right_copy), left);
+        *out = right_copy;
+        return;
+    }
+
+    expression_init_operator(out, left, '*', right);
+}
+
 void expression_add(expression_t* result, expression_t* lexpr, expression_t* rexpr) {
     _expression_add_recursive(result, lexpr, rexpr);
+}
+
+void expression_subtract(expression_t* result, expression_t* lexpr, expression_t* rexpr) {
+    _expression_subtract_recursive(result, lexpr, rexpr);
+}
+
+void expression_multiply(expression_t* result, expression_t* lexpr, expression_t* rexpr) {
+    _expression_multiply_recursive(result, lexpr, rexpr);
 }

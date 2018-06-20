@@ -55,7 +55,11 @@ bool expression_compare_structure(expression_t* expr1, expression_t* expr2);
  * @lexpr the left hand side of the addition expression
  * @rexpr the right hand side of the addition expression
  */
-void expression_add(expression_t* result, expression_t* left, expression_t* right);
+void expression_add(expression_t* result, expression_t* lexpr, expression_t* rexpr);
+
+void expression_subtract(expression_t* result, expression_t* lexpr, expression_t* rexpr);
+
+void expression_multiply(expression_t* result, expression_t* lexpr, expression_t* rexpr);
 
 /* get the name of the first variable that appears in an expression
  *

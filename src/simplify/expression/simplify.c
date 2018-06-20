@@ -159,57 +159,6 @@ bool _expression_check_for_polynomial(expression_t* expr) {
     return false;
 }
 
-void _expression_distribute(expression_t* expr) {
-    assert(EXPRESSION_IS_OPERATOR(expr));
-    assert(expr->operator.infix == '*');
-
-    expression_t* target;
-    expression_t* mul;
-    if (EXPRESSION_IS_OPERATOR(EXPRESSION_RIGHT(expr)) &&
-        operator_precedence(expr->operator.infix) > operator_precedence(EXPRESSION_RIGHT(expr)->operator.infix)) {
-        target = EXPRESSION_RIGHT(expr);
-        mul = EXPRESSION_LEFT(expr);
-    } else if (EXPRESSION_IS_OPERATOR(EXPRESSION_LEFT(expr)) &&
-               operator_precedence(expr->operator.infix) > operator_precedence(EXPRESSION_LEFT(expr)->operator.infix)) {
-        target = EXPRESSION_LEFT(expr);
-        mul = EXPRESSION_RIGHT(expr);
-    } else {
-        return;
-    }
-    expression_t* left = NULL;
-    expression_t* right = NULL;
-    if (EXPRESSION_IS_NUMBER(mul)) {
-        if (EXPRESSION_IS_NUMBER(EXPRESSION_LEFT(target))) {
-            left = expression_new_number(EXPRESSION_LEFT(target)->number.value);
-            mpc_mul(left->number.value, left->number.value, mul->number.value, MPC_RNDNN);
-            free(EXPRESSION_LEFT(target));
-        }
-
-        if (EXPRESSION_IS_NUMBER(EXPRESSION_RIGHT(target))) {
-            right = expression_new_number(EXPRESSION_RIGHT(target)->number.value);
-            mpc_mul(right->number.value, right->number.value, mul->number.value, MPC_RNDNN);
-            free(EXPRESSION_RIGHT(target));
-        }
-    }
-
-    if (!right && !left) {
-        expression_t* mul_cpy = malloc(sizeof(expression_t));
-        expression_copy(mul, mul_cpy);
-        right = expression_new_operator(mul, '*', EXPRESSION_RIGHT(target));
-        left = expression_new_operator(mul_cpy, '*', EXPRESSION_LEFT(target));
-    } else if (!right) {
-        right = expression_new_operator(mul, '*', EXPRESSION_RIGHT(target));
-    } else if (!left) {
-        left = expression_new_operator(mul, '*', EXPRESSION_LEFT(target));
-    }
-
-    expression_init_operator(expr, left, target->operator.infix, right);
-    if (EXPRESSION_IS_OPERATOR(left) && left->operator.infix == '*') _expression_distribute(left);
-
-    if (EXPRESSION_IS_OPERATOR(right) && right->operator.infix == '*') _expression_distribute(right);
-    free(target);
-}
-
 void _expression_simplify_polynomials_recursive(expression_t* expr) {
     switch (expr->type) {
         case EXPRESSION_TYPE_NUMBER:
@@ -243,6 +192,12 @@ error_t _expression_collapse_variables_recursive(expression_t* expr) {
             switch (expr->operator.infix) {
                 case '+':
                     expression_add(expr, EXPRESSION_LEFT(expr), EXPRESSION_RIGHT(expr));
+                    break;
+                case '-':
+                    expression_subtract(expr, EXPRESSION_LEFT(expr), EXPRESSION_RIGHT(expr));
+                    break;
+                case '*':
+                    expression_multiply(expr, EXPRESSION_LEFT(expr), EXPRESSION_RIGHT(expr));
                     break;
                 default:
                     break;
