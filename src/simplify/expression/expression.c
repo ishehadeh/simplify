@@ -33,10 +33,26 @@ static inline expression_t* _expression_multiplaction_scalar(expression_t* expr)
     if (!EXPRESSION_IS_OPERATOR(expr)) return NULL;
     if (expr->operator.infix != '*') return NULL;
 
-    if (EXPRESSION_IS_NUMBER(EXPRESSION_LEFT(expr))) {
-        return EXPRESSION_LEFT(expr);
-    } else if (EXPRESSION_IS_NUMBER(EXPRESSION_RIGHT(expr))) {
+    if (EXPRESSION_IS_NUMBER(EXPRESSION_RIGHT(expr)) &&
+        (EXPRESSION_IS_VARIABLE(EXPRESSION_LEFT(expr)) || EXPRESSION_IS_FUNCTION(EXPRESSION_LEFT(expr)))) {
         return EXPRESSION_RIGHT(expr);
+    } else if (EXPRESSION_IS_NUMBER(EXPRESSION_LEFT(expr)) &&
+               (EXPRESSION_IS_VARIABLE(EXPRESSION_RIGHT(expr)) || EXPRESSION_IS_FUNCTION(EXPRESSION_RIGHT(expr)))) {
+        return EXPRESSION_LEFT(expr);
+    }
+    return NULL;
+}
+
+static inline expression_t* _expression_exponent_scalar(expression_t* expr) {
+    if (!EXPRESSION_IS_OPERATOR(expr)) return NULL;
+    if (expr->operator.infix != '^') return NULL;
+
+    if (EXPRESSION_IS_NUMBER(EXPRESSION_RIGHT(expr)) &&
+        (EXPRESSION_IS_VARIABLE(EXPRESSION_LEFT(expr)) || EXPRESSION_IS_FUNCTION(EXPRESSION_LEFT(expr)))) {
+        return EXPRESSION_RIGHT(expr);
+    } else if (EXPRESSION_IS_NUMBER(EXPRESSION_LEFT(expr)) &&
+               (EXPRESSION_IS_VARIABLE(EXPRESSION_RIGHT(expr)) || EXPRESSION_IS_FUNCTION(EXPRESSION_RIGHT(expr)))) {
+        return EXPRESSION_LEFT(expr);
     }
     return NULL;
 }
@@ -590,9 +606,7 @@ void _expression_multiply_recursive(expression_t* out, expression_t* left, expre
         return;
     }
 
-    if (((EXPRESSION_IS_VARIABLE(left) && EXPRESSION_IS_VARIABLE(right)) ||
-         ((EXPRESSION_IS_FUNCTION(left) && EXPRESSION_IS_FUNCTION(right)))) &&
-        expression_compare(left, right) == COMPARE_RESULT_EQUAL) {
+    if (expression_compare_structure(left, right)) {
         expression_t* left_copy = expression_new_uninialized();
         expression_copy(left, left_copy);
 
@@ -600,32 +614,53 @@ void _expression_multiply_recursive(expression_t* out, expression_t* left, expre
         return;
     }
 
-    if (EXPRESSION_IS_OPERATOR(left) && EXPRESSION_IS_OPERATOR(right) &&
-        right->operator.infix == left->operator.infix &&(left->operator.infix == '*' || left->operator.infix == '+')) {
-        switch (left->operator.infix) {
-            case '*': {
-                expression_t* scalar_l = _expression_multiplaction_scalar(left);
-                expression_t* scalar_r = _expression_multiplaction_scalar(right);
-                expression_init_operator(
-                    out, scalar_l == EXPRESSION_LEFT(left) ? EXPRESSION_RIGHT(left) : EXPRESSION_LEFT(left), '^',
-                    expression_new_uninialized());
-                if (scalar_l && scalar_r) {
-                    _expression_multiply_recursive(EXPRESSION_RIGHT(out), scalar_l, scalar_r);
-                    return;
-                }
-                break;
-            }
+    expression_t* scalar_l = _expression_exponent_scalar(left);
+    expression_t* scalar_r = _expression_exponent_scalar(right);
 
-            case '+': {
-                goto distribute;
-            }
-
-            default:
-                return;
-        }
+    if (scalar_l && EXPRESSION_IS_VARIABLE(right)) {
+        expression_t num;
+        expression_init_number_si(&num, 0);
+        mpc_add_ui(num.number.value, scalar_l->number.value, 1, MPC_RNDNN);
+        expression_copy(left, out);
+        if (scalar_l == EXPRESSION_LEFT(left))
+            *out->operator.left = num;
+        else
+            *out->operator.right = num;
+        return;
+    } else if (scalar_r && EXPRESSION_IS_VARIABLE(left)) {
+        expression_t num;
+        expression_init_number_si(&num, 0);
+        mpc_add_ui(num.number.value, scalar_r->number.value, 1, MPC_RNDNN);
+        expression_copy(right, out);
+        if (scalar_r == EXPRESSION_LEFT(right))
+            *out->operator.left = num;
+        else
+            *out->operator.right = num;
+        return;
     }
 
-distribute:
+    scalar_l = _expression_multiplaction_scalar(left);
+    scalar_r = _expression_multiplaction_scalar(right);
+
+    if (scalar_l && EXPRESSION_IS_VARIABLE(right)) {
+        expression_copy(left, out);
+        if (scalar_l == EXPRESSION_LEFT(left))
+            _expression_multiply_recursive(EXPRESSION_RIGHT(out), EXPRESSION_RIGHT(left), right);
+        else
+            _expression_multiply_recursive(EXPRESSION_LEFT(out), EXPRESSION_LEFT(left), right);
+
+        return;
+    } else if (scalar_r && EXPRESSION_IS_VARIABLE(left)) {
+        expression_copy(right, out);
+
+        if (scalar_r == EXPRESSION_LEFT(right))
+            _expression_multiply_recursive(EXPRESSION_RIGHT(out), EXPRESSION_RIGHT(right), left);
+        else
+            _expression_multiply_recursive(EXPRESSION_LEFT(out), EXPRESSION_LEFT(right), left);
+
+        return;
+    }
+
     if (EXPRESSION_IS_OPERATOR(left) && operator_precedence(left->operator.infix) <= OPERATOR_PRECEDENCE_SUM) {
         expression_t left_copy;
         expression_copy(left, &left_copy);
