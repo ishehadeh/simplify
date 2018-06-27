@@ -1,12 +1,15 @@
 <?xml version='1.0' encoding='utf-8'?>
 <struct id="variable_info" name="variable_info" xmlns="http://jessevdk.github.com/cldoc/1.0">
   <field id="variable_info::constant" name="constant">
-    <type builtin="yes" name="int" />
+    <type builtin="yes" name="bool" />
+  </field>
+  <field id="variable_info::is_internal" name="is_internal">
+    <type builtin="yes" name="bool" />
   </field>
   <field id="variable_info::named_inputs" name="named_inputs">
     <type name="expression_list_t" qualifier="*" ref="expression_list_t#expression_list_t" />
   </field>
   <field id="variable_info::value" name="value">
-    <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    <type name="variable_value_t" ref="index#variable_value_t" />
   </field>
 </struct>

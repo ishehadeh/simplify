@@ -1,0 +1,136 @@
+<?xml version='1.0' encoding='utf-8'?>
+<typedef id="string_t" name="string_t" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <brief>string is a dynamically sized, ASCII encoded string</brief>
+  <type name="string" ref="string#string" />
+  <function id="string_append_buffer" name="string_append_buffer">
+    <brief> copy `len` chars from a buffer, and append them to the end of the string</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="string_append_buffer::string" name="string">
+      <type name="string_t" qualifier="*" ref="string_t#string_t" />
+    </argument>
+    <argument id="string_append_buffer::buf" name="buf">
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+    <argument id="string_append_buffer::len" name="len">
+      <type name="size_t" />
+    </argument>
+  </function>
+  <function id="string_append_char" name="string_append_char">
+    <brief> push a character onto the end of a string</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="string_append_char::string" name="string">
+      <type name="string_t" qualifier="*" ref="string_t#string_t" />
+    </argument>
+    <argument id="string_append_char::c" name="c">
+      <type builtin="yes" name="char" />
+    </argument>
+  </function>
+  <function id="string_append_cstring" name="string_append_cstring">
+    <brief> append a NULL terminated char* to the end of the string</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="string_append_cstring::string" name="string">
+      <type name="string_t" qualifier="*" ref="string_t#string_t" />
+    </argument>
+    <argument id="string_append_cstring::str" name="str">
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+  </function>
+  <function id="string_cap" name="string_cap">
+    <brief>get the capacity of a string</brief>
+    <return>
+      <type name="size_t" />
+    </return>
+    <argument id="string_cap::string" name="string">
+      <type name="string_t" qualifier="*" ref="string_t#string_t" />
+    </argument>
+  </function>
+  <function id="string_clean" name="string_clean">
+    <brief> free a string's internal buffer</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="string_clean::string" name="string">
+      <type name="string_t" qualifier="*" ref="string_t#string_t" />
+    </argument>
+  </function>
+  <function id="string_init" name="string_init">
+    <brief>initialize a string with the default capacity (this is a compile-time option)</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="string_init::string" name="string">
+      <type name="string_t" qualifier="*" ref="string_t#string_t" />
+    </argument>
+  </function>
+  <function id="string_init_cap" name="string_init_cap">
+    <brief>initialize a string with a custom initial capacity</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="string_init_cap::string" name="string">
+      <type name="string_t" qualifier="*" ref="string_t#string_t" />
+    </argument>
+    <argument id="string_init_cap::cap" name="cap">
+      <type name="size_t" />
+    </argument>
+  </function>
+  <function id="string_insert_char" name="string_insert_char">
+    <brief> insert a character into a string</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="string_insert_char::string" name="string">
+      <type name="string_t" qualifier="*" ref="string_t#string_t" />
+    </argument>
+    <argument id="string_insert_char::index" name="index">
+      <type name="size_t" />
+    </argument>
+    <argument id="string_insert_char::c" name="c">
+      <type builtin="yes" name="char" />
+    </argument>
+  </function>
+  <function id="string_insert_cstr" name="string_insert_cstr">
+    <brief> insert a NULL terminated c string into a string</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="string_insert_cstr::string" name="string">
+      <type name="string_t" qualifier="*" ref="string_t#string_t" />
+    </argument>
+    <argument id="string_insert_cstr::index" name="index">
+      <type name="size_t" />
+    </argument>
+    <argument id="string_insert_cstr::c" name="c">
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+  </function>
+  <function id="string_len" name="string_len">
+    <brief>get the length of a string</brief>
+    <return>
+      <type name="size_t" />
+    </return>
+    <argument id="string_len::string" name="string">
+      <type name="string_t" qualifier="*" ref="string_t#string_t" />
+    </argument>
+  </function>
+  <function id="write_expression" name="write_expression">
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="write_expression::string" name="string">
+      <type name="string_t" qualifier="*" ref="string_t#string_t" />
+    </argument>
+    <argument id="write_expression::format" name="format">
+      <type name="string_format_t" qualifier="*" ref="index#string_format_t" />
+    </argument>
+    <argument id="write_expression::expr" name="expr">
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+  </function>
+</typedef>

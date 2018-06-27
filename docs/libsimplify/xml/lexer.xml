@@ -3,9 +3,6 @@
   <field id="lexer::token" name="token">
     <type name="token_t" ref="index#token_t" />
   </field>
-  <field id="lexer::source" name="source">
-    <type name="FILE" qualifier="*" />
-  </field>
   <field id="lexer::buffer" name="buffer">
     <type builtin="yes" name="char" qualifier="*" />
   </field>

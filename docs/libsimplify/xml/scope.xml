@@ -6,7 +6,4 @@
   <field id="scope::variables" name="variables">
     <type name="rbtree_t" ref="rbtree_t#rbtree_t" />
   </field>
-  <field id="scope::boolean" name="boolean">
-    <type builtin="yes" name="int" />
-  </field>
 </struct>

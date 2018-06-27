@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <typedef id="variable_info_t" name="variable_info_t" xmlns="http://jessevdk.github.com/cldoc/1.0">
-  <brief> Holds information about a variable, constant, or function</brief>
+  <brief>Stores information about a single value.</brief>
   <type name="variable_info" ref="variable_info#variable_info" />
   <function id="variable_info_free" name="variable_info_free">
     <brief> free variable's information</brief>

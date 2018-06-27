@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='utf-8'?>
+<struct id="string_format" name="string_format" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <field id="string_format::whitespace" name="whitespace">
+    <type builtin="yes" name="char" qualifier="*" />
+  </field>
+  <field id="string_format::infinity" name="infinity">
+    <type builtin="yes" name="char" qualifier="*" />
+  </field>
+  <field id="string_format::not_a_number" name="not_a_number">
+    <type builtin="yes" name="char" qualifier="*" />
+  </field>
+  <field id="string_format::imaginary" name="imaginary">
+    <type builtin="yes" name="char" qualifier="*" />
+  </field>
+  <field id="string_format::approximate_tolerance" name="approximate_tolerance">
+    <type name="size_t" />
+  </field>
+  <field id="string_format::brief_multiplication" name="brief_multiplication">
+    <brief>zero to disable approximation</brief>
+    <type builtin="yes" name="bool" />
+  </field>
+  <field id="string_format::force_brief_multiplication" name="force_brief_multiplication">
+    <brief>x * 1 =&gt; x1</brief>
+    <type builtin="yes" name="bool" />
+  </field>
+  <field id="string_format::omit_parmeter_parentheses" name="omit_parmeter_parentheses">
+    <brief>1 * 2 =&gt; 1(2)</brief>
+    <type builtin="yes" name="bool" />
+  </field>
+  <field id="string_format::omit_parameter_commas" name="omit_parameter_commas">
+    <brief>f(x, y, z) =&gt; f x,y,z</brief>
+    <type builtin="yes" name="bool" />
+  </field>
+  <field id="string_format::explicit_precedence" name="explicit_precedence">
+    <brief>f(x, y, z) =&gt; f(xyz)</brief>
+    <type builtin="yes" name="bool" />
+  </field>
+  <field id="string_format::format" name="format">
+    <brief>put parentheses around every operator expression</brief>
+    <type name="string_format_type_t" ref="index#string_format_type_t" />
+  </field>
+</struct>

@@ -4,7 +4,7 @@
     <type name="expression_type_t" ref="index#expression_type_t" />
   </field>
   <field id="Expression Structures::expression_function::name" name="name">
-    <type name="variable_t" ref="index#variable_t" />
+    <type name="variable_t" ref="variable_t#variable_t" />
   </field>
   <field id="Expression Structures::expression_function::parameters" name="parameters">
     <type name="expression_list_t" qualifier="*" ref="expression_list_t#expression_list_t" />

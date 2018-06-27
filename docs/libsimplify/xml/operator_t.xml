@@ -2,16 +2,27 @@
 <typedef id="operator_t" name="operator_t" xmlns="http://jessevdk.github.com/cldoc/1.0">
   <brief> Specifies an operator's type.</brief>
   <doc>An operator represents a specific operation performed on one or more numbers.
-At the moment an operator is just the literal token stored in a `char`. This is liable to change in the future
+At the moment an operator is just the literal token stored in a `char`.
+__This is liable to change in the future__
 </doc>
   <type builtin="yes" name="char" />
+  <function id="expression_new_prefix" name="expression_new_prefix">
+    <return>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </return>
+    <argument id="expression_new_prefix::op" name="op">
+      <type name="operator_t" ref="operator_t#operator_t" />
+    </argument>
+    <argument id="expression_new_prefix::right" name="right">
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+  </function>
   <function id="operator_precedence" name="operator_precedence">
-    <brief> get the precedence of a given operator (higher = should be executed first)</brief>
+    <brief> get the precedence of a given operator (higher = more important)</brief>
     <return>
       <type name="operator_precedence_t" ref="index#operator_precedence_t" />
     </return>
     <argument id="operator_precedence::op" name="op">
-      <doc>the operator to check</doc>
       <type name="operator_t" ref="operator_t#operator_t" />
     </argument>
   </function>

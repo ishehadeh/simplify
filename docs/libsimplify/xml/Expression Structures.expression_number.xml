@@ -4,6 +4,6 @@
     <type name="expression_type_t" ref="index#expression_type_t" />
   </field>
   <field id="Expression Structures::expression_number::value" name="value">
-    <type name="mpfr_t" />
+    <type name="mpc_ptr" />
   </field>
 </struct>

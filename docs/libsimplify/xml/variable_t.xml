@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<typedef id="variable_t" name="variable_t" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <brief>A variable is a null terminated string.</brief>
+  <type builtin="yes" name="char" qualifier="*" />
+  <function id="expression_new_function" name="expression_new_function">
+    <return>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </return>
+    <argument id="expression_new_function::name" name="name">
+      <type name="variable_t" ref="variable_t#variable_t" />
+    </argument>
+    <argument id="expression_new_function::param_count" name="param_count">
+      <type builtin="yes" name="int" />
+    </argument>
+  </function>
+  <function id="expression_new_variable" name="expression_new_variable">
+    <return>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </return>
+    <argument id="expression_new_variable::var" name="var">
+      <type name="variable_t" ref="variable_t#variable_t" />
+    </argument>
+  </function>
+</typedef>

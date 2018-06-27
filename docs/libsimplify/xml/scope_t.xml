@@ -1,7 +1,29 @@
 <?xml version='1.0' encoding='utf-8'?>
 <typedef id="scope_t" name="scope_t" xmlns="http://jessevdk.github.com/cldoc/1.0">
-  <brief> A scope holds information about an expression's local variables and functions</brief>
+  <brief>A scope holds information about an expression's local variables, constants and functions.</brief>
   <type name="scope" ref="scope#scope" />
+  <function id="scope_call" name="scope_call">
+    <brief> call a function</brief>
+    <return>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="scope_call::scope" name="scope">
+      <doc>the scope to search</doc>
+      <type name="scope_t" qualifier="*" ref="scope_t#scope_t" />
+    </argument>
+    <argument id="scope_call::name" name="name">
+      <doc>the name to look for</doc>
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+    <argument id="scope_call::args" name="args">
+      <doc>location for argument list</doc>
+      <type name="expression_list_t" qualifier="*" ref="expression_list_t#expression_list_t" />
+    </argument>
+    <argument id="scope_call::expr" name="expr">
+      <doc>the output expression</doc>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </argument>
+  </function>
   <function id="scope_clean" name="scope_clean">
     <brief> clean all resources associated with a scope</brief>
     <return>
@@ -55,33 +77,70 @@
     <argument id="scope_define_function::name" name="name">
       <type builtin="yes" name="char" qualifier="*" />
     </argument>
-    <argument id="scope_define_function::value" name="value">
+    <argument id="scope_define_function::body" name="body">
       <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
     </argument>
     <argument id="scope_define_function::args" name="args">
       <type name="expression_list_t" qualifier="*" ref="expression_list_t#expression_list_t" />
     </argument>
   </function>
-  <function id="scope_get_function" name="scope_get_function">
-    <brief> search a scope for a function</brief>
+  <function id="scope_define_internal_const" name="scope_define_internal_const">
+    <brief> create a new internal constant</brief>
     <return>
       <type name="error_t" ref="error_t#error_t" />
     </return>
-    <argument id="scope_get_function::scope" name="scope">
-      <doc>the scope to search</doc>
+    <argument id="scope_define_internal_const::scope" name="scope">
+      <doc>the scope to insert into</doc>
       <type name="scope_t" qualifier="*" ref="scope_t#scope_t" />
     </argument>
-    <argument id="scope_get_function::name" name="name">
-      <doc>the name to look for</doc>
+    <argument id="scope_define_internal_const::name" name="name">
+      <doc>the name of the item</doc>
       <type builtin="yes" name="char" qualifier="*" />
     </argument>
-    <argument id="scope_get_function::body" name="body">
-      <doc>location for function's body</doc>
-      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    <argument id="scope_define_internal_const::callback" name="callback">
+      <doc>the callback that will create the constant's value (the result doesn't always have to be the same, but it
+__really__ should)</doc>
+      <type name="simplify_func_t" ref="index#simplify_func_t" />
     </argument>
-    <argument id="scope_get_function::args" name="args">
-      <doc>location for argument list</doc>
-      <type name="expression_list_t" qualifier="*" ref="expression_list_t#expression_list_t" />
+  </function>
+  <function id="scope_define_internal_function" name="scope_define_internal_function">
+    <brief> create a new internal constant</brief>
+    <return>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="scope_define_internal_function::scope" name="scope">
+      <doc>the scope to insert into</doc>
+      <type name="scope_t" qualifier="*" ref="scope_t#scope_t" />
+    </argument>
+    <argument id="scope_define_internal_function::name" name="name">
+      <doc>the name of the item</doc>
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+    <argument id="scope_define_internal_function::callback" name="callback">
+      <doc>the callback that will create the variable's value</doc>
+      <type name="simplify_func_t" ref="index#simplify_func_t" />
+    </argument>
+    <argument id="scope_define_internal_function::args" name="args">
+      <doc>the number of arguments to this function</doc>
+      <type builtin="yes" name="int" />
+    </argument>
+  </function>
+  <function id="scope_define_internal_variable" name="scope_define_internal_variable">
+    <brief> create a new internal variable</brief>
+    <return>
+      <type name="error_t" ref="error_t#error_t" />
+    </return>
+    <argument id="scope_define_internal_variable::scope" name="scope">
+      <doc>the scope to insert into</doc>
+      <type name="scope_t" qualifier="*" ref="scope_t#scope_t" />
+    </argument>
+    <argument id="scope_define_internal_variable::name" name="name">
+      <doc>the name of the item</doc>
+      <type builtin="yes" name="char" qualifier="*" />
+    </argument>
+    <argument id="scope_define_internal_variable::callback" name="callback">
+      <doc>the callback that will create the variable's value</doc>
+      <type name="simplify_func_t" ref="index#simplify_func_t" />
     </argument>
   </function>
   <function id="scope_get_value" name="scope_get_value">
@@ -98,7 +157,7 @@
       <type builtin="yes" name="char" qualifier="*" />
     </argument>
     <argument id="scope_get_value::expr" name="expr">
-      <doc>location for result</doc>
+      <doc>variable's value</doc>
       <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
     </argument>
   </function>
@@ -124,6 +183,16 @@
       <type builtin="yes" name="void" />
     </return>
     <argument id="scope_init::scope" name="scope">
+      <type name="scope_t" qualifier="*" ref="scope_t#scope_t" />
+    </argument>
+  </function>
+  <function id="simplify_export_builtins" name="simplify_export_builtins">
+    <brief> export all builtin variables &amp; functions into a scope</brief>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="simplify_export_builtins::scope" name="scope">
+      <doc>the target scope</doc>
       <type name="scope_t" qualifier="*" ref="scope_t#scope_t" />
     </argument>
   </function>

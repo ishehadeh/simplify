@@ -13,8 +13,16 @@
   <struct name="rbtree" ref="rbtree#rbtree" />
   <struct name="rbtree_node" ref="rbtree_node#rbtree_node" />
   <struct name="scope" ref="scope#scope" />
+  <struct name="string" ref="string#string" />
+  <struct name="string_format" ref="string_format#string_format" />
   <struct name="token" ref="token#token" />
   <struct name="variable_info" ref="variable_info#variable_info" />
+  <enum anonymous="yes" id="compare_result" name="compare_result">
+    <enumvalue id="COMPARE_RESULT_INCOMPARABLE" name="COMPARE_RESULT_INCOMPARABLE" value="0" />
+    <enumvalue id="COMPARE_RESULT_EQUAL" name="COMPARE_RESULT_EQUAL" value="1" />
+    <enumvalue id="COMPARE_RESULT_LESS" name="COMPARE_RESULT_LESS" value="2" />
+    <enumvalue id="COMPARE_RESULT_GREATER" name="COMPARE_RESULT_GREATER" value="3" />
+  </enum>
   <enum anonymous="yes" id="error" name="error">
     <enumvalue id="ERROR_NO_ERROR" name="ERROR_NO_ERROR" value="0" />
     <enumvalue id="ERROR_INVALID_TOKEN" name="ERROR_INVALID_TOKEN" value="1" />
@@ -42,6 +50,11 @@
     <enumvalue id="ERROR_IS_A_VARIABLE" name="ERROR_IS_A_VARIABLE" value="23" />
     <enumvalue id="ERROR_MISSING_ARGUMENTS" name="ERROR_MISSING_ARGUMENTS" value="24" />
   </enum>
+  <enum anonymous="yes" id="expression_result" name="expression_result">
+    <enumvalue id="EXPRESSION_RESULT_NONBINARY" name="EXPRESSION_RESULT_NONBINARY" value="0" />
+    <enumvalue id="EXPRESSION_RESULT_TRUE" name="EXPRESSION_RESULT_TRUE" value="1" />
+    <enumvalue id="EXPRESSION_RESULT_FALSE" name="EXPRESSION_RESULT_FALSE" value="2" />
+  </enum>
   <enum anonymous="yes" id="expression_type" name="expression_type">
     <enumvalue id="EXPRESSION_TYPE_NUMBER" name="EXPRESSION_TYPE_NUMBER" value="0" />
     <enumvalue id="EXPRESSION_TYPE_PREFIX" name="EXPRESSION_TYPE_PREFIX" value="1" />
@@ -50,17 +63,28 @@
     <enumvalue id="EXPRESSION_TYPE_FUNCTION" name="EXPRESSION_TYPE_FUNCTION" value="4" />
   </enum>
   <enum anonymous="yes" id="operator_precedence" name="operator_precedence">
-    <enumvalue id="OPERATOR_PRECEDENCE_MINIMUM" name="OPERATOR_PRECEDENCE_MINIMUM" value="0" />
+    <enumvalue id="OPERATOR_PRECEDENCE_MINIMUM" name="OPERATOR_PRECEDENCE_MINIMUM" value="0">
+      <brief> this value is used to say, "anything can follow this operator".</brief>
+      <doc>it should __never__ be assigned to an actual operator.
+</doc>
+    </enumvalue>
     <enumvalue id="OPERATOR_PRECEDENCE_ASSIGN" name="OPERATOR_PRECEDENCE_ASSIGN" value="1" />
     <enumvalue id="OPERATOR_PRECEDENCE_COMPARE" name="OPERATOR_PRECEDENCE_COMPARE" value="2" />
     <enumvalue id="OPERATOR_PRECEDENCE_SUM" name="OPERATOR_PRECEDENCE_SUM" value="3" />
     <enumvalue id="OPERATOR_PRECEDENCE_PRODUCT" name="OPERATOR_PRECEDENCE_PRODUCT" value="4" />
     <enumvalue id="OPERATOR_PRECEDENCE_EXPONENT" name="OPERATOR_PRECEDENCE_EXPONENT" value="5" />
-    <enumvalue id="OPERATOR_PRECEDENCE_MAXIMUM" name="OPERATOR_PRECEDENCE_MAXIMUM" value="6" />
+    <enumvalue id="OPERATOR_PRECEDENCE_MAXIMUM" name="OPERATOR_PRECEDENCE_MAXIMUM" value="6">
+      <brief>similar to `OPERATOR_PRECEDENCE_MINIMUM` but just the opposite</brief>
+    </enumvalue>
   </enum>
   <enum anonymous="yes" id="rbtree_color" name="rbtree_color">
     <enumvalue id="RBTREE_COLOR_RED" name="RBTREE_COLOR_RED" value="0" />
     <enumvalue id="RBTREE_COLOR_BLACK" name="RBTREE_COLOR_BLACK" value="1" />
+  </enum>
+  <enum anonymous="yes" id="string_format_type" name="string_format_type">
+    <enumvalue id="STRING_FORMAT_ASCII" name="STRING_FORMAT_ASCII" value="0" />
+    <enumvalue id="STRING_FORMAT_LATEX" name="STRING_FORMAT_LATEX" value="1" />
+    <enumvalue id="STRING_FORMAT_HTML" name="STRING_FORMAT_HTML" value="2" />
   </enum>
   <enum anonymous="yes" id="token_type" name="token_type">
     <enumvalue id="TOKEN_TYPE_OPERATOR" name="TOKEN_TYPE_OPERATOR" value="0" />
@@ -91,24 +115,40 @@
       <type name="expression_function" ref="Expression Structures::expression_function#Expression Structures::expression_function" />
     </field>
   </union>
+  <union id="variable_value" name="variable_value">
+    <field id="variable_value::internal" name="internal">
+      <type name="simplify_func_t" ref="index#simplify_func_t" />
+    </field>
+    <field id="variable_value::expression" name="expression">
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </field>
+  </union>
+  <typedef id="compare_result_t" name="compare_result_t">
+    <brief>the result of comparing two expressions</brief>
+    <type name="compare_result" ref="index#compare_result" />
+  </typedef>
   <typedef name="error_t" ref="error_t#error_t">
     <brief> Enumerates all errors that may occur.</brief>
     <type name="error" ref="index#error" />
   </typedef>
   <typedef name="expression_list_t" ref="expression_list_t#expression_list_t">
-    <brief> A singly linked list of expressions</brief>
+    <brief>A singly linked list of expressions</brief>
     <type name="expression_list" ref="expression_list#expression_list" />
   </typedef>
   <typedef name="expression_parser_t" ref="expression_parser_t#expression_parser_t">
     <brief> transforms a stream of tokens into an expression.</brief>
     <type name="expression_parser" ref="expression_parser#expression_parser" />
   </typedef>
+  <typedef id="expression_result_t" name="expression_result_t">
+    <brief>The boolean result of an expression, No Result (if there was no condition operator), true or false</brief>
+    <type name="expression_result" ref="index#expression_result" />
+  </typedef>
   <typedef name="expression_t" ref="expression_t#expression_t">
     <brief> A parsed mathmatical expression.</brief>
     <type name="expression" ref="index#expression" />
   </typedef>
   <typedef id="expression_type_t" name="expression_type_t">
-    <brief> Enumerates the values that can be held in `expression_t`.</brief>
+    <brief>Enumerates the values that can be held in `expression_t`</brief>
     <type name="expression_type" ref="index#expression_type" />
   </typedef>
   <typedef name="lexer_t" ref="lexer_t#lexer_t">
@@ -116,7 +156,7 @@
     <type name="lexer" ref="lexer#lexer" />
   </typedef>
   <typedef id="operator_precedence_t" name="operator_precedence_t">
-    <brief> Operator precedence enumerates the different precedence levels for groups of operators.</brief>
+    <brief>Operator precedence enumerates the different precedence levels for groups of operators.</brief>
     <type name="operator_precedence" ref="index#operator_precedence" />
   </typedef>
   <typedef name="operator_t" ref="operator_t#operator_t">
@@ -136,8 +176,36 @@
     <type name="rbtree" ref="rbtree#rbtree" />
   </typedef>
   <typedef name="scope_t" ref="scope_t#scope_t">
-    <brief> A scope holds information about an expression's local variables and functions</brief>
+    <brief>A scope holds information about an expression's local variables, constants and functions.</brief>
     <type name="scope" ref="scope#scope" />
+  </typedef>
+  <typedef id="simplify_func_t" name="simplify_func_t">
+    <brief> A function pointer which may be invoked as a `simplify` function or variable with scope_call, or scope_get_value.</brief>
+    <doc>This function will be passed a valid `scope_t`, and a pointer to a `NULL` expression pointer.
+The scope contains all of the function's arguments.
+By the time the callback exits the expression pointer __must__ be pointing to a non-null value,
+or an error is returned, otherwise no action is taken.
+</doc>
+    <type class="function" qualifier="*">
+      <result>
+        <type name="error" ref="index#error" />
+      </result>
+      <arguments>
+        <type name="scope" qualifier="*" ref="scope#scope" />
+        <type name="expression" qualifier="**" ref="index#expression" />
+      </arguments>
+    </type>
+  </typedef>
+  <typedef id="string_format_t" name="string_format_t">
+    <brief>a string format holds information about how to transform an expression into a string</brief>
+    <type name="string_format" ref="string_format#string_format" />
+  </typedef>
+  <typedef id="string_format_type_t" name="string_format_type_t">
+    <type name="string_format_type" ref="index#string_format_type" />
+  </typedef>
+  <typedef name="string_t" ref="string_t#string_t">
+    <brief>string is a dynamically sized, ASCII encoded string</brief>
+    <type name="string" ref="string#string" />
   </typedef>
   <typedef id="token_t" name="token_t">
     <brief> A token labels part of a buffer</brief>
@@ -148,87 +216,94 @@
     <type name="token_type" ref="index#token_type" />
   </typedef>
   <typedef name="variable_info_t" ref="variable_info_t#variable_info_t">
-    <brief> Holds information about a variable, constant, or function</brief>
+    <brief>Stores information about a single value.</brief>
     <type name="variable_info" ref="variable_info#variable_info" />
   </typedef>
-  <typedef id="variable_t" name="variable_t">
-    <brief> A variable is a null terminated string.</brief>
+  <typedef name="variable_t" ref="variable_t#variable_t">
+    <brief>A variable is a null terminated string.</brief>
     <type builtin="yes" name="char" qualifier="*" />
   </typedef>
-  <function id="approximate_number" name="approximate_number">
-    <brief> try to trim a floating point number that was convert to a string, to improve accuracy</brief>
+  <typedef id="variable_value_t" name="variable_value_t">
+    <brief>a variable, constant, or function's value</brief>
+    <type name="variable_value" ref="index#variable_value" />
+  </typedef>
+  <function id="__math_max_prec" name="__math_max_prec">
     <return>
-      <type name="error_t" ref="error_t#error_t" />
+      <type name="mpfr_prec_t" />
     </return>
-    <argument id="approximate_number::str" name="str">
-      <doc>the string to edit</doc>
-      <type builtin="yes" name="char" qualifier="*" />
-    </argument>
-    <argument id="approximate_number::tolerance" name="tolerance">
-      <doc>how easily the string should be rounded off. (five is probably a good default for this parameter)</doc>
-      <type builtin="yes" name="int" />
+    <argument id="__math_max_prec::nums" name="nums">
+      <type name="mpc_ptr" qualifier="*" />
     </argument>
   </function>
-  <function id="expression_evaluate" name="expression_evaluate">
-    <brief> evaluate an expression as much as possible</brief>
+  <function id="__math_multi_clean" name="__math_multi_clean">
     <return>
-      <doc>returns an error</doc>
-      <type name="error_t" ref="error_t#error_t" />
+      <type builtin="yes" name="void" />
     </return>
-    <argument id="expression_evaluate::expr" name="expr">
-      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    <argument id="__math_multi_clean::nums" name="nums">
+      <type name="mpc_ptr" qualifier="*" />
     </argument>
-    <argument id="expression_evaluate::scope" name="scope">
-      <type name="scope_t" qualifier="*" ref="scope_t#scope_t" />
+  </function>
+  <function id="__math_multi_init" name="__math_multi_init">
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="__math_multi_init::prec" name="prec">
+      <type name="mpfr_prec_t" />
+    </argument>
+    <argument id="__math_multi_init::inits" name="inits">
+      <type name="mpc_ptr" qualifier="*" />
     </argument>
   </function>
   <function id="expression_fprint" name="expression_fprint">
-    <brief> print an expression to `file`</brief>
     <return>
-      <type name="error_t" ref="error_t#error_t" />
+      <type builtin="yes" name="void" />
     </return>
     <argument id="expression_fprint::expr" name="expr">
-      <doc>the expression to print</doc>
       <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
     </argument>
-    <argument id="expression_fprint::file" name="file">
-      <doc>the file to write to</doc>
+    <argument id="expression_fprint::f" name="f">
       <type name="FILE" qualifier="*" />
     </argument>
   </function>
-  <function id="expression_isolate_variable" name="expression_isolate_variable">
-    <brief> isolate a variable on one side of an comparison operator.</brief>
-    <doc>If no comparison operator is present, append `= 0`
-
-</doc>
+  <function id="expression_list_new_uninialized" name="expression_list_new_uninialized">
     <return>
-      <doc>returns an error code</doc>
-      <type name="error_t" ref="error_t#error_t" />
+      <type name="expression_list_t" qualifier="*" ref="expression_list_t#expression_list_t" />
     </return>
-    <argument id="expression_isolate_variable::expr" name="expr">
+  </function>
+  <function id="expression_new_number" name="expression_new_number">
+    <return>
       <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </return>
+    <argument id="expression_new_number::num" name="num">
+      <type name="mpc_ptr" />
     </argument>
-    <argument id="expression_isolate_variable::var" name="var">
-      <type name="variable_t" ref="index#variable_t" />
+  </function>
+  <function id="expression_new_number_d" name="expression_new_number_d">
+    <return>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </return>
+    <argument id="expression_new_number_d::num" name="num">
+      <type builtin="yes" name="double" />
     </argument>
+  </function>
+  <function id="expression_new_number_si" name="expression_new_number_si">
+    <return>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </return>
+    <argument id="expression_new_number_si::num" name="num">
+      <type builtin="yes" name="long" />
+    </argument>
+  </function>
+  <function id="expression_new_uninialized" name="expression_new_uninialized">
+    <return>
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
+    </return>
   </function>
   <function id="expression_print" name="expression_print">
-    <brief> print an expression to stdout</brief>
     <return>
-      <type name="error_t" ref="error_t#error_t" />
+      <type builtin="yes" name="void" />
     </return>
     <argument id="expression_print::expr" name="expr">
-      <doc>the expression to print</doc>
-      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
-    </argument>
-  </function>
-  <function id="expression_simplify" name="expression_simplify">
-    <brief> try to make `expr` as short as possible by combining child expressions</brief>
-    <return>
-      <doc>returns an error code</doc>
-      <type name="error_t" ref="error_t#error_t" />
-    </return>
-    <argument id="expression_simplify::expr" name="expr">
       <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
     </argument>
   </function>
@@ -240,42 +315,6 @@
     <argument id="isident::c" name="c">
       <doc>the character to check</doc>
       <type builtin="yes" name="char" />
-    </argument>
-  </function>
-  <function id="number_to_buffer" name="number_to_buffer">
-    <brief> convert a number to a string</brief>
-    <return>
-      <type name="error_t" ref="error_t#error_t" />
-    </return>
-    <argument id="number_to_buffer::number" name="number">
-      <doc>the number to convert</doc>
-      <type name="mpfr_t" />
-    </argument>
-    <argument id="number_to_buffer::buf" name="buf">
-      <doc>the buffer that the number should be stored in</doc>
-      <type builtin="yes" name="char" qualifier="*" />
-    </argument>
-    <argument id="number_to_buffer::len" name="len">
-      <doc>the max length of the number, 0 for no maximum</doc>
-      <type name="size_t" />
-    </argument>
-  </function>
-  <function id="operator_to_buffer" name="operator_to_buffer">
-    <brief> convert an operator to a string</brief>
-    <return>
-      <type name="error_t" ref="error_t#error_t" />
-    </return>
-    <argument id="operator_to_buffer::op" name="op">
-      <doc>the operator to convert</doc>
-      <type name="operator_t" ref="operator_t#operator_t" />
-    </argument>
-    <argument id="operator_to_buffer::buf" name="buf">
-      <doc>the buffer that the operator should be stored in</doc>
-      <type builtin="yes" name="char" qualifier="*" />
-    </argument>
-    <argument id="operator_to_buffer::len" name="len">
-      <doc>the max length of the operator, 0 for no maximum</doc>
-      <type name="size_t" />
     </argument>
   </function>
   <function id="parse_file" name="parse_file">
@@ -304,22 +343,128 @@
       <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
     </argument>
   </function>
-  <function id="variable_to_buffer" name="variable_to_buffer">
-    <brief> convert a variable to a string</brief>
+  <function id="perform_cubic_equation" name="perform_cubic_equation">
     <return>
-      <type name="error_t" ref="error_t#error_t" />
+      <type builtin="yes" name="void" />
     </return>
-    <argument id="variable_to_buffer::var" name="var">
-      <doc>the variable to convert</doc>
-      <type name="variable_t" ref="index#variable_t" />
+    <argument id="perform_cubic_equation::C1" name="C1">
+      <type name="mpc_ptr" />
     </argument>
-    <argument id="variable_to_buffer::buf" name="buf">
-      <doc>the buffer that the variable should be stored in</doc>
+    <argument id="perform_cubic_equation::C2" name="C2">
+      <type name="mpc_ptr" />
+    </argument>
+    <argument id="perform_cubic_equation::a" name="a">
+      <type name="mpc_ptr" />
+    </argument>
+    <argument id="perform_cubic_equation::b" name="b">
+      <type name="mpc_ptr" />
+    </argument>
+    <argument id="perform_cubic_equation::c" name="c">
+      <type name="mpc_ptr" />
+    </argument>
+    <argument id="perform_cubic_equation::d" name="d">
+      <type name="mpc_ptr" />
+    </argument>
+    <argument id="perform_cubic_equation::" name="">
+      <type name="mpc_rnd_t" />
+    </argument>
+  </function>
+  <function id="perform_quadratic_equation" name="perform_quadratic_equation">
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="perform_quadratic_equation::C1" name="C1">
+      <type name="mpc_ptr" />
+    </argument>
+    <argument id="perform_quadratic_equation::C2" name="C2">
+      <type name="mpc_ptr" />
+    </argument>
+    <argument id="perform_quadratic_equation::a" name="a">
+      <type name="mpc_ptr" />
+    </argument>
+    <argument id="perform_quadratic_equation::b" name="b">
+      <type name="mpc_ptr" />
+    </argument>
+    <argument id="perform_quadratic_equation::c" name="c">
+      <type name="mpc_ptr" />
+    </argument>
+    <argument id="perform_quadratic_equation::" name="">
+      <type name="mpc_rnd_t" />
+    </argument>
+  </function>
+  <function id="simplify_const_catalan" name="simplify_const_catalan">
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="simplify_const_catalan::" name="">
+      <type name="mpc_ptr" />
+    </argument>
+  </function>
+  <function id="simplify_const_e" name="simplify_const_e">
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="simplify_const_e::" name="">
+      <type name="mpc_ptr" />
+    </argument>
+  </function>
+  <function id="simplify_const_euler" name="simplify_const_euler">
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="simplify_const_euler::" name="">
+      <type name="mpc_ptr" />
+    </argument>
+  </function>
+  <function id="simplify_const_i" name="simplify_const_i">
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="simplify_const_i::" name="">
+      <type name="mpc_ptr" />
+    </argument>
+  </function>
+  <function id="simplify_const_pi" name="simplify_const_pi">
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="simplify_const_pi::" name="">
+      <type name="mpc_ptr" />
+    </argument>
+  </function>
+  <function id="simplify_get_default_precision" name="simplify_get_default_precision">
+    <return>
+      <type name="mpfr_prec_t" />
+    </return>
+  </function>
+  <function id="simplify_new_number" name="simplify_new_number">
+    <return>
+      <type name="mpc_ptr" />
+    </return>
+    <argument id="simplify_new_number::" name="">
+      <type name="mpfr_prec_t" />
+    </argument>
+  </function>
+  <function id="simplify_set_default_precision" name="simplify_set_default_precision">
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="simplify_set_default_precision::" name="">
+      <type name="mpfr_prec_t" />
+    </argument>
+  </function>
+  <function id="stringify" name="stringify">
+    <brief> Write the expression `expr` as a c string</brief>
+    <doc>The `stringify` function stringifies an expression usinging the
+default stringifier settings.
+
+</doc>
+    <return>
+      <doc>returns a null-terminated string. This string must be freed using `free` by the user.</doc>
       <type builtin="yes" name="char" qualifier="*" />
-    </argument>
-    <argument id="variable_to_buffer::len" name="len">
-      <doc>the max length of the variable, 0 for no maximum</doc>
-      <type name="size_t" />
+    </return>
+    <argument id="stringify::expr" name="expr">
+      <type name="expression_t" qualifier="*" ref="expression_t#expression_t" />
     </argument>
   </function>
 </index>

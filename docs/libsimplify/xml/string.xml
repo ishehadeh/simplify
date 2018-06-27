@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<struct id="string" name="string" xmlns="http://jessevdk.github.com/cldoc/1.0">
+  <field id="string::cap" name="cap">
+    <type name="size_t" />
+  </field>
+  <field id="string::len" name="len">
+    <type name="size_t" />
+  </field>
+  <field id="string::buffer" name="buffer">
+    <type builtin="yes" name="char" qualifier="*" />
+  </field>
+</struct>

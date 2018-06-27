@@ -28,6 +28,24 @@
       <type name="FILE" qualifier="*" />
     </argument>
   </function>
+  <function id="lexer_init_from_file_buffered" name="lexer_init_from_file_buffered">
+    <brief> initialize a lexer from a file</brief>
+    <doc>This function reads the file block-by-block into an intermediate buffer,
+instead of immediately checking its length and reading the entire file.
+Generally it's optimal to use lexer_init_from_file, instead of this function.
+`lexer_init_from_file` will call this function if it can't determine the length anyway.
+
+</doc>
+    <return>
+      <type builtin="yes" name="void" />
+    </return>
+    <argument id="lexer_init_from_file_buffered::lexer" name="lexer">
+      <type name="lexer_t" qualifier="*" ref="lexer_t#lexer_t" />
+    </argument>
+    <argument id="lexer_init_from_file_buffered::file" name="file">
+      <type name="FILE" qualifier="*" />
+    </argument>
+  </function>
   <function id="lexer_init_from_string" name="lexer_init_from_string">
     <brief> initialize lexer from a null terminated string</brief>
     <return>
@@ -39,7 +57,7 @@
     </argument>
     <argument id="lexer_init_from_string::buffer" name="buffer">
       <doc>the buffer to read, the buffer is copied</doc>
-      <type builtin="yes" name="char" qualifier="*" />
+      <type builtin="yes" name="char" qualifier=" const *" />
     </argument>
   </function>
   <function id="lexer_next" name="lexer_next">
