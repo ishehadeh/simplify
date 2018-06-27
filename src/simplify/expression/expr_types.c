@@ -3,6 +3,7 @@
 #include "simplify/expression/expr_types.h"
 #include "simplify/errors.h"
 #include "simplify/expression/evaluate.h"
+#include "simplify/math/math.h"
 
 void expression_init_operator(expression_t* expr, expression_t* left, operator_t op, expression_t* right) {
     expr->type = EXPRESSION_TYPE_OPERATOR;
@@ -33,14 +34,14 @@ void expression_init_number(expression_t* expr, mpc_ptr value) {
 void expression_init_number_d(expression_t* expr, double value) {
     expr->type = EXPRESSION_TYPE_NUMBER;
     expr->number.value = malloc(sizeof(mpc_t));
-    mpc_init2(expr->number.value, 52);
+    mpc_init2(expr->number.value, simplify_get_default_precision());
     mpc_set_d(expr->number.value, value, MPC_RNDNN);
 }
 
 void expression_init_number_si(expression_t* expr, long value) {
     expr->type = EXPRESSION_TYPE_NUMBER;
     expr->number.value = malloc(sizeof(mpc_t));
-    mpc_init2(expr->number.value, 52);
+    mpc_init2(expr->number.value, simplify_get_default_precision());
     mpc_set_si(expr->number.value, value, MPC_RNDNN);
 }
 

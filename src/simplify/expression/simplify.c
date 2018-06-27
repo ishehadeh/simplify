@@ -48,7 +48,7 @@ error_t _expression_do_quadratic(char* var, expression_t* out, expression_t* x, 
     mpc_ptr c = z ? z->number.value : NULL;
     if (!c) {
         c = malloc(sizeof(mpc_t));
-        mpc_init2(c, 256);
+        mpc_init2(c, simplify_get_default_precision());
         mpc_set_si(c, 0, MPC_RNDNN);
     }
 

@@ -5,6 +5,7 @@
 #include "simplify/expression/evaluate.h"
 #include "simplify/expression/expression.h"
 #include "simplify/expression/isolate.h"
+#include "simplify/math/math.h"
 
 error_t _expression_isolate_variable_recursive(expression_t* expr, expression_t** target, variable_t var);
 
@@ -56,7 +57,7 @@ error_t _expression_setup_natural_log(expression_t* y, expression_t* expr) {
 
     if (EXPRESSION_IS_NUMBER(y)) {
         mpc_ptr loge = malloc(sizeof(mpc_t));
-        mpc_init3(loge, 256, 256);
+        mpc_init2(loge, simplify_get_default_precision());
         mpc_log(loge, y->number.value, MPC_RNDNN);
         expression_init_number(expr, loge);
         expression_clean(y);

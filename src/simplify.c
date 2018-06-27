@@ -1,6 +1,7 @@
 /* Copyright Ian Shehadeh 2018 */
 
 #include <stdio.h>
+#include <tgmath.h>
 #include <time.h>
 
 #include "flags/flags.h"
@@ -27,6 +28,7 @@ void usage(char* arg0) {
     puts("\t-d, --define NAME=EXPR ......... define a variable `NAME' as `EXPR'");
     puts("\t-i, --isolate NAME ............. if the variable `NAME' exists than attempt to isolate it");
     puts("\t-f, --file FILE ................ execute the file `FILE' before any expression(s)");
+    puts("\t-p, --digits DIGITS ............ allow `DIGITS' accurate digits in each number [default: 512]");
 }
 
 error_t do_assignment(char* assignment, scope_t* scope) {
@@ -115,13 +117,75 @@ error_t simplify_and_print(scope_t* scope, expression_t* expr, char* isolate_tar
     return ERROR_NO_ERROR;
 }
 
+error_t builtin_read(scope_t* scope, expression_t** out) {
+    (void)scope;
+
+    lexer_t lexer;
+    expression_parser_t parser;
+
+    *out = expression_new_uninialized();
+
+    lexer_init_from_file_buffered(&lexer, stdin);
+    expression_parser_init(&parser, &lexer);
+
+    error_t err = expression_parser_parse(&parser, *out);
+    expression_parser_clean(&parser);
+    lexer_clean(&lexer);
+    return err;
+}
+
+error_t builtin_readline(scope_t* scope, expression_t** out) {
+    (void)scope;
+
+    size_t buffer_size = 1024;
+    size_t buffer_index = 0;
+    bool reading = true;
+    char* buffer = malloc(buffer_size * sizeof(char));
+    lexer_t lexer;
+    expression_parser_t parser;
+
+    while (reading) {
+        fgets(buffer + buffer_index, 1024, stdin);
+        for (size_t i = buffer_index; i < buffer_size; ++i) {
+            if (buffer[i] == '\n') {
+                reading = false;
+                buffer_size = i + 1;
+                break;
+            } else if (buffer[i] == 0) {
+                reading = false;
+                break;
+            }
+        }
+        if (reading) {
+            buffer_index = buffer_size;
+            buffer = realloc(buffer, (buffer_size += 1024) * sizeof(char));
+        }
+    }
+    buffer[buffer_size - 1] = 0;
+
+    *out = expression_new_uninialized();
+
+    lexer_init_from_string(&lexer, buffer);
+    expression_parser_init(&parser, &lexer);
+
+    error_t err = expression_parser_parse(&parser, *out);
+    expression_parser_clean(&parser);
+    lexer_clean(&lexer);
+    free(buffer);
+    return err;
+}
+
 int main(int argc, char** argv) {
     int verbosity = 0;
     variable_t isolation_target = NULL;
     scope_t scope;
 
     scope_init(&scope);
+
     simplify_export_builtins(&scope);
+    scope_define_internal_function(&scope, "read", &builtin_read, 0);
+    scope_define_internal_function(&scope, "readline", &builtin_readline, 0);
+
     error_t err = ERROR_NO_ERROR;
 
     /* clang-format off */
@@ -132,6 +196,7 @@ int main(int argc, char** argv) {
         FLAG('d', "define", err = do_assignment(FLAG_VALUE, &scope); if (err) goto error)
         FLAG('i', "isolate", isolation_target = FLAG_VALUE)
         FLAG('f', "file", err = execute_file(FLAG_VALUE, &scope); if (err) goto error)
+        FLAG('p', "digits", simplify_set_default_precision(1 + atol(FLAG_VALUE)))
     )
     /* clang-format on */
 

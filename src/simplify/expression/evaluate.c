@@ -2,6 +2,7 @@
 
 #include "simplify/expression/evaluate.h"
 #include "simplify/expression/isolate.h"
+#include "simplify/math/math.h"
 
 /* evaluate an expression, try to put it in it's simplest terms. Only apply operator and expand variables and function.
  *
@@ -107,36 +108,38 @@ error_t _expression_apply_operator(expression_t* expr) {
     mpc_ptr left = expr->operator.left->number.value;
     mpc_ptr right = expr->operator.right->number.value;
 
+    mp_prec_t prec = GET_MAX_PREC(left, right);
+
     switch (expr->operator.infix) {
         case '+':
             result = malloc(sizeof(mpc_t));
-            mpc_init2(result, 256);
+            mpc_init2(result, prec);
             mpc_add(result, left, right, round_mode);
             break;
         case '-':
             result = malloc(sizeof(mpc_t));
-            mpc_init2(result, 256);
+            mpc_init2(result, prec);
             mpc_sub(result, left, right, round_mode);
             break;
         case '/':
             result = malloc(sizeof(mpc_t));
-            mpc_init2(result, 256);
+            mpc_init2(result, prec);
             mpc_div(result, left, right, round_mode);
             break;
         case '*':
         case '(':
             result = malloc(sizeof(mpc_t));
-            mpc_init2(result, 256);
+            mpc_init2(result, prec);
             mpc_mul(result, left, right, round_mode);
             break;
         case '^':
             result = malloc(sizeof(mpc_t));
-            mpc_init2(result, 256);
+            mpc_init2(result, prec);
             mpc_pow(result, left, right, round_mode);
             break;
         case '\\':
             result = malloc(sizeof(mpc_t));
-            mpc_init2(result, 256);
+            mpc_init2(result, prec);
             mpc_ui_div(right, 1, right, MPC_RNDNN);
             mpc_pow(result, left, right, round_mode);
             break;

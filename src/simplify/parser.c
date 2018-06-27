@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "simplify/errors.h"
+#include "simplify/math/math.h"
 #include "simplify/parser.h"
 error_t _expression_parser_parse_precedence_recursive(expression_parser_t* parser, expression_t* expression,
                                                       operator_precedence_t precedence);
@@ -69,7 +70,7 @@ error_t _parser_parse_number(expression_parser_t* parser, expression_t* expr) {
 
     strncpy(&number_buffer[0], token.start, token.length);
     expr->number.value = malloc(sizeof(mpc_t));
-    mpc_init2(expr->number.value, 256);
+    mpc_init2(expr->number.value, simplify_get_default_precision());
     mpc_set_str(expr->number.value, &number_buffer[0], 10, MPC_RNDNN);
 
     return ERROR_NO_ERROR;

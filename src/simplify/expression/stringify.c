@@ -1,6 +1,7 @@
 /* Copyright Ian Shehadeh 2018 */
 
 #include "simplify/expression/stringify.h"
+#include "simplify/math/math.h"
 
 void _write_expression_prec(string_t* string, string_format_t* fmt, expression_t* expr, operator_precedence_t prec);
 
@@ -133,7 +134,8 @@ void _write_mpfr(string_t* string, string_format_t* format, mpfr_ptr num) {
         return;
     }
 
-    mpfr_inits(int_part, int_part_frac, NULL);
+    mpfr_init2(int_part, mpfr_get_prec(num));
+    mpfr_init2(int_part_frac, mpfr_get_prec(num));
     mpfr_modf(int_part, num, num, MPFR_RNDF);
 
     size_t start = string->len;
@@ -198,10 +200,11 @@ void _write_prefix(string_t* string, string_format_t* fmt, expression_t* pre, op
 
 void _write_number(string_t* string, string_format_t* fmt, expression_t* number) {
     assert(EXPRESSION_IS_NUMBER(number));
+    mp_prec_t prec = GET_MAX_PREC(number->number.value);
     mpfr_t real;
     mpfr_t imag;
-    mpfr_init(real);
-    mpfr_init(imag);
+    mpfr_init2(real, prec);
+    mpfr_init2(imag, prec);
     mpc_real(real, number->number.value, MPFR_RNDN);
     mpc_imag(imag, number->number.value, MPFR_RNDN);
 
