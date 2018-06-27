@@ -50,9 +50,6 @@ static inline expression_t* _expression_exponent_scalar(expression_t* expr) {
     if (EXPRESSION_IS_NUMBER(EXPRESSION_RIGHT(expr)) &&
         (EXPRESSION_IS_VARIABLE(EXPRESSION_LEFT(expr)) || EXPRESSION_IS_FUNCTION(EXPRESSION_LEFT(expr)))) {
         return EXPRESSION_RIGHT(expr);
-    } else if (EXPRESSION_IS_NUMBER(EXPRESSION_LEFT(expr)) &&
-               (EXPRESSION_IS_VARIABLE(EXPRESSION_RIGHT(expr)) || EXPRESSION_IS_FUNCTION(EXPRESSION_RIGHT(expr)))) {
-        return EXPRESSION_LEFT(expr);
     }
     return NULL;
 }
@@ -661,21 +658,38 @@ void _expression_multiply_recursive(expression_t* out, expression_t* left, expre
         return;
     }
 
-    if (EXPRESSION_IS_OPERATOR(left) && operator_precedence(left->operator.infix) <= OPERATOR_PRECEDENCE_SUM) {
-        expression_t left_copy;
-        expression_copy(left, &left_copy);
-        _expression_multiply_recursive(EXPRESSION_RIGHT(&left_copy), EXPRESSION_RIGHT(left), right);
-        _expression_multiply_recursive(EXPRESSION_LEFT(&left_copy), EXPRESSION_LEFT(left), right);
-        *out = left_copy;
-        return;
-    } else if (EXPRESSION_IS_OPERATOR(right) && operator_precedence(right->operator.infix) <= OPERATOR_PRECEDENCE_SUM) {
-        expression_t right_copy;
-        expression_copy(right, &right_copy);
+    if (EXPRESSION_IS_OPERATOR(left)) {
+        if (operator_precedence(left->operator.infix) <= OPERATOR_PRECEDENCE_SUM) {
+            expression_t left_copy;
+            expression_copy(left, &left_copy);
+            _expression_multiply_recursive(EXPRESSION_RIGHT(&left_copy), EXPRESSION_RIGHT(left), right);
+            _expression_multiply_recursive(EXPRESSION_LEFT(&left_copy), EXPRESSION_LEFT(left), right);
+            *out = left_copy;
+            return;
+        } else if (operator_precedence(left->operator.infix) <= OPERATOR_PRECEDENCE_PRODUCT) {
+            /* TODO try to detect which side to multiply, if the operator is reversible */
+            expression_t left_copy;
+            expression_copy(left, &left_copy);
+            _expression_multiply_recursive(EXPRESSION_RIGHT(&left_copy), EXPRESSION_RIGHT(left), right);
+            *out = left_copy;
+            return;
+        }
+    } else if (EXPRESSION_IS_OPERATOR(right)) {
+        if (operator_precedence(right->operator.infix) <= OPERATOR_PRECEDENCE_SUM) {
+            expression_t right_copy;
+            expression_copy(right, &right_copy);
 
-        _expression_multiply_recursive(EXPRESSION_RIGHT(&right_copy), EXPRESSION_RIGHT(right), left);
-        _expression_multiply_recursive(EXPRESSION_LEFT(&right_copy), EXPRESSION_LEFT(right), left);
-        *out = right_copy;
-        return;
+            _expression_multiply_recursive(EXPRESSION_RIGHT(&right_copy), EXPRESSION_RIGHT(right), left);
+            _expression_multiply_recursive(EXPRESSION_LEFT(&right_copy), EXPRESSION_LEFT(right), left);
+            *out = right_copy;
+            return;
+        } else if (operator_precedence(right->operator.infix) <= OPERATOR_PRECEDENCE_PRODUCT) {
+            expression_t right_copy;
+            expression_copy(right, &right_copy);
+            _expression_multiply_recursive(EXPRESSION_LEFT(&right_copy), EXPRESSION_LEFT(right), left);
+            *out = right_copy;
+            return;
+        }
     }
 
     expression_init_operator(out, left, '*', right);
