@@ -603,7 +603,7 @@ void _expression_multiply_recursive(expression_t* out, expression_t* left, expre
         return;
     }
 
-    if (expression_compare_structure(left, right)) {
+    if (expression_compare(left, right) == COMPARE_RESULT_EQUAL) {
         expression_t* left_copy = expression_new_uninialized();
         expression_copy(left, left_copy);
 
@@ -667,7 +667,6 @@ void _expression_multiply_recursive(expression_t* out, expression_t* left, expre
             *out = left_copy;
             return;
         } else if (operator_precedence(left->operator.infix) <= OPERATOR_PRECEDENCE_PRODUCT) {
-            /* TODO try to detect which side to multiply, if the operator is reversible */
             expression_t left_copy;
             expression_copy(left, &left_copy);
             _expression_multiply_recursive(EXPRESSION_RIGHT(&left_copy), EXPRESSION_RIGHT(left), right);

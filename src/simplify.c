@@ -23,8 +23,10 @@ void usage(char* arg0) {
     printf("\nUSAGE: %s [OPTIONS] [...EXPRESSION]\n", arg0);
     puts("OPTIONS:");
     puts("\t-h, --help ..................... print this message");
+#if 0
     puts("\t-v, --verbose .................. print status updates while running, not just the expression's result");
     puts("\t-q, --quiet .................... only print errors (this overides -v)");
+#endif
     puts("\t-d, --define NAME=EXPR ......... define a variable `NAME' as `EXPR'");
     puts("\t-i, --isolate NAME ............. if the variable `NAME' exists than attempt to isolate it");
     puts("\t-f, --file FILE ................ execute the file `FILE' before any expression(s)");

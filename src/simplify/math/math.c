@@ -1,6 +1,6 @@
 #include "simplify/math/math.h"
 
-mp_prec_t _g_simplify_default_precision = 513;
+mp_prec_t _g_simplify_default_precision = 512;
 
 mp_prec_t simplify_get_default_precision() { return _g_simplify_default_precision; }
 
