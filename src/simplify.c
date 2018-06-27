@@ -3,18 +3,6 @@
 #include <stdio.h>
 #include <time.h>
 
-#if defined(_WIN32) || defined(_WIN64)
-#include <io.h>
-#elif defined(unix) || defined(__unix__) || defined(__unix) || defined(__APPLE__) || defined(__MACH__)
-#include <unistd.h>
-#else
-#error "Your system doesn't appear to be Windows or unix-like!"
-#endif
-
-#ifndef STDIN_FILENO
-#define STDIN_FILENO 0
-#endif
-
 #include "flags/flags.h"
 #include "simplify/simplify.h"
 
@@ -149,7 +137,7 @@ int main(int argc, char** argv) {
 
     if (err) goto error;
 
-    if (stdin && !isatty(STDIN_FILENO)) {
+    if (flag_argc == 0 || (flag_argc == 1 && !strcmp(flag_argv[0], "-"))) {
         expression_t* expr;
         expression_list_t* expr_list = malloc(sizeof(expression_list_t));
         expression_list_init(expr_list);
@@ -163,8 +151,9 @@ int main(int argc, char** argv) {
         }
 
         expression_list_free(expr_list);
+        if (err) goto error;
+        goto cleanup;
     }
-    if (err) goto error;
 
     for (int i = 0; i < flag_argc; ++i) {
         expression_t expr;
