@@ -320,6 +320,8 @@ int expression_has_variable_or_function(expression_t* expr, variable_t var) {
 
 variable_t expression_find_variable(expression_t* expr) { return _expression_find_variable_recursive(expr); }
 
+void _expression_subtract_recursive(expression_t* out, expression_t* left, expression_t* right);
+
 void _expression_add_recursive(expression_t* out, expression_t* left, expression_t* right) {
     /* TODO handle prefixes */
 
@@ -428,13 +430,21 @@ void _expression_add_recursive(expression_t* out, expression_t* left, expression
         if (expression_compare_structure(EXPRESSION_LEFT(left), right)) {
             expression_t left_copy;
             expression_copy(left, &left_copy);
-            _expression_add_recursive(EXPRESSION_LEFT(&left_copy), EXPRESSION_LEFT(left), right);
+            if (left->operator.infix == '-') {
+                _expression_subtract_recursive(EXPRESSION_LEFT(&left_copy), EXPRESSION_LEFT(left), right);
+            } else {
+                _expression_add_recursive(EXPRESSION_LEFT(&left_copy), EXPRESSION_LEFT(left), right);
+            }
             *out = left_copy;
             return;
         } else if (expression_compare_structure(EXPRESSION_RIGHT(left), right)) {
             expression_t left_copy;
             expression_copy(left, &left_copy);
-            _expression_add_recursive(EXPRESSION_RIGHT(&left_copy), EXPRESSION_RIGHT(left), right);
+            if (left->operator.infix == '-') {
+                _expression_subtract_recursive(EXPRESSION_RIGHT(&left_copy), EXPRESSION_RIGHT(left), right);
+            } else {
+                _expression_add_recursive(EXPRESSION_RIGHT(&left_copy), EXPRESSION_RIGHT(left), right);
+            }
             *out = left_copy;
             return;
         }
@@ -442,13 +452,21 @@ void _expression_add_recursive(expression_t* out, expression_t* left, expression
         if (expression_compare_structure(EXPRESSION_LEFT(right), left)) {
             expression_t right_copy;
             expression_copy(right, &right_copy);
-            _expression_add_recursive(EXPRESSION_LEFT(&right_copy), EXPRESSION_LEFT(&right_copy), right);
+            if (left->operator.infix == '-') {
+                _expression_subtract_recursive(EXPRESSION_LEFT(&right_copy), EXPRESSION_LEFT(right), left);
+            } else {
+                _expression_add_recursive(EXPRESSION_LEFT(&right_copy), EXPRESSION_LEFT(right), left);
+            }
             *out = right_copy;
             return;
         } else if (expression_compare_structure(EXPRESSION_RIGHT(right), left)) {
             expression_t right_copy;
             expression_copy(right, &right_copy);
-            _expression_add_recursive(EXPRESSION_RIGHT(&right_copy), EXPRESSION_RIGHT(&right_copy), right);
+            if (left->operator.infix == '-') {
+                _expression_subtract_recursive(EXPRESSION_RIGHT(&right_copy), EXPRESSION_RIGHT(right), left);
+            } else {
+                _expression_add_recursive(EXPRESSION_RIGHT(&right_copy), EXPRESSION_RIGHT(right), left);
+            }
             *out = right_copy;
             return;
         }
@@ -565,13 +583,21 @@ void _expression_subtract_recursive(expression_t* out, expression_t* left, expre
         if (expression_compare_structure(EXPRESSION_LEFT(left), right)) {
             expression_t left_copy;
             expression_copy(left, &left_copy);
-            _expression_subtract_recursive(EXPRESSION_LEFT(&left_copy), EXPRESSION_LEFT(left), right);
+            if (left->operator.infix == '-') {
+                _expression_add_recursive(EXPRESSION_LEFT(&left_copy), EXPRESSION_LEFT(left), right);
+            } else {
+                _expression_subtract_recursive(EXPRESSION_LEFT(&left_copy), EXPRESSION_LEFT(left), right);
+            }
             *out = left_copy;
             return;
         } else if (expression_compare_structure(EXPRESSION_RIGHT(left), right)) {
             expression_t left_copy;
             expression_copy(left, &left_copy);
-            _expression_subtract_recursive(EXPRESSION_RIGHT(&left_copy), EXPRESSION_RIGHT(left), right);
+            if (left->operator.infix == '-') {
+                _expression_add_recursive(EXPRESSION_RIGHT(&left_copy), EXPRESSION_RIGHT(left), right);
+            } else {
+                _expression_subtract_recursive(EXPRESSION_RIGHT(&left_copy), EXPRESSION_RIGHT(left), right);
+            }
             *out = left_copy;
             return;
         }
@@ -579,13 +605,21 @@ void _expression_subtract_recursive(expression_t* out, expression_t* left, expre
         if (expression_compare_structure(EXPRESSION_LEFT(right), left)) {
             expression_t right_copy;
             expression_copy(right, &right_copy);
-            _expression_subtract_recursive(EXPRESSION_LEFT(&right_copy), EXPRESSION_LEFT(&right_copy), right);
+            if (left->operator.infix == '-') {
+                _expression_add_recursive(EXPRESSION_LEFT(&right_copy), EXPRESSION_LEFT(right), left);
+            } else {
+                _expression_subtract_recursive(EXPRESSION_LEFT(&right_copy), EXPRESSION_LEFT(right), left);
+            }
             *out = right_copy;
             return;
         } else if (expression_compare_structure(EXPRESSION_RIGHT(right), left)) {
             expression_t right_copy;
             expression_copy(right, &right_copy);
-            _expression_subtract_recursive(EXPRESSION_RIGHT(&right_copy), EXPRESSION_RIGHT(&right_copy), right);
+            if (left->operator.infix == '-') {
+                _expression_add_recursive(EXPRESSION_RIGHT(&right_copy), EXPRESSION_RIGHT(right), left);
+            } else {
+                _expression_subtract_recursive(EXPRESSION_RIGHT(&right_copy), EXPRESSION_RIGHT(right), left);
+            }
             *out = right_copy;
             return;
         }

@@ -119,7 +119,7 @@ bool _expression_check_for_polynomial(expression_t* expr) {
         if (expr->operator.left->operator.infix == '+' || expr->operator.left->operator.infix == '-') {
             varl = expression_find_variable(EXPRESSION_LEFT(expr->operator.left));
             varr = expression_find_variable(EXPRESSION_RIGHT(expr->operator.left));
-            if (varl && varr && !strcmp(varl, varr)) {
+            if (varl && varr && !strcmp(varl, varr) && EXPRESSION_IS_OPERATOR(EXPRESSION_RIGHT(expr->operator.left))) {
                 x = EXPRESSION_LEFT(expr->operator.left);
                 y = EXPRESSION_RIGHT(expr->operator.left);
                 z = expr->operator.right;
