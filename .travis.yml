@@ -16,7 +16,6 @@ env:
     - CTEST_BUILD_FLAGS=-j4
 
 script:
- - python ./deps/cpplint.py ./src/**/*.* ./src/*.*
  - mkdir build
  - cd build
  - cmake ..

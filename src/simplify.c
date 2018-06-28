@@ -50,25 +50,10 @@ error_t do_assignment(char* assignment, scope_t* scope) {
 }
 
 error_t execute_file(char* fname, scope_t* scope) {
-    int free_fname = 0;
-
-    if (fname[0] == '~') {
-        char* bad_fname = fname;
-        char* home = getenv("HOME");
-        int len = strlen(fname) - 1;
-        int home_len = strlen(home);
-        fname = malloc(len + home_len + 1);
-        fname[len + home_len] = 0;
-
-        memmove(fname, home, home_len);
-        memmove(fname + home_len, bad_fname + 1, len);
-        free_fname = 1;
-    }
-
     FILE* f = fopen(fname, "r");
     if (!f) return ERROR_UNABLE_TO_OPEN_FILE;
 
-    expression_list_t* exprs = malloc(sizeof(expression_list_t));
+    expression_list_t* exprs = expression_list_new_uninialized();
     expression_list_init(exprs);
     error_t err = parse_file(f, exprs);
     if (err) return err;
@@ -83,8 +68,7 @@ error_t execute_file(char* fname, scope_t* scope) {
     }
 
     expression_list_free(exprs);
-    if (f != stdin) fclose(f);
-    if (free_fname) free(fname);
+    fclose(f);
     return ERROR_NO_ERROR;
 }
 

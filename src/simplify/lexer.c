@@ -68,7 +68,6 @@ void lexer_init_from_file(lexer_t* lexer, FILE* file) {
     lexer->buffer_position = 0;
 
     lexer->buffer[len] = 0;
-    printf("%s\n", lexer->buffer);
     fseek(file, 0, SEEK_SET);
     fread(lexer->buffer, len, 1, file);
 }

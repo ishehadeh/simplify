@@ -7,7 +7,7 @@
 
 #define FLAG(SHORT, LONG, RESULT)                                          \
     if ((__flag_argi[0] == (SHORT) && (__flag_should_advance = 0) == 0) || \
-        (__flag_argi[1] == '-' && strcmp(LONG, __flag_argi + 1) == 0)) {   \
+        (__flag_argi[0] == '-' && strcmp(LONG, __flag_argi + 1) == 0)) {   \
         RESULT;                                                            \
     } else
 
