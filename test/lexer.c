@@ -111,7 +111,7 @@ int main() {
     }
 
     for (size_t i = 0; i < sizeof(__token_error_pairs) / sizeof(__token_error_pairs[0]); ++i) {
-        INFO("analyzing: '%s'", __token_error_pairs[i].string);
+        TSIMPLIFY_START_CHECK(lexer);
 
         lexer_t lexer;
         lexer_init_from_string(&lexer, __token_error_pairs[i].string);
@@ -122,5 +122,6 @@ int main() {
             if (tok.type == TOKEN_TYPE_EOF) FATAL("%s", "error never encountered");
         }
         lexer_clean(&lexer);
+        TSIMPLIFY_END_CHECK();
     }
 }

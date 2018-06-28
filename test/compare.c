@@ -1,72 +1,46 @@
-#include "simplify/expression/evaluate.h"
-#include "simplify/expression/expression.h"
-#include "simplify/expression/isolate.h"
-#include "simplify/expression/simplify.h"
-#include "simplify/expression/stringify.h"
+
+#define SIMPLIFY_TEST "compare"
+
+#include "simplify/simplify.h"
 #include "test.h"
 
-static struct {
-    char* expr1;
-    char* expr2;
-    compare_result_t result;
-} __expr_result_pairs[] = {
-    {"2", "4", COMPARE_RESULT_LESS},
-    {"10", "10", COMPARE_RESULT_EQUAL},
-    {"10", "-10", COMPARE_RESULT_GREATER},
-    {"-0.2", "0.2", COMPARE_RESULT_LESS},
-    {"-0.0002", "-1", COMPARE_RESULT_GREATER},
-    {"-5", "-6", COMPARE_RESULT_GREATER},
-    {"10", "1", COMPARE_RESULT_GREATER},
-    {"-2", "-2", COMPARE_RESULT_EQUAL},
-    {"x + 5", "1", COMPARE_RESULT_INCOMPARABLE},
-    {"2 * x", "2x", COMPARE_RESULT_EQUAL},
-    {"2.25", "2.2", COMPARE_RESULT_GREATER},
-    {"2.0003", "2.2", COMPARE_RESULT_LESS},
-    {".0001", "0.00002", COMPARE_RESULT_GREATER},
-    {"1.000001", "1.00002", COMPARE_RESULT_LESS},
-    {"5e2", "5e3", COMPARE_RESULT_LESS},
-    {"y * (x2) + x^4", "x^4 + y * (2 * x)", COMPARE_RESULT_EQUAL},
-    {"(y)f(x + 5)", "f(x + 5) * y", COMPARE_RESULT_EQUAL},
-    {"x * x * x", "x ^ 2 * x", COMPARE_RESULT_EQUAL},
-};
+void Tsimplify_check_compare(const char* x, const char* y, compare_result_t result) {
+    expression_t* xexpr = Tsimplify_parse(x);
+    expression_t* yexpr = Tsimplify_parse(y);
+
+    Tsimplify_evaluate(xexpr);
+    Tsimplify_evaluate(yexpr);
+
+    Tsimplify_simplify(xexpr);
+    Tsimplify_simplify(yexpr);
+
+    compare_result_t cmp = expression_compare(xexpr, yexpr);
+    if (cmp != result) {
+        FATAL("expected the result of \"%s <=> %s\" to be %s, but it was %s.", x, y, print_compare_result(result),
+              print_compare_result(cmp));
+    }
+
+    expression_free(xexpr);
+    expression_free(yexpr);
+}
 
 int main() {
-    error_t err;
-    for (int i = 0; i < (int)(sizeof(__expr_result_pairs) / sizeof(__expr_result_pairs[0])); ++i) {
-        expression_t expr1;
-        expression_t expr2;
-        scope_t scope;
-
-        printf("starting test #%d...", i + 1);
-        err = parse_string(__expr_result_pairs[i].expr1, &expr1);
-        if (err) FATAL("failed to parse expression 1/2 \"%s\": %s", __expr_result_pairs[i].expr1, error_string(err));
-
-        err = parse_string(__expr_result_pairs[i].expr2, &expr2);
-        if (err) FATAL("failed to parse expression 2/2 \"%s\": %s", __expr_result_pairs[i].expr2, error_string(err));
-
-        scope_init(&scope);
-
-        err = expression_evaluate(&expr1, &scope);
-        if (err) FATAL("failed to evaluate 1/2 \"%s\": %s", __expr_result_pairs[i].expr1, error_string(err));
-
-        err = expression_evaluate(&expr2, &scope);
-        if (err) FATAL("failed to evaluate 2/2 \"%s\": %s", __expr_result_pairs[i].expr2, error_string(err));
-
-        err = expression_simplify(&expr1);
-        if (err) FATAL("failed to simplify expression 1/2 \"%s\": %s", __expr_result_pairs[i].expr1, error_string(err));
-
-        err = expression_simplify(&expr2);
-        if (err) FATAL("failed to simplify expression 2/2 \"%s\": %s", __expr_result_pairs[i].expr2, error_string(err));
-
-        compare_result_t cmp = expression_compare(&expr1, &expr2);
-        if (cmp != __expr_result_pairs[i].result) {
-            FATAL("Test failed, expected the relationship of '%s' and '%s' to be %s, got %s",
-                  __expr_result_pairs[i].expr1, __expr_result_pairs[i].expr2,
-                  print_compare_result(__expr_result_pairs[i].result), print_compare_result(cmp));
-        }
-        scope_clean(&scope);
-        expression_clean(&expr1);
-        expression_clean(&expr2);
-        printf("done\n");
-    }
+    SIMPLIFY_CHECK(compare, "3", "4", COMPARE_RESULT_LESS);
+    SIMPLIFY_CHECK(compare, "10", "10", COMPARE_RESULT_EQUAL);
+    SIMPLIFY_CHECK(compare, "10", "-10", COMPARE_RESULT_GREATER);
+    SIMPLIFY_CHECK(compare, "-0.2", "0.2", COMPARE_RESULT_LESS);
+    SIMPLIFY_CHECK(compare, "-0.0002", "-1", COMPARE_RESULT_GREATER);
+    SIMPLIFY_CHECK(compare, "-5", "-6", COMPARE_RESULT_GREATER);
+    SIMPLIFY_CHECK(compare, "10", "1", COMPARE_RESULT_GREATER);
+    SIMPLIFY_CHECK(compare, "-2", "-2", COMPARE_RESULT_EQUAL);
+    SIMPLIFY_CHECK(compare, "x + 5", "1", COMPARE_RESULT_INCOMPARABLE);
+    SIMPLIFY_CHECK(compare, "2 * x", "2x", COMPARE_RESULT_EQUAL);
+    SIMPLIFY_CHECK(compare, "2.25", "2.2", COMPARE_RESULT_GREATER);
+    SIMPLIFY_CHECK(compare, "2.0003", "2.2", COMPARE_RESULT_LESS);
+    SIMPLIFY_CHECK(compare, ".0001", "0.00002", COMPARE_RESULT_GREATER);
+    SIMPLIFY_CHECK(compare, "1.000001", "1.00002", COMPARE_RESULT_LESS);
+    SIMPLIFY_CHECK(compare, "5e2", "5e3", COMPARE_RESULT_LESS);
+    SIMPLIFY_CHECK(compare, "y * (x2) + x^4", "x^4 + y * (2 * x)", COMPARE_RESULT_EQUAL);
+    SIMPLIFY_CHECK(compare, "(y)f(x + 5)", "f(x + 5) * y", COMPARE_RESULT_EQUAL);
+    SIMPLIFY_CHECK(compare, "x * x * x", "x ^ 2 * x", COMPARE_RESULT_EQUAL);
 }

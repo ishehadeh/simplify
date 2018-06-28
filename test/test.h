@@ -1,24 +1,14 @@
 /* Copyright Ian Shehadeh 2018 */
 
-#ifndef TEST_TEST_H_
-#define TEST_TEST_H_
-
-/* file: test/test.h
- * Utilities and data to help create tests
- *
- * Macros:
- *  - FATAL(MSG, ...FMT) : print an error and exit
- *  - ERROR(MSG, ...FMT) : print an error, but do not exit
- *  - INFO(MSG, ...FMT) : print an info message
- *  - WARN(MSG, ...FMT) : print a warning message (goes to stderr)
- */
+#ifndef SIMPLIFY_TEST_TEST_H_
+#define SIMPLIFY_TEST_TEST_H_
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "simplify/expression/expression.h"
-#include "simplify/expression/stringify.h"
-#include "simplify/parser.h"
+#include "simplify/simplify.h"
+
+static unsigned long long _g_Tsimplify_check;
 
 #define FATAL(MSG, ...)                                                            \
     {                                                                              \
@@ -28,6 +18,21 @@
 #define ERROR(MSG, ...) fprintf(stdout, __FILE__ ":%d ERROR: " MSG "\n", __LINE__, ##__VA_ARGS__);
 #define INFO(MSG, ...) fprintf(stdout, __FILE__ ":%d INFO: " MSG "\n", __LINE__, ##__VA_ARGS__);
 #define WARN(MSG, ...) fprintf(stdout, __FILE__ ":%d WARN: " MSG "\n", __LINE__, ##__VA_ARGS__);
+
+#define TSIMPLIFY_OP(X, OP, Y) expression_new_operator(X, OP, Y)
+#define TSIMPLIFY_NUM(X) expression_new_number_d(X)
+#define TSIMPLIFY_VAR(X) expression_new_variable(X)
+#define TSIMPLIFY_FUN(NAME, ARGS, ...) expression_new_function(NAME, ARGS, __VA_ARGS__)
+#define TSIMPLIFY_PREFIX(PRE, X) expression_new_prefix(PRE, X)
+
+#define SIMPLIFY_CHECK(CHECK, ...)        \
+    TSIMPLIFY_START_CHECK(CHECK)          \
+    Tsimplify_check_##CHECK(__VA_ARGS__); \
+    TSIMPLIFY_END_CHECK()
+
+#define TSIMPLIFY_START_CHECK(CHECK) INFO("starting check %s #%llu", #CHECK, ++_g_Tsimplify_check);
+#define TSIMPLIFY_END_CHECK() INFO("finished check #%llu", _g_Tsimplify_check)
+#define TSIMPLIFY_RESET_CHECK_COUNT() _g_Tsimplify_check = 0
 
 static inline const char* print_type(expression_type_t t) {
     switch (t) {
@@ -59,6 +64,46 @@ static inline const char* print_compare_result(compare_result_t t) {
     return "UNKOWN";
 }
 
+static inline const char* print_expression_result(expression_result_t t) {
+    switch (t) {
+        case EXPRESSION_RESULT_FALSE:
+            return "EXPRESSION_RESULT_FALSE";
+        case EXPRESSION_RESULT_TRUE:
+            return "EXPRESSION_RESULT_TRUE";
+        case EXPRESSION_RESULT_NONBINARY:
+            return "EXPRESSION_RESULT_NONBINARY";
+    }
+    return "UNKOWN";
+}
+
+expression_t* Tsimplify_parse(const char* str) {
+    expression_t* expr = expression_new_uninialized();
+    error_t err = parse_string((char*)str, expr);
+    if (err) FATAL("failed to parse \"%s\" (reason: %s)", str, error_string(err));
+    return expr;
+}
+
+void Tsimplify_evaluate(expression_t* expr) {
+    scope_t scope;
+    scope_init(&scope);
+    simplify_export_builtins(&scope);
+    error_t err = expression_evaluate(expr, &scope);
+    if (err) FATAL("failed to evaluate \"%s\" (reason: %s)", stringify(expr), error_string(err));
+    scope_clean(&scope);
+}
+
+compare_result_t Tsimplify_compare(expression_t* expr) { return expression_evaluate_comparisons(expr); }
+
+void Tsimplify_simplify(expression_t* expr) {
+    error_t err = expression_simplify(expr);
+    if (err) FATAL("failed to simplify \"%s\" (reason: %s)", stringify(expr), error_string(err));
+}
+
+void Tsimplify_isolate(expression_t* expr, char* x) {
+    error_t err = expression_isolate_variable(expr, x);
+    if (err) FATAL("failed to simplify \"%s\" (reason: %s)", stringify(expr), error_string(err));
+}
+
 void expression_assert_eq(expression_t* expr1, expression_t* expr2) {
     if (expr1->type != expr2->type) {
         printf("EXPECTED:\n");
@@ -72,7 +117,7 @@ void expression_assert_eq(expression_t* expr1, expression_t* expr2) {
 
     switch (expr1->type) {
         case EXPRESSION_TYPE_NUMBER:
-            if (mpc_cmp(expr1->number.value, expr2->number.value) != 0) {
+            if (expression_compare(expr1, expr2) != COMPARE_RESULT_EQUAL) {
                 char* expr1num = stringify(expr1);
                 char* expr2num = stringify(expr2);
                 FATAL("ASSERT FAILED ('%s' != '%s'): numeric expressions don't match", expr1num, expr2num);
@@ -122,4 +167,4 @@ void assert_token_eq(token_t* tok1, token_t* tok2) {
     }
 }
 
-#endif  // TEST_TEST_H_
+#endif  // SIMPLIFY_TEST_TEST_H_

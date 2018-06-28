@@ -95,13 +95,18 @@ int main() {
     char* key;
     char* value;
     ITERATE_PAIRS(key, value) {
+        TSIMPLIFY_START_CHECK(rbtree_insert);
         err = rbtree_insert(&tree, key, value);
         if (err) {
             FATAL("(iteration %d) %s", i, error_string(err));
         }
+        TSIMPLIFY_END_CHECK();
     }
 
+    TSIMPLIFY_RESET_CHECK_COUNT();
+
     ITERATE_PAIRS(key, value) {
+        TSIMPLIFY_START_CHECK(rbtree_search);
         char* data;
         err = rbtree_search(&tree, key, (void**)&data);
         if (err) {
@@ -110,6 +115,7 @@ int main() {
         if (data != value) {
             FATAL("(iteration %d) data did not match: expected \"%s\", got \"%s\"", i, value, data);
         }
+        TSIMPLIFY_END_CHECK();
     }
 
     rbtree_clean(&tree, NULL);

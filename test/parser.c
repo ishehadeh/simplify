@@ -68,10 +68,12 @@ int main() {
 
     error_t err;
     for (int i = 0; i < (int)(sizeof(__string_expr_pairs) / sizeof(__string_expr_pairs[0])); ++i) {
+        TSIMPLIFY_START_CHECK(parser);
         expression_t expr;
         err = parse_string(__string_expr_pairs[i].string, &expr);
         printf("starting test #%d...\n", i + 1);
         if (err) FATAL("failed to parse string: %s", error_string(err));
         expression_assert_eq(&expr, __string_expr_pairs[i].expr);
+        TSIMPLIFY_END_CHECK();
     }
 }
