@@ -2,8 +2,7 @@
 
 void Tsimplify_check_stringify(expression_t* expr, char* str) {
     char* rstr = stringify(expr);
-    if (strcmp(str, rstr) != 0) FATAL("expecting string \"%s\" got \"%s\"", str, rstr);
-    free(str);
+    if (strcmp(str, rstr) != 0) FATAL("expecting string \"%s\" got \"%s\"", str, rstr); 
 }
 
 int main() {

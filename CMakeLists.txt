@@ -35,7 +35,7 @@ find_program(RONN  ronn  ronn.rb  DOC "markdown to man converter")
 find_program(GCOV  gcov           DOC "GNU test coverage tool")
 
 include_directories("${CMAKE_SOURCE_DIR}/src" "${CMAKE_SOURCE_DIR}" "${GMP_INCLUDE_DIR}" "${MPFR_INCLUDES}")
-set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic -Werror -std=c99")
+set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic -Werror -Wno-gnu-zero-variadic-macro-arguments -std=c99")
 
 add_custom_target("docs")
 

@@ -47,3 +47,4 @@ void string_insert_cstr(string_t* string, size_t index, char* str) {
     memmove(string->buffer + index + len, string->buffer + index, string_len(string) - index);
     memcpy(string->buffer + index, str, len);
 }
+

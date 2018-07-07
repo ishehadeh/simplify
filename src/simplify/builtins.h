@@ -20,3 +20,4 @@ void simplify_export_builtins(scope_t* scope);
 #define ALIAS(SCOPE, X, Y) scope_define_constant((SCOPE), #X, expression_new_variable(#Y))
 
 #endif  // SIMPLIFY_BUILTINS_H_
+

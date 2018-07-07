@@ -161,3 +161,4 @@ void simplify_export_builtins(scope_t* scope) {
     _EXPORT_BUILTIN_CONST(scope, euler);
     _EXPORT_BUILTIN_CONST(scope, catalan);
 }
+

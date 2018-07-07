@@ -22,13 +22,6 @@ int index_of(char* x, char* y) {
     return -1;
 }
 
-static inline bool _expression_is_var_mul(expression_t* expr) {
-    expression_t* left = EXPRESSION_LEFT(expr);
-    expression_t* right = EXPRESSION_RIGHT(expr);
-    return expr->operator.infix == '*' &&((EXPRESSION_IS_VARIABLE(left) || EXPRESSION_IS_FUNCTION(left)) ||
-                                          (EXPRESSION_IS_VARIABLE(right) || EXPRESSION_IS_FUNCTION(right)));
-}
-
 static inline expression_t* _expression_multiplaction_scalar(expression_t* expr) {
     if (!EXPRESSION_IS_OPERATOR(expr)) return NULL;
     if (expr->operator.infix != '*') return NULL;

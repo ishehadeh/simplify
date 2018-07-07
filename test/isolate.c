@@ -22,7 +22,7 @@ int main() {
     SIMPLIFY_CHECK(isolate, "99 = -x * 2", TSIMPLIFY_VAR("x"), TSIMPLIFY_NUM(-49.5));
     SIMPLIFY_CHECK(isolate, "5 + x", TSIMPLIFY_VAR("x"), TSIMPLIFY_NUM(-5));
     SIMPLIFY_CHECK(isolate, "2 ^ x= 2", TSIMPLIFY_VAR("x"), TSIMPLIFY_NUM(1));
-    SIMPLIFY_CHECK(isolate, "2 ^ 4 = 4", TSIMPLIFY_VAR("x"), TSIMPLIFY_NUM(2));
+    SIMPLIFY_CHECK(isolate, "2 ^ 4 = x", TSIMPLIFY_VAR("x"), TSIMPLIFY_NUM(16));
     SIMPLIFY_CHECK(isolate, "log(2, x + 5) = 3", TSIMPLIFY_VAR("x"), TSIMPLIFY_NUM(3));
     SIMPLIFY_CHECK(isolate, "8 = 2 * x ^ 2", TSIMPLIFY_VAR("x"), TSIMPLIFY_NUM(2));
     SIMPLIFY_CHECK(isolate, "11 = x \\ 2", TSIMPLIFY_VAR("x"), TSIMPLIFY_NUM(121));
@@ -32,3 +32,4 @@ int main() {
     SIMPLIFY_CHECK(isolate, "x(y, x) = -10", TSIMPLIFY_FUN("x", 2, TSIMPLIFY_VAR("y"), TSIMPLIFY_VAR("x")),
                    TSIMPLIFY_NUM(-10));
 }
+

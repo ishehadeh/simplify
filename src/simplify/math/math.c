@@ -36,3 +36,4 @@ void simplify_const_euler(mpc_ptr x) {
 }
 
 void simplify_const_i(mpc_ptr x) { mpc_set_si_si(x, 0, 1, MPC_RNDNN); }
+

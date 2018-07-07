@@ -92,7 +92,7 @@ void Tsimplify_evaluate(expression_t* expr) {
     scope_clean(&scope);
 }
 
-compare_result_t Tsimplify_compare(expression_t* expr) { return expression_evaluate_comparisons(expr); }
+expression_result_t Tsimplify_compare(expression_t* expr) { return expression_evaluate_comparisons(expr); }
 
 void Tsimplify_simplify(expression_t* expr) {
     error_t err = expression_simplify(expr);

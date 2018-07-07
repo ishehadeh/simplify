@@ -27,3 +27,4 @@ int main() {
         TSIMPLIFY_OP(TSIMPLIFY_OP(TSIMPLIFY_NUM(100), '^', TSIMPLIFY_VAR("x")), '*',
                      TSIMPLIFY_OP(TSIMPLIFY_OP(TSIMPLIFY_VAR("x"), '^', TSIMPLIFY_NUM(2)), '*', TSIMPLIFY_NUM(3))));
 }
+
