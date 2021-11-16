@@ -1,3 +1,10 @@
+# Notice
+
+Simplify was a project I worked on while taking algebra 2 to teach myself the concepts and improve my C skills.
+I don't plan on working on it anymore, even though it's buggy and incomplete. 
+
+I'm leaving the repo up and archiving it because I think it will be fun to look back on. :)
+
 # Simplify
 
 [![Build Status](https://travis-ci.org/IanS5/simplify.svg?branch=master)](https://travis-ci.org/IanS5/simplify)
